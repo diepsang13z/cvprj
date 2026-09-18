@@ -1,43 +1,49 @@
 # RESEARCH PROPOSAL
 
-| Hạng mục           | Chi tiết                                                                                                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Hạng mục               | Chi tiết                                                                                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Research title** | **Failure-Aware and Resource-Adaptive 2D Aerial Mosaicking for UAV Video**<br />(Xây dựng bản đồ ảnh 2D từ video UAV với cơ chế cảnh báo lỗi và tự thích ứng tài nguyên) |
-| **Lecturer**       | Nguyễn Hồng Hải - HaiNH51                                                                                                                                                |
-| **Members**        | 1. Diệp Quang Sáng - SE200655<br />2. Nguyễn Đức Nam - SE200991<br />3. Đào Đặng Nguyên Khôi - SE200450<br />4. Trương Quang Đăng Khoa - SE201463                        |
+| **Lecturer**       | Nguyễn Hồng Hải - HaiNH51                                                                                                                                                                      |
+| **Members**        | 1. Diệp Quang Sáng - SE200655<br />2. Nguyễn Đức Nam - SE200991<br />3. Đào Đặng Nguyên Khôi - SE200450<br />4. Trương Quang Đăng Khoa - SE201463                                  |
 
 ---
 
 ## Abstract
 
-Việc ghép ảnh 2D từ video máy bay không người lái (UAV) cho phép tạo mosaic hiện trạng cục bộ phục vụ nông nghiệp, xây dựng, cứu hộ và giám sát môi trường. Tuy nhiên, pipeline tuần tự có thể thất bại nghiêm trọng (_catastrophic failure_) hoặc tích lũy sai số trôi dạt (_cumulative drift_) khi cảnh có ít đặc trưng, như mặt nước và đồng lúa, hoặc khi camera quay đột ngột. Nghiên cứu này đề xuất khung ghép ảnh **Failure-Aware and Resource-Adaptive 2D Aerial Mosaicking** gồm ba cơ chế: (1) dự báo sớm rủi ro đăng ký từ các chỉ báo chi phí thấp ở cấp cặp frame; (2) phân luồng tài nguyên hai tầng (_matcher routing_), dùng SIFT/ORB mặc định và chỉ kích hoạt learned matcher SIFT+LightGlue khi rủi ro cao; (3) phục hồi có kiểm soát bằng cách loại frame, ghép lại với keyframe trước đó hoặc tách submosaic. Đề tài sẽ đánh giá khung trên các bộ dữ liệu UAV thực tế (NPU Drone-Map, DroneZaic) theo sai số hình học, tỷ lệ ghép thành công và độ trễ thực thi trong điều kiện giới hạn tài nguyên.
+Việc ghép ảnh 2D từ video máy bay không người lái (UAV) cho phép tạo mosaic hiện trạng cục bộ phục vụ nông nghiệp, xây dựng, cứu hộ và giám sát môi trường.
+
+Tuy nhiên, pipeline tuần tự có thể thất bại nghiêm trọng (_catastrophic failure_) hoặc tích lũy sai số trôi dạt (_cumulative drift_) khi cảnh có ít đặc trưng, như mặt nước và đồng lúa, hoặc khi camera quay đột ngột.
+
+Nghiên cứu này đề xuất khung ghép ảnh **Failure-Aware and Resource-Adaptive 2D Aerial Mosaicking** gồm ba cơ chế: (1) dự báo sớm rủi ro đăng ký từ các chỉ báo chi phí thấp ở cấp cặp frame; (2) phân luồng tài nguyên hai tầng (_matcher routing_), dùng SIFT/ORB mặc định và chỉ kích hoạt learned matcher SIFT+LightGlue khi rủi ro cao; (3) phục hồi có kiểm soát bằng cách loại frame, ghép lại với keyframe trước đó hoặc tách submosaic.
+
+Đề tài sẽ đánh giá khung trên các bộ dữ liệu UAV thực tế (NPU Drone-Map, DroneZaic) theo sai số hình học, tỷ lệ ghép thành công và độ trễ thực thi trong điều kiện giới hạn tài nguyên.
 
 **Keywords:** UAV Video Mosaicking, Failure Prediction, Feature Matching, Matcher Routing, Homography Estimation, Cumulative Drift.
 
 ---
 
-## 1. Introduction / Giới thiệu
+## 1. Introduction
 
-### 1.1. Literature review / Tình hình nghiên cứu trong và ngoài nước
+### 1.1. Literature review 
 
 - **Ghép ảnh UAV tuần tự:** Hwang et al. (2026) trình bày pipeline chạy hoàn toàn trên CPU với ngân sách keypoint cố định và bước lọc inlier đơn giản. Li et al. (2023) tối ưu sai số chiếu lại có trọng số kết hợp với chọn keyframe. Hai công trình này dùng heuristic vận hành, nhưng chưa liên hệ các tín hiệu ở cấp cặp frame với drift tích lũy trên toàn mosaic. Kharismawati & Kazic (DroneZaic, 2025) sử dụng optical flow và tách submosaic cho ảnh nông nghiệp có đặc trưng lặp lại.
 - **Chỉ báo lỗi và độ bất định (Failure Indicators):** Trong Visual Place Recognition (VPR), Zaffar et al. (CVPR 2024) và Sferrazza et al. (CVPRW 2024/2025) cho thấy số inlier có thể phân biệt các trường hợp matching thất bại, nhưng vẫn có false positive ở cảnh lặp vân. Barath et al. (HEB, CVPR 2023) và Yuan et al. (J. Imaging 2024) ghi nhận tương quan yếu giữa sai số chiếu lại, số lượng đặc trưng và sai số toàn cục (RMSE).
 - **Feature matcher thích ứng tài nguyên:** LightGlue (ICCV 2023) dùng cơ chế early-exit thích ứng. XFeat (CVPR 2024) đạt khoảng 27 FPS trên CPU. Kim & Kim (ISPRS 2025) báo cáo SIFT+LightGlue cho kết quả tốt hơn ở địa hình UAV ít đặc trưng, với chi phí tính toán cao hơn.
 - **Bối cảnh ứng dụng tại Việt Nam:** Nhiều quy trình viễn thám trong nước sử dụng phần mềm thương mại như Pix4D và Agisoft theo hướng SfM/3D, thường cần xử lý ngoại tuyến trong thời gian dài. Đề tài tập trung vào việc tạo mosaic 2D cục bộ nhanh cho các tình huống trinh sát hiện trường, đánh giá lũ lụt và nông nghiệp chính xác.
 
-### 1.2. Limitations of current work / Những hạn chế của các nghiên cứu hiện tại
+### 1.2. Limitations of current work 
 
 1. **Thiếu dự báo lỗi sớm:** Pipeline UAV hiện hành thường dùng ngưỡng inlier tối thiểu để nhận hoặc loại frame cục bộ, nhưng chưa liên hệ các tín hiệu ở cấp cặp frame với drift tích lũy của toàn mosaic.
 2. **Đánh đổi tài nguyên:** Việc chỉ dùng thuật toán cổ điển có thể thất bại ở cảnh khó, trong khi chạy learned matcher cho mọi frame làm tăng chi phí tính toán trên thiết bị biên.
 3. **Phục hồi chưa được đánh giá thống nhất:** Các cơ chế loại frame, ghép lại với keyframe hoặc tách submosaic đã xuất hiện trong các công trình khác nhau, nhưng chưa được so sánh trực tiếp dưới cùng một ngưỡng kích hoạt (_confidence trigger_).
 
-### 1.3. Research rationale / Sự cần thiết tiến hành nghiên cứu
+### 1.3. Research rationale 
 
 Đề tài xem xét một pipeline có cơ chế nhận biết rủi ro và điều phối tài nguyên để đánh giá khả năng tạo mosaic 2D cục bộ từ video UAV mà không yêu cầu GPS độ chính xác cao (RTK) hoặc máy chủ GPU. Điều này phù hợp với các nhiệm vụ hiện trường có hạ tầng tính toán hạn chế.
 
 ---
 
-## 2. Research objectives / Mục tiêu của đề tài
+## 2. Research objectives 
 
 - **Mục tiêu tổng quát:** Xây dựng pipeline phần mềm tạo mosaic 2D từ video UAV, có cơ chế phân luồng tài nguyên và phục hồi nhằm hạn chế drift tích lũy.
 - **Mục tiêu cụ thể (3 Research Questions - RDR-0003):**
@@ -47,14 +53,14 @@ Việc ghép ảnh 2D từ video máy bay không người lái (UAV) cho phép t
 
 ---
 
-## 3. Research scope / Phạm vi nghiên cứu
+## 3. Research scope 
 
 - **Trong phạm vi:** Video UAV ngắn (100–1000 frame), camera gần thẳng đứng (near-nadir), cảnh tương đối phẳng (đồng ruộng, đô thị, giao thông); pipeline tích lũy homography 2D kết hợp bộ đánh giá định lượng.
 - **Ngoài phạm vi:** Không bắt buộc GPS/IMU (dữ liệu telemetry chỉ dùng đối chứng nếu có); không tái tạo 3D/SfM/SLAM; không khảo sát trắc địa địa chính có georeference tuyệt đối.
 
 ---
 
-## 4. Feasibility of research / Tính khả thi của đề tài
+## 4. Feasibility of research 
 
 - **Dữ liệu khả dụng (RDR-0002):** NPU Drone-Map là tập dữ liệu chính, gồm video UAV RGB, ảnh đã hiệu chỉnh méo, log GPS và điểm kiểm soát mặt đất (GCP) để đo sai số. DroneZaic (Dryad) là phương án dự phòng và tập stress-test cho cảnh nông nghiệp có đặc trưng lặp lại.
 - **Công nghệ và công cụ:** Python, OpenCV, PyTorch cùng các mô hình tiền huấn luyện sẵn có như LightGlue, XFeat và SIFT.
@@ -62,7 +68,7 @@ Việc ghép ảnh 2D từ video máy bay không người lái (UAV) cho phép t
 
 ---
 
-## 5. Approach and Method / Cách tiếp cận và phương pháp nghiên cứu
+## 5. Approach and Method 
 
 ### 5.1. Kiến trúc hệ thống đề xuất (Proposed Pipeline)
 
@@ -71,7 +77,7 @@ Video UAV (near-nadir) ──► Trích xuất frame ──► Classical matcher
                                                       │
                                                [RQ1: Risk gate]
                                                ┌──────┴──────┐
-                                (Rủi ro thấp) │             │ (Rủi ro cao)
+                                (Rủi ro thấp)  │             │ (Rủi ro cao)
                                                ▼             ▼
                                         Tích lũy H     Learned matcher (SIFT+LightGlue)
                                                │             │
@@ -96,27 +102,27 @@ Video UAV (near-nadir) ──► Trích xuất frame ──► Classical matcher
 
 ---
 
-## 6. Research plan / Kế hoạch thực hiện nghiên cứu
+## 6. Research plan 
 
 | No. | Date | Task | Output | Person in charge |
 | :-: | :--: | ---- | ------ | :--------------: |
-|  1  |      |      |        |                  |
-|  2  |      |      |        |                  |
-|  3  |      |      |        |                  |
-|  4  |      |      |        |                  |
-|  5  |      |      |        |                  |
-|  6  |      |      |        |                  |
+|  1  | 21-9 -> 27/9  | **Chuẩn hóa dữ liệu & Thiết lập môi trường đánh giá:** Chuẩn hóa tập dữ liệu UAV thực nghiệm và thiết lập giao thức đo lường sai số định lượng. | Bộ dữ liệu UAV tiền xử lý; Khung công cụ đo lường định lượng (Evaluation Harness). | Nguyễn Đức Nam |
+|  2  | 28-9 -> 4/10  | **Xây dựng pipeline ghép ảnh cơ sở (Baseline Framework):** Hiện thực quy trình ghép ảnh tuần tự 2D dựa trên homography tích lũy và kiểm chứng tính đúng đắn. | Khung phần mềm ghép ảnh 2D cơ sở; Kết quả mosaic đối chứng ban đầu. | Diệp Quang Sáng |
+|  3  | 5-10 -> 11/10 | **Nghiên cứu cơ chế dự báo rủi ro & Phân luồng tài nguyên (RQ1, RQ2):** Mô hình hóa chỉ báo lỗi cấp cặp frame chi phí thấp và thiết kế bộ điều phối matcher thích ứng hai tầng. | Module nhận biết rủi ro đăng ký; Chính sách phân luồng tài nguyên (Matcher Router). | Đào Đặng Nguyên Khôi |
+|  4  | 12-10 -> 18/10| **Phát triển chiến lược phục hồi & Tích hợp hệ thống (RQ3):** Xây dựng các cơ chế phục hồi có kiểm soát (loại frame, rematch keyframe, tách submosaic) và hoàn thiện khung ghép ảnh tổng thể. | Module phục hồi theo độ tin cậy; Pipeline ghép ảnh hoàn chỉnh (Integrated Pipeline). | Trương Quang Đăng Khoa |
+|  5  | 19-10 -> 25/10| **Thực nghiệm diện rộng & Đánh giá định lượng:** Tiến hành thực nghiệm trên các kịch bản chuẩn và điều kiện biên (stress-test); đối chuẩn hiệu năng, độ trễ và sai số hình học. | Tập số liệu đo lường định lượng (RMSE, drift, latency profile); Báo cáo thực nghiệm đối chuẩn. | Nguyễn Đức Nam, Trương Quang Đăng Khoa |
+|  6  | 26-10 -> 31/10| **Tổng hợp kết quả nghiên cứu & Hoàn thiện tài liệu đề tài:** Phân tích, tổng hợp phát hiện khoa học từ 3 câu hỏi nghiên cứu; đóng gói mã nguồn và hoàn thiện báo cáo tổng kết đề tài. | Báo cáo nghiên cứu hoàn chỉnh (Research Report); Kho mã nguồn và tài liệu kỹ thuật đóng gói. | Cả nhóm |
 
 ---
 
-## 7. Computational Resource Requirements / Yêu cầu tài nguyên tính toán
+## 7. Computational Resource Requirements 
 
 - **Phần cứng:** Máy trạm cá nhân (01 PC): CPU 8 cores/16 threads, RAM 16–32 GB, GPU hỗ trợ CUDA $\ge 6$ GB VRAM (chạy inference LightGlue).
 - **Lưu trữ:** 100 GB ổ cứng cho dataset NPU Drone-Map và DroneZaic.
 
 ---
 
-## 8. Expected results / Dự kiến kết quả đề tài
+## 8. Expected results 
 
 1. **Mã nguồn:** Pipeline hoàn chỉnh cùng bộ công cụ đánh giá định lượng, dự kiến công bố mã nguồn mở.
 2. **Dữ liệu thực nghiệm:** Báo cáo kết quả định lượng cho ba câu hỏi nghiên cứu RQ1, RQ2 và RQ3.
@@ -124,7 +130,7 @@ Video UAV (near-nadir) ──► Trích xuất frame ──► Classical matcher
 
 ---
 
-## References / Tài liệu tham khảo
+## References 
 
 1. D. Hwang et al., "Real-Time 2D Orthomosaic Mapping Using CPU-Based Incremental Homography Matrix Estimation with UAV Video," _Appl. Sci._, vol. 16, no. 4, p. 2133, 2026.
 2. X. Li et al., "A Real-Time Incremental Video Mosaic Framework for UAV Remote Sensing," _Remote Sens._, vol. 15, no. 8, p. 2127, 2023.
