@@ -24,7 +24,7 @@ Cập nhật lần cuối: 2026-09-19
 
 - **RDR-0001 (Accepted, 2026-09-18)** — điều kiện dừng khảo sát literature: đủ bằng chứng/RQ, hai vòng liên tiếp không đổi đánh giá, mỗi RQ một trạng thái keep/narrow/kill, và có ba RQ hợp lệ dùng chung harness (hoặc ghi nhận pivot).
 - **RDR-0002 (2026-09-19)** — dataset cho mọi thí nghiệm phải opensource và là dữ liệu từ drone (UAV) thật. File: `docs/decisions/0002_choise_dataset.md`.
-
+- **RDR-0003 (Accepted, 2026-09-19)** — Chốt bộ 3 RQ cốt lõi (RQ1, RQ2, RQ3; hoãn RQ5 xét sau) và lựa chọn dataset (NPU Drone-Map là ưu tiên 1, DroneZaic Dryad dự phòng/stress-test). File: `docs/decisions/0003_confirm_rq_dataset.md`.
 ## Chốt tạm (chỉ nằm trong log)
 
 - Hình thức: NCKH + 1 MVP demo, dùng chung một codebase (pipeline = demo, eval harness = số liệu).
@@ -43,10 +43,10 @@ Cập nhật lần cuối: 2026-09-19
 | Evidence matrix + query/citation log (đợt 2) | có — `docs/logs/literature-survey/0002_novelty_audit_wave_2.md` |
 | Quét dataset theo RDR-0002 | có — `docs/logs/datasets/0001_dataset_scan.md` |
 | Experiment contract (baseline, dataset, metric) | chưa — cần khi khóa RQ |
-| README, `refs/` | chưa có gì |
+| README, `refs/` | `refs/` đã có 18 PDF papers đối chứng (2021–2026) |
 
 ## Việc tiếp theo
 
-1. Team quyết định dataset từ shortlist trong `docs/logs/datasets/0001_dataset_scan.md` (kèm quyết định về cách đọc "opensource": license chuẩn hay chỉ cần tải được) → ghi RDR-0003.
-2. Chạy đợt quét 4 nhỏ (retry kênh chết + chaining theo 4 tên mới trong log đợt 3 + nguồn tiếng Trung/Hàn). Nếu vẫn không đổi đánh giá → đủ hai vòng liên tiếp theo RDR-0001 → ghi RDR-0004 khóa bộ RQ (3 × narrow + RQ4 mở).
-3. Khóa xong RQ + dataset → dựng MVP trước (1 video → 1 mosaic), đặt 3 RQ lên thành eval harness, rồi chuyển experiment contract sơ bộ thành bản thành văn.
+1. Chạy đợt quét 4 nhỏ (retry kênh chết + chaining theo 4 tên mới trong log đợt 3 + nguồn tiếng Trung/Hàn) để thỏa điều kiện information saturation RDR-0001 trước khi khóa hoàn toàn literature audit.
+2. Tải/chuẩn bị dữ liệu từ NPU Drone-Map (hoặc DroneZaic nếu NPU gặp sự cố).
+3. Dựng MVP pipeline (1 video $\to$ 1 mosaic 2D), đặt 3 RQ lên thành eval harness, và lập experiment contract thành văn.
