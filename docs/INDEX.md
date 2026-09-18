@@ -1,9 +1,9 @@
-# INDEX — router tài liệu
+# INDEX — context management
 
-Đọc bảng này trước, chỉ mở file theo cột "Đọc khi nào". Tạo file context mới → thêm một dòng ở đây.
+Chỉ liệt kê tài liệu context cần để định hướng quyết định và công việc. Cấu trúc dự án, báo cáo và template nằm trong `README.md`.
 Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
 
-| File | Mục đích | Đọc khi nào | ~Dòng |
+| Context file | Mục đích | Đọc khi nào | ~Dòng |
 |---|---|---|---|
 | `AGENTS.md` | Entry point: tổng quan dự án, quy tắc đọc tài liệu | Luôn (auto-load) | 30 |
 | `RULES.md` | Ràng buộc cứng (200 dòng/file, không tự commit) | Luôn (auto-load) | 25 |
@@ -19,7 +19,6 @@ Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
 | `docs/logs/literature-survey/0001_literature_survey_wave_1.md` | Khảo sát literature 2022–2026: kết luận, shortlist RQ1–RQ4, contract sơ bộ | Làm về RQ, baseline, dataset, metric | 100 |
 | `docs/logs/datasets/0001_dataset_scan.md` | Quét dataset theo RDR-0002: shortlist, license, truy cập, telemetry/GT, khuyến nghị | Quyết định dataset cho thí nghiệm | 110 |
 | `refs/README.md` | Danh mục 18 tài liệu tham khảo PDF toàn văn (2021–2026) theo từng RQ | Tra cứu nguồn gốc, tác giả, venue, vai trò | 60 |
-| `docs/research_proposal.md` | Bản thuyết minh đề cương nghiên cứu (Research Proposal) theo template chuẩn | Cần nộp/trình bày đề cương nghiên cứu | 130 |
 
 ## Đường đọc nhanh
 
