@@ -7,7 +7,7 @@ Cập nhật lần cuối: 2026-09-19
 
 ## Giai đoạn
 
-Đã xong đợt quét targeted novelty thứ hai cho ba cụm RQ. Evidence matrix, query log và chuỗi existing→gap nằm ở `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`. Ba RQ cốt lõi có trạng thái tạm **narrow**; chưa đạt information saturation (RDR-0001 điều kiện 2) vì đợt 2 phát hiện công trình làm thu hẹp cả ba RQ. Đã quét xong dataset theo RDR-0002; shortlist và bằng chứng tại `docs/logs/datasets/0001_dataset_scan.md` — đang chờ team quyết định dataset. Chưa có mã nguồn, chưa có experiment contract thành văn.
+Đã xong đợt quét targeted novelty thứ hai cho ba cụm RQ. Evidence matrix, query log và chuỗi existing→gap nằm ở `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`. Ba RQ cốt lõi có trạng thái tạm **narrow**. Đã chạy đợt quét 3 (`docs/logs/literature-survey/0003_novelty_audit_wave_3.md`): không phát hiện công trình đổi đánh giá nào, nhưng kênh tra cứu bị hạn chế ngày 2026-09-19 và theo chữ RDR-0001 (hai vòng liên tiếp không đổi) còn thiếu một vòng yên tĩnh nữa — đợt 4 nhỏ (retry kênh chết + chaining tên mới + non-English). Đã quét xong dataset theo RDR-0002; shortlist và bằng chứng tại `docs/logs/datasets/0001_dataset_scan.md` — đang chờ team quyết định dataset. Chưa có mã nguồn, chưa có experiment contract thành văn.
 
 ## Hướng nghiên cứu
 
@@ -48,6 +48,5 @@ Cập nhật lần cuối: 2026-09-19
 ## Việc tiếp theo
 
 1. Team quyết định dataset từ shortlist trong `docs/logs/datasets/0001_dataset_scan.md` (kèm quyết định về cách đọc "opensource": license chuẩn hay chỉ cần tải được) → ghi RDR-0003.
-2. Chạy đợt quét novelty 3 theo các nhánh rủi ro đã liệt kê trong log đợt 2 (photogrammetric block reliability, learned matcher CPU trong UAV mosaicking, shot detection/keyframe selection, nguồn non-English).
-3. Nếu đợt 3 không đổi đánh giá → đạt saturation → ghi RDR-0004 khóa bộ RQ (3 × narrow + RQ4 mở).
-4. Khóa xong RQ + dataset → chuyển experiment contract sơ bộ thành bản thành văn.
+2. Chạy đợt quét 4 nhỏ (retry kênh chết + chaining theo 4 tên mới trong log đợt 3 + nguồn tiếng Trung/Hàn). Nếu vẫn không đổi đánh giá → đủ hai vòng liên tiếp theo RDR-0001 → ghi RDR-0004 khóa bộ RQ (3 × narrow + RQ4 mở).
+3. Khóa xong RQ + dataset → dựng MVP trước (1 video → 1 mosaic), đặt 3 RQ lên thành eval harness, rồi chuyển experiment contract sơ bộ thành bản thành văn.

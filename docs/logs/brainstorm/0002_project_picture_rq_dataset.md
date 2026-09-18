@@ -1,6 +1,6 @@
 # Bức tranh tổng thể để chốt — dự án, RQ, dataset (2026-09-19)
 
-**Mục đích:** tổng hợp một trang cho người dùng dễ quyết định (chốt dataset, xác nhận RQ). **Nguồn:** `STATUS.md`, `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`, `docs/logs/datasets/0001_dataset_scan.md`. Không phải quyết định mới — là ảnh chụp để bàn luận.
+**Mục đích:** tổng hợp một trang cho người dùng dễ quyết định (chốt dataset, xác nhận RQ). **Nguồn:** `STATUS.md`, `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`, `docs/logs/literature-survey/0003_novelty_audit_wave_3.md`, `docs/logs/datasets/0001_dataset_scan.md`. Không phải quyết định mới — là ảnh chụp để bàn luận. Cập nhật sau đợt quét 3: 2026-09-19.
 
 ## 1. Dự án đang làm gì
 
@@ -34,7 +34,7 @@ flowchart LR
 | **RQ3 — Recovery** | Khi vẫn kém tin: reject / rematch keyframe / split submosaic — cái nào giới hạn drift tốt nhất? | Từng hành động đã tồn tại: reject (Hwang'26), rematch (Li'23), split (DroneZaic'25) | Chưa ai so sánh 3 hành động **dưới một confidence trigger** trên cùng dữ liệu |
 | RQ4 — Telemetry (GPS/yaw) | mở | — | chỉ kích hoạt nếu 3 cụm trên bị kill |
 
-Ba RQ dùng chung pipeline + harness → hợp lệ thành bundle. Chưa đạt saturation (đợt 2 làm thu hẹp cả ba) → cần **đợt quét 3** trước khi khóa.
+Ba RQ dùng chung pipeline + harness → hợp lệ thành bundle. **Sau đợt quét 3:** không có công trình nào đổi keep/narrow/kill (đợt 2 đã thu hẹp cả ba; đợt 3 đứng yên). Theo chữ RDR-0001 cần hai vòng liên tiếp không đổi → còn thiếu **một vòng yên tĩnh nữa** (đợt 4 nhỏ) trước khi khóa, hoặc team quyết khóa luôn.
 
 ## 3. Dataset ứng viên — đã quét theo RDR-0002
 
@@ -49,12 +49,16 @@ Ba RQ dùng chung pipeline + harness → hợp lệ thành bundle. Chưa đạt 
 
 Đã loại: Mid-Air, MovingDrone, Blackbird (mô phỏng/tổng hợp); VisDrone/UDD (license không rõ/không phù hợp chính).
 
-## 4. Cần chốt — 3 quyết định
+## 4. Cần chốt — quyết định
 
-1. **Cách đọc "opensource"** trong RDR-0002:
+1. **Khóa RQ (sau đợt quét 3):** đợt 3 không đổi đánh giá nào — 3 × narrow đứng vững; chi tiết tại `docs/logs/literature-survey/0003_novelty_audit_wave_3.md`. Chọn:
+   - (a) Chạy **đợt 4 nhỏ** (retry kênh chết + chaining 4 tên mới AAPMatcher/Ada-Matcher/Bare Homography/CHAMELEON-SLAM + nguồn tiếng Trung/Hàn) rồi khóa — khuyến nghị.
+   - (b) **Khóa luôn** bằng quyết định mới ghi đè đọc chặt điều kiện 2 của RDR-0001.
+2. **Dataset — cách đọc "opensource"** trong RDR-0002:
    - (a) Bắt buộc license chuẩn → chỉ còn Aerial234 (cc-by-4.0) + DroneZaic (nếu CC0 xác nhận).
    - (b) Tải được + dùng cho nghiên cứu → mở rộng cho NPU, WHU, UMCD.
-2. **Kênh tải**: chấp nhận Baidu Pan (NPU) và mật khẩu/email (UMCD, WHU) không?
-3. **Tổ hợp chọn**: khuyến nghị — **NPU (chính) + DroneZaic (stress) + Aerial234 (challenge) + WHU (drift/GT nếu xin được)**; UMCD thay NPU nếu muốn dataset chuyên mosaicking.
+3. **Dataset — kênh tải:** chấp nhận Baidu Pan (NPU) và mật khẩu/email (UMCD, WHU) không?
+4. **Dataset — tổ hợp chọn:** khuyến nghị **NPU (chính) + DroneZaic (stress) + Aerial234 (challenge) + WHU (drift/GT nếu xin được)**; UMCD thay NPU nếu muốn dataset chuyên mosaicking. → ghi **RDR-0003**.
+5. **Thứ tự làm việc:** dựng **MVP trước** (1 video → 1 mosaic, ~1–2 tuần) rồi đặt 3 RQ lên thành eval harness — khuyến nghị; hoặc viết experiment contract thành văn trước.
 
-Sau khi chốt: ghi **RDR-0003** (dataset) → chạy đợt quét novelty 3 → đủ saturation thì **RDR-0004** khóa bộ RQ → viết experiment contract thành văn.
+Sau khi chốt: **RDR-0003** (dataset) → đợt 4 nhỏ → **RDR-0004** (khóa bộ RQ 3 × narrow + RQ4 mở) → dựng MVP → experiment contract thành văn.
