@@ -1,9 +1,9 @@
-# INDEX — router tài liệu
+# INDEX — context management
 
-Đọc bảng này trước, chỉ mở file theo cột "Đọc khi nào". Tạo file context mới → thêm một dòng ở đây.
+Chỉ liệt kê tài liệu context cần để định hướng quyết định và công việc. Cấu trúc dự án, báo cáo và template nằm trong `README.md`.
 Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
 
-| File | Mục đích | Đọc khi nào | ~Dòng |
+| Context file | Mục đích | Đọc khi nào | ~Dòng |
 |---|---|---|---|
 | `AGENTS.md` | Entry point: tổng quan dự án, quy tắc đọc tài liệu | Luôn (auto-load) | 30 |
 | `RULES.md` | Ràng buộc cứng (200 dòng/file, không tự commit) | Luôn (auto-load) | 25 |
