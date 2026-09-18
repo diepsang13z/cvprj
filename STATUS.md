@@ -44,7 +44,7 @@ Cập nhật lần cuối: 2026-09-19
 | Quét dataset theo RDR-0002 | có — `docs/logs/datasets/0001_dataset_scan.md` |
 | Experiment contract (baseline, dataset, metric) | chưa — cần khi khóa RQ |
 | README, `refs/` | `refs/` đã có 18 PDF papers đối chứng (2021–2026) |
-| Research Proposal | có — `reports/md/research_proposal.md` (chờ điền nhân sự & kế hoạch) |
+| Research Proposal | có — `reports/md/research_proposal.md` (đã điền mục tiêu, phương pháp, RQs và kế hoạch thực hiện) |
 
 ## Việc tiếp theo
 
