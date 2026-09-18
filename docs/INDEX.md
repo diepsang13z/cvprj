@@ -18,7 +18,7 @@ Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
 | `docs/logs/brainstorm/0002_project_picture_rq_dataset.md` | Bức tranh tổng thể để chốt: dự án, RQ tạm narrow, dataset ứng viên, 3 quyết định chờ | Chốt RQ và dataset | 110 |
 | `docs/logs/literature-survey/0001_literature_survey_wave_1.md` | Khảo sát literature 2022–2026: kết luận, shortlist RQ1–RQ4, contract sơ bộ | Làm về RQ, baseline, dataset, metric | 100 |
 | `docs/logs/datasets/0001_dataset_scan.md` | Quét dataset theo RDR-0002: shortlist, license, truy cập, telemetry/GT, khuyến nghị | Quyết định dataset cho thí nghiệm | 110 |
-| `refs/` | Tài liệu tham khảo tải về | Cần tra PDF/nguồn gốc | — |
+| `refs/README.md` | Danh mục 18 tài liệu tham khảo PDF toàn văn (2021–2026) theo từng RQ | Tra cứu nguồn gốc, tác giả, venue, vai trò | 60 |
 
 ## Đường đọc nhanh
 

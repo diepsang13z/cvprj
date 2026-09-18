@@ -43,7 +43,7 @@ Cập nhật lần cuối: 2026-09-19
 | Evidence matrix + query/citation log (đợt 2) | có — `docs/logs/literature-survey/0002_novelty_audit_wave_2.md` |
 | Quét dataset theo RDR-0002 | có — `docs/logs/datasets/0001_dataset_scan.md` |
 | Experiment contract (baseline, dataset, metric) | chưa — cần khi khóa RQ |
-| README, `refs/` | chưa có gì |
+| README, `refs/` | `refs/` đã có 18 PDF papers đối chứng (2021–2026) |
 
 ## Việc tiếp theo
 
