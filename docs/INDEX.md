@@ -13,7 +13,9 @@ Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
 | `docs/decisions/0002_choise_dataset.md` | RDR-0002: dataset phải opensource và là dữ liệu drone (UAV) thật | Chọn/thay dataset cho mọi thí nghiệm | 10 |
 | `docs/logs/literature-survey/0002_novelty_audit_wave_2.md` | Đợt quét targeted novelty 2: evidence matrix, query log, chuỗi existing→gap, trạng thái tạm RQ1–RQ3 | Đánh giá keep/narrow/kill, chuẩn bị đợt quét 3 | 170 |
 | `docs/logs/brainstorm/0001_root_project_brainstorm_log.md` | Brainstorm gốc: chọn đề tài, phạm vi MVP, dataset, chuyển sang NCKH | Truy lý do gốc của phạm vi và đề tài | 230 |
+| `docs/logs/brainstorm/0002_project_picture_rq_dataset.md` | Bức tranh tổng thể để chốt: dự án, RQ tạm narrow, dataset ứng viên, 3 quyết định chờ | Chốt RQ và dataset | 110 |
 | `docs/logs/literature-survey/0001_literature_survey_wave_1.md` | Khảo sát literature 2022–2026: kết luận, shortlist RQ1–RQ4, contract sơ bộ | Làm về RQ, baseline, dataset, metric | 100 |
+| `docs/logs/datasets/0001_dataset_scan.md` | Quét dataset theo RDR-0002: shortlist, license, truy cập, telemetry/GT, khuyến nghị | Quyết định dataset cho thí nghiệm | 110 |
 | `refs/` | Tài liệu tham khảo tải về | Cần tra PDF/nguồn gốc | — |
 
 ## Đường đọc nhanh
@@ -21,6 +23,7 @@ Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
 - Đang ở đâu, làm gì tiếp: `STATUS.md`.
 - Trạng thái tạm keep/narrow/kill và chuỗi bằng chứng: `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`.
 - Ràng buộc dataset (mở + drone thật): `docs/decisions/0002_choise_dataset.md`.
+- Shortlist dataset và bằng chứng: `docs/logs/datasets/0001_dataset_scan.md`.
 - Đã chốt gì: `docs/decisions/` — file số lớn nhất.
 - Bắt tay vào RQ / baseline / metric: `docs/logs/literature-survey/0001_literature_survey_wave_1.md`.
 - Điều kiện dừng của đợt novelty audit đang chạy: RDR-0001.

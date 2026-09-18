@@ -7,7 +7,7 @@ Cập nhật lần cuối: 2026-09-19
 
 ## Giai đoạn
 
-Đã xong đợt quét targeted novelty thứ hai cho ba cụm RQ. Evidence matrix, query log và chuỗi existing→gap nằm ở `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`. Ba RQ cốt lõi có trạng thái tạm **narrow**; chưa đạt information saturation (RDR-0001 điều kiện 2) vì đợt 2 phát hiện công trình làm thu hẹp cả ba RQ. Chưa có mã nguồn, chưa có experiment contract thành văn.
+Đã xong đợt quét targeted novelty thứ hai cho ba cụm RQ. Evidence matrix, query log và chuỗi existing→gap nằm ở `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`. Ba RQ cốt lõi có trạng thái tạm **narrow**; chưa đạt information saturation (RDR-0001 điều kiện 2) vì đợt 2 phát hiện công trình làm thu hẹp cả ba RQ. Đã quét xong dataset theo RDR-0002; shortlist và bằng chứng tại `docs/logs/datasets/0001_dataset_scan.md` — đang chờ team quyết định dataset. Chưa có mã nguồn, chưa có experiment contract thành văn.
 
 ## Hướng nghiên cứu
 
@@ -28,7 +28,7 @@ Cập nhật lần cuối: 2026-09-19
 ## Chốt tạm (chỉ nằm trong log)
 
 - Hình thức: NCKH + 1 MVP demo, dùng chung một codebase (pipeline = demo, eval harness = số liệu).
-- Dataset theo RDR-0002 (mở + drone thật): chính UMCD (real UAV, public nhưng cần xin mật khẩu); dự phòng/kiểm thử DroneZaic (Dryad), NPU Drone-Map (Li 2023), Aerial234 (cần kiểm lại nguồn thật + license); Mid-Air và MovingDrone bị loại vì dữ liệu mô phỏng. Video nhóm tự quay chỉ dùng external validation.
+- Dataset theo RDR-0002 (mở + drone thật): đang chờ team quyết định — shortlist và bằng chứng tại `docs/logs/datasets/0001_dataset_scan.md`. Ứng viên: NPU Drone-Map (video + .SRT + GPS + GCP), DroneZaic Dryad (nông nghiệp repetitive), Aerial234 (cc-by-4.0), WHU Aerial Video (RTK + GCP + GT pose), UMCD (mosaicking-specific, cần mật khẩu). Mid-Air và MovingDrone đã loại vì mô phỏng. Video nhóm tự quay chỉ dùng external validation.
 - MVP: video ngắn gần nadir, cảnh phẳng, 15–30 frame chồng lấn → một aerial mosaic.
 - Trạng thái tạm đợt 2 (2026-09-19): RQ1–RQ3 đều `narrow`; RQ4 mở.
 
@@ -41,11 +41,13 @@ Cập nhật lần cuối: 2026-09-19
 | RDR-0001 | Accepted |
 | RDR-0002 (dataset mở + drone thật) | có |
 | Evidence matrix + query/citation log (đợt 2) | có — `docs/logs/literature-survey/0002_novelty_audit_wave_2.md` |
+| Quét dataset theo RDR-0002 | có — `docs/logs/datasets/0001_dataset_scan.md` |
 | Experiment contract (baseline, dataset, metric) | chưa — cần khi khóa RQ |
 | README, `refs/` | chưa có gì |
 
 ## Việc tiếp theo
 
-1. Chạy đợt quét 3 theo các nhánh rủi ro đã liệt kê trong log đợt 2 (photogrammetric block reliability, learned matcher CPU trong UAV mosaicking, shot detection/keyframe selection, nguồn non-English).
-2. Nếu đợt 3 không đổi đánh giá → đạt saturation → ghi RDR-0003 khóa bộ RQ (3 × narrow + RQ4 mở).
-3. Song song: kiểm tra dataset theo RDR-0002 (mật khẩu UMCD, tải NPU Drone-Map, license DroneZaic Dryad, Aerial234) và chuyển experiment contract sơ bộ thành bản thành văn.
+1. Team quyết định dataset từ shortlist trong `docs/logs/datasets/0001_dataset_scan.md` (kèm quyết định về cách đọc "opensource": license chuẩn hay chỉ cần tải được) → ghi RDR-0003.
+2. Chạy đợt quét novelty 3 theo các nhánh rủi ro đã liệt kê trong log đợt 2 (photogrammetric block reliability, learned matcher CPU trong UAV mosaicking, shot detection/keyframe selection, nguồn non-English).
+3. Nếu đợt 3 không đổi đánh giá → đạt saturation → ghi RDR-0004 khóa bộ RQ (3 × narrow + RQ4 mở).
+4. Khóa xong RQ + dataset → chuyển experiment contract sơ bộ thành bản thành văn.
