@@ -1,0 +1,29 @@
+# INDEX — router tài liệu
+
+Đọc bảng này trước, chỉ mở file theo cột "Đọc khi nào". Tạo file context mới → thêm một dòng ở đây.
+Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
+
+| File | Mục đích | Đọc khi nào | ~Dòng |
+|---|---|---|---|
+| `AGENTS.md` | Entry point: tổng quan dự án, quy tắc đọc tài liệu | Luôn (auto-load) | 30 |
+| `RULES.md` | Ràng buộc cứng (200 dòng/file, không tự commit) | Luôn (auto-load) | 25 |
+| `STATUS.md` | Ảnh chụp trạng thái: giai đoạn, RQ, tài liệu, việc tiếp theo | Cần biết đang ở đâu | 50 |
+| `docs/INDEX.md` | Router này | Luôn | 30 |
+| `docs/decisions/0001_stopping_point_for_literature_survey.md` | RDR-0001 (Accepted): điều kiện dừng, không chứa scope hay kế hoạch khảo sát | Cần quyết định tiếp tục, dừng hoặc mở lại khảo sát | 60 |
+| `docs/logs/brainstorm/0001_root_project_brainstorm_log.md` | Brainstorm gốc: chọn đề tài, phạm vi MVP, dataset, chuyển sang NCKH | Truy lý do gốc của phạm vi và đề tài | 230 |
+| `docs/logs/literature-survey/0001_literature_survey_wave_1.md` | Khảo sát literature 2022–2026: kết luận, shortlist RQ1–RQ4, contract sơ bộ | Làm về RQ, baseline, dataset, metric | 100 |
+| `refs/` | Tài liệu tham khảo tải về | Cần tra PDF/nguồn gốc | — |
+
+## Đường đọc nhanh
+
+- Đang ở đâu, làm gì tiếp: `STATUS.md`.
+- Đã chốt gì: `docs/decisions/` — file số lớn nhất.
+- Bắt tay vào RQ / baseline / metric: `docs/logs/literature-survey/0001_literature_survey_wave_1.md`.
+- Điều kiện dừng của đợt novelty audit đang chạy: RDR-0001.
+- Vì sao phạm vi bị giới hạn (GPS/IMU, 3D, realtime ngoài học kỳ): `docs/logs/brainstorm/0001_root_project_brainstorm_log.md` mục 8 và 10.
+
+## Ghi chú
+
+- `docs/logs/**` là nhật ký thô, miễn giới hạn 200 dòng; mọi file còn lại trong bảng phải ≤ 200 dòng.
+- `docs/decisions/**` append-only: sửa sai bằng file mới, không sửa file cũ.
+- `STATUS.md` ngược lại: ghi đè, chỉ giữ hiện tại.
