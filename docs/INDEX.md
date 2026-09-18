@@ -19,6 +19,7 @@ Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
 | `docs/logs/literature-survey/0001_literature_survey_wave_1.md` | Khảo sát literature 2022–2026: kết luận, shortlist RQ1–RQ4, contract sơ bộ | Làm về RQ, baseline, dataset, metric | 100 |
 | `docs/logs/datasets/0001_dataset_scan.md` | Quét dataset theo RDR-0002: shortlist, license, truy cập, telemetry/GT, khuyến nghị | Quyết định dataset cho thí nghiệm | 110 |
 | `refs/README.md` | Danh mục 18 tài liệu tham khảo PDF toàn văn (2021–2026) theo từng RQ | Tra cứu nguồn gốc, tác giả, venue, vai trò | 60 |
+| `docs/research_proposal.md` | Bản thuyết minh đề cương nghiên cứu (Research Proposal) theo template chuẩn | Cần nộp/trình bày đề cương nghiên cứu | 130 |
 
 ## Đường đọc nhanh
 
