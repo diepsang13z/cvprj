@@ -76,6 +76,24 @@ Ba RQ dùng chung pipeline + harness → hợp lệ thành bundle. **Sau đợt 
 
 Đã loại: Mid-Air, MovingDrone, Blackbird (mô phỏng/tổng hợp); VisDrone/UDD (license không rõ/không phù hợp chính).
 
+### Tính độc lập và tương thích giữa Dataset & các RQ
+
+Việc chốt Dataset có thể tiến hành **độc lập** trước khi chốt bộ RQ, vì mọi RQ đều dùng chung định dạng dữ liệu cốt lõi (video/ảnh drone RGB chụp gần nadir).
+
+| Dataset | Tương thích với các RQ nào? | Ràng buộc / Lưu ý |
+|---|---|---|
+| **NPU Drone-Map** | **100% mọi RQ** (RQ1–RQ6, RQE, RQS, RQ4) | Đầy đủ nhất: video gốc, ảnh undistorted, `.SRT`, GPS log, GCPs đo sai số |
+| **DroneZaic** (Dryad) | RQ1, RQ2, RQ3, RQ5, RQ6, RQS | Rất mạnh cho cảnh khó lặp vân (nông nghiệp); telemetry thô |
+| **Aerial234** (HF) | RQ1, RQ2, RQ3, RQ5, RQ7 | Tập ảnh tĩnh (không phải video mượt), không có telemetry |
+| **WHU Aerial Video** | RQ1, RQE, RQ4 | Rất mạnh cho đo drift (RTK + 16 GCP), nhưng cần liên hệ email xin link |
+| **UMCD** | RQ1, RQ2, RQ3, **RQ8 (Change Detection)** | **Bắt buộc nếu chọn RQ8** (10 cặp video bay lặp 2 thời điểm) |
+
+**2 ngoại lệ phụ thuộc duy nhất:**
+1. *Nếu chọn RQ4 (Telemetry / GPS / Yaw):* Cần dataset có file `.SRT`/log GPS $\to$ dùng NPU Drone-Map hoặc WHU; không lấy Aerial234 làm tập chính.
+2. *Nếu chọn RQ8 (Giám sát thay đổi 2 thời điểm):* Cần 2 video bay cùng tuyến $\to$ bắt buộc chọn UMCD.
+
+$\implies$ **Tổ hợp an toàn tuyệt đối:** Chốt **NPU Drone-Map (chính) + DroneZaic (stress)** *(kèm Aerial234)* là đáp ứng 100% mọi bộ RQ (B-1, B-2, B-4, B-5, B-6), không lo bị khoá cứng khi đổi ý.
+
 ## 4. Cần chốt — quyết định
 
 ### A. Chọn hướng nghiên cứu (chọn 1)
