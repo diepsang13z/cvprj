@@ -10,6 +10,8 @@ Dự án xây dựng mosaic ảnh 2D từ video UAV bằng pipeline đặc trưn
 ├── RULES.md                          # Ràng buộc cứng của repository
 ├── STATUS.md                         # Ảnh chụp trạng thái hiện tại
 ├── README.md                         # Tổng quan và cấu trúc repository
+├── data/
+│   └── sample/                       # Dữ liệu ảnh/frame mẫu chạy thử nghiệm
 ├── docs/
 │   ├── INDEX.md                      # Router cho tài liệu context
 │   ├── decisions/                    # Quyết định đã chốt (append-only)
@@ -20,8 +22,8 @@ Dự án xây dựng mosaic ảnh 2D từ video UAV bằng pipeline đặc trưn
 │   ├── README.md                     # Danh mục tài liệu tham khảo
 │   └── *.pdf                         # Toàn văn các bài báo tham khảo
 ├── reports/
-│   └── md/
-│       └── research_proposal.md      # Bản thuyết minh đề cương đã điền nội dung
+│   ├── proposal/                     # Deliverables đề cương (Word, PDF, slide PPTX/PDF)
+│   └── md/                           # Bản markdown (thuyết minh đề cương, kịch bản thuyết trình)
 └── templates/
     └── Research Proposal template.docx # Mẫu Word gốc của đề cương
 ```
