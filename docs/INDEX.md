@@ -1,39 +1,59 @@
-# INDEX — context management
+# Documentation Router (docs/INDEX.md)
 
-Chỉ liệt kê tài liệu context cần để định hướng quyết định và công việc. Cấu trúc dự án, báo cáo và template nằm trong `README.md`.
-Cột "~Dòng" làm tròn, không cần sửa khi lệch vài dòng.
+Router đơn điều hướng toàn bộ tài liệu context. Mọi Agent bắt đầu tra cứu từ file này.
 
-| Context file | Mục đích | Đọc khi nào | ~Dòng |
-|---|---|---|---|
-| `AGENTS.md` | Entry point: tổng quan dự án, quy tắc đọc tài liệu | Luôn (auto-load) | 30 |
-| `RULES.md` | Ràng buộc cứng (200 dòng/file, không tự commit) | Luôn (auto-load) | 25 |
-| `STATUS.md` | Ảnh chụp trạng thái: giai đoạn, RQ, tài liệu, việc tiếp theo | Cần biết đang ở đâu | 50 |
-| `docs/INDEX.md` | Router này | Luôn | 30 |
-| `docs/decisions/0001_stopping_point_for_literature_survey.md` | RDR-0001 (Accepted): điều kiện dừng, không chứa scope hay kế hoạch khảo sát | Cần quyết định tiếp tục, dừng hoặc mở lại khảo sát | 60 |
-| `docs/decisions/0002_choise_dataset.md` | RDR-0002: dataset phải opensource và là dữ liệu drone (UAV) thật | Chọn/thay dataset cho mọi thí nghiệm | 10 |
-| `docs/decisions/0003_confirm_rq_dataset.md` | RDR-0003: Chốt bộ 3 RQ cốt lõi (RQ1-3, hoãn RQ5) và dataset (NPU #1, DroneZaic dự phòng) | Xem định hướng RQs và dataset chính thức | 40 |
-| `docs/logs/literature-survey/0002_novelty_audit_wave_2.md` | Đợt quét targeted novelty 2: evidence matrix, query log, chuỗi existing→gap, trạng thái tạm RQ1–RQ3 | Đánh giá keep/narrow/kill, chuẩn bị đợt quét 3 | 170 |
-| `docs/logs/literature-survey/0003_novelty_audit_wave_3.md` | Đợt quét novelty 3: nhánh rủi ro, sự cố kênh, verdict saturation còn thiếu một vòng | Đánh giá điều kiện dừng RDR-0001 | 50 |
-| `docs/logs/brainstorm/0001_root_project_brainstorm_log.md` | Brainstorm gốc: chọn đề tài, phạm vi MVP, dataset, chuyển sang NCKH | Truy lý do gốc của phạm vi và đề tài | 230 |
-| `docs/logs/brainstorm/0002_project_picture_rq_dataset.md` | Bức tranh tổng thể để chốt: dự án, RQ tạm narrow, dataset ứng viên, 3 quyết định chờ | Chốt RQ và dataset | 110 |
-| `docs/logs/literature-survey/0001_literature_survey_wave_1.md` | Khảo sát literature 2022–2026: kết luận, shortlist RQ1–RQ4, contract sơ bộ | Làm về RQ, baseline, dataset, metric | 100 |
-| `docs/logs/datasets/0001_dataset_scan.md` | Quét dataset theo RDR-0002: shortlist, license, truy cập, telemetry/GT, khuyến nghị | Quyết định dataset cho thí nghiệm | 110 |
-| `refs/README.md` | Danh mục 18 tài liệu tham khảo PDF toàn văn (2021–2026) theo từng RQ | Tra cứu nguồn gốc, tác giả, venue, vai trò | 60 |
+---
+
+## 1. Core Context Files (Cấp file)
+
+- [`README.md`](../README.md) — Điểm vào cho người đọc: đề tài, kiến trúc repo, cấu trúc thư mục.
+- [`RULES.md`](../RULES.md) — Quy tắc vận hành: ngân sách 200 dòng, kỷ luật Git, Single Source of Truth, quy ước đặt tên, luật nhật ký.
+- [`AGENTS.md`](../AGENTS.md) — Định vị đề tài, phạm vi in/out-scope, protocol đọc 5 bước, dataset.
+- [GitHub Issues](https://github.com/diepsang13z/cvprj/issues) — Việc đang mở, người phụ trách, blocker; không chép danh sách việc vào repo.
+- [`refs/INDEX.md`](../refs/INDEX.md) — Danh mục tài liệu tham khảo và thư viện bài báo.
+
+## 2. Decisions (Cấp file)
+
+Thư mục `docs/decisions/` hoạt động append-only (`RDR-NNNN`). Đọc theo chủ đề; quyết định mới chỉ thay quyết định cũ khi ghi rõ phạm vi thay thế.
+
+- [`RDR-0001_stopping_point_for_literature_survey.md`](decisions/RDR-0001_stopping_point_for_literature_survey.md) — Điều kiện dừng khảo sát literature.
+- [`RDR-0002_choise_dataset.md`](decisions/RDR-0002_choise_dataset.md) — Dataset phải opensource và là dữ liệu từ drone (UAV) thật.
+- [`RDR-0003_confirm_rq_dataset.md`](decisions/RDR-0003_confirm_rq_dataset.md) — Chốt 3 RQ cốt lõi và dataset (NPU Drone-Map ưu tiên 1, DroneZaic dự phòng).
+- [`RDR-0004_lecturer_review_after_persen_proposal.md`](decisions/RDR-0004_lecturer_review_after_persen_proposal.md) — Giảm scope SV năm 2: dùng model có sẵn, sample ~10 GB, chạy Colab/Kaggle.
+- [`RDR-0005_finalize_npu_dronemap_dataset.md`](decisions/RDR-0005_finalize_npu_dronemap_dataset.md) — Chốt NPU Drone-Map là dataset duy nhất (loại bỏ DroneZaic do đã cũ).
+
+## 3. Logs & Working Notes (Cấp thư mục)
+
+Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (không áp dụng giới hạn 200 dòng):
+
+- [`notes/glossary.md`](../notes/glossary.md) — Từ điển thuật ngữ thị giác máy tính, xử lý ảnh UAV và khái niệm 3 RQ.
+- [`notes/project_overview.md`](../notes/project_overview.md) — Bức tranh toàn cảnh dự án: bài toán, nguồn lực, RQ và kế hoạch triển khai.
+- [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
+  - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
+- [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
+- [`docs/logs/datasets/`](logs/datasets/) — Quét và phân tích dataset UAV mở.
+- [`docs/logs/brainstorm/`](logs/brainstorm/) — Brainstorm gốc: chọn đề tài, hình dung RQ và dataset.
+
+## 4. Reports & Deliverables (Cấp thư mục)
+
+- `reports/proposal/` — Đề cương đã nộp: Word, PDF, slide PPTX/PDF và asset.
+- `reports/md/` — Bản markdown (thuyết minh đề cương, kịch bản thuyết trình).
+- `templates/` — Mẫu Word gốc của học phần.
+
+---
 
 ## Đường đọc nhanh
 
-- Đang ở đâu, làm gì tiếp: `STATUS.md`.
-- Trạng thái tạm keep/narrow/kill và chuỗi bằng chứng: `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`.
-- Ràng buộc dataset (mở + drone thật): `docs/decisions/0002_choise_dataset.md`.
-- Shortlist dataset và bằng chứng: `docs/logs/datasets/0001_dataset_scan.md`.
-- Đã chốt gì: `docs/decisions/` — file số lớn nhất.
-- Bắt tay vào RQ / baseline / metric: `docs/logs/literature-survey/0001_literature_survey_wave_1.md`.
-- Điều kiện dừng của đợt novelty audit đang chạy: RDR-0001.
-- Vì sao phạm vi bị giới hạn (GPS/IMU, 3D, realtime ngoài học kỳ): `docs/logs/brainstorm/0001_root_project_brainstorm_log.md` mục 8 và 10.
+- Đang ở đâu, làm gì tiếp: [`docs/logs/progress/2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) (hoặc Issues).
+- Đã chốt gì: `docs/decisions/` — file số lớn nhất là mới nhất.
+- Hướng nghiên cứu & RQs: [`RDR-0003_confirm_rq_dataset.md`](decisions/RDR-0003_confirm_rq_dataset.md).
+- Dataset đã chốt: [`RDR-0005_finalize_npu_dronemap_dataset.md`](decisions/RDR-0005_finalize_npu_dronemap_dataset.md) (NPU Drone-Map là dataset duy nhất).
+- Điều kiện dừng novelty audit: [`RDR-0001_stopping_point_for_literature_survey.md`](decisions/RDR-0001_stopping_point_for_literature_survey.md).
+- Vì sao phạm vi bị giới hạn: [`RDR-0004_lecturer_review_after_persen_proposal.md`](decisions/RDR-0004_lecturer_review_after_persen_proposal.md).
+- Trạng thái keep/narrow/kill và chuỗi bằng chứng: `docs/logs/literature-survey/0002_novelty_audit_wave_2.md`.
 
 ## Ghi chú
 
-- `docs/logs/**` là nhật ký thô, miễn giới hạn 200 dòng; mọi file còn lại trong bảng phải ≤ 200 dòng.
+- `docs/logs/**` là nhật ký thô, miễn giới hạn 200 dòng; mọi file còn lại trong router phải ≤ 200 dòng.
 - `docs/decisions/**` append-only: sửa sai bằng file mới, không sửa file cũ.
-- `STATUS.md` ngược lại: ghi đè, chỉ giữ hiện tại.
-- Cấu trúc log: `docs/logs/<topic>/<NNNN>_<slug>.md` (<topic>: kebab-case; <NNNN>: 4 số tăng dần theo topic; <slug>: snake_case).
+- Cấu trúc log: `docs/logs/<chủ-đề>/<NNNN>_<slug>.md` (chủ đề snake_case cho file mới; `<NNNN>` 4 số tăng dần theo chủ đề).
