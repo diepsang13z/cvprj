@@ -42,7 +42,7 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - `reports/proposal/` — Đề cương đã nộp: Word, PDF, slide PPTX/PDF và asset.
 - `reports/md/` — Bản markdown (thuyết minh đề cương, kịch bản thuyết trình).
 - `templates/` — Mẫu Word gốc của học phần.
-
+- `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
 ---
 
 ## Đường đọc nhanh
