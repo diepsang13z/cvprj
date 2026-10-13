@@ -32,6 +32,10 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - [`notes/datasets.md`](../notes/datasets.md) — Dataset của dự án: 14 gói NPU Drone-Map, nội dung ảnh/metadata, thứ tự tải trong ngân sách 10 GB; phân loại toàn bộ mục còn lại trên adv-ci và lý do không dùng.
 - [`notes/orb_sift.md`](../notes/orb_sift.md) — Cơ chế hoạt động và so sánh trực diện hai thuật toán đặc trưng cổ điển (SIFT và ORB).
 - [`notes/models.md`](../notes/models.md) — Danh sách các mô hình và cấu hình chạy thử nghiệm (SIFT/ORB, LightGlue, XFeat, Efficient LoFTR), vai trò trong RQ2 và lưu ý kỹ thuật.
+- [`notes/notebook_01_classical_baseline.md`](../notes/notebook_01_classical_baseline.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 01: Quy trình ghép ảnh cổ điển bằng SIFT và ORB.
+- [`notes/notebook_02_lightglue_pilot.md`](../notes/notebook_02_lightglue_pilot.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 02: Dùng AI LightGlue ghép ảnh ở độ phân giải gốc 1080p.
+- [`notes/notebook_03_all_models.md`](../notes/notebook_03_all_models.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 03: Đấu trường 7 mô hình và phát hiện ca vỡ bản đồ thực tế của EfficientLoFTR.
+- [`notes/detector_matcher.md`](../notes/detector_matcher.md) — Giải thích khái niệm Detector, Matcher và vai trò trung tâm trong 3 RQ của nghiên cứu Failure-Aware Mosaicking.
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
