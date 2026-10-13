@@ -45,6 +45,8 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
 - `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
+- [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot pretrained SIFT/SuperPoint + LightGlue; cài `requirements_learned.txt`, chọn kernel `.venv`, Run All. Đã kiểm tra CPU trên 3 cặp village mỗi cấu hình; chưa đánh giá drift/routing.
+- [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Chạy đủ 7 cấu hình RDR-0006 trên cùng cặp-frame; tự chứa toàn bộ code (adapter, pipeline, báo cáo, kiểm tra), không cần `.py`. Mở `notebooks/outputs/index.html` để vào kết quả.
 ---
 
 ## Đường đọc nhanh

@@ -60,3 +60,22 @@ Bám sát chỉ đạo tại `RDR-0004` và `RDR-0006`:
 1. **Bước 1 (Mô-đun hoá):** Xây dựng interface chuẩn `match_pair(img0, img1, method, **cfg)` trong `src/matcher/`.
 2. **Bước 2 (Pilot test):** Chạy thử từng cấu hình trên tập mẫu nhỏ (~100–200 cặp frame) trích từ các sequence đa dạng của NPU Drone-Map.
 3. **Bước 3 (Ghi nhận số liệu):** Đo đạc đồng thời tỷ lệ inliers, RMSE reprojection, thời gian (tính cả chi phí gate nếu dùng routing) và bộ nhớ tiêu thụ trên cùng một máy để đưa ra kết luận công bằng.
+
+## 5. Pilot đã chạy (2026-10-13)
+
+- `notebooks/02_lightglue_pilot.ipynb` chạy 2 cấu hình LightGlue ở **độ phân giải gốc 1920×1080, không resize**: 3 cặp đầu (`metrics.json` + ảnh nối điểm) và **mosaic 20 frame ở độ phân giải gốc** (`mosaic_sift/`, `mosaic_superpoint/`). Dùng để đối chiếu ảnh hưởng của độ phân giải với notebook 03 (chạy 640 px).
+- `notebooks/03_all_models.ipynb` chạy cả 7 cấu hình, **toàn bộ code nằm trong notebook** (adapter, pipeline, sinh báo cáo, kiểm tra) — không cần file `.py`; chưa chuyển thành package `src/matcher/`.
+- Notebook 03 có **hai tầng**: `pairs/` đo chất lượng khớp cặp frame (3 cặp đầu/sequence), `mosaic/` nối chuỗi 20 frame đầu rồi warp/blend ra bảng đồ hoàn chỉnh cho từng cấu hình. Blend dùng cùng cách với notebook 01 để so sánh được.
+- **Phát hiện đáng chú ý (mosaic tầng 2, village + grass):** cả 7 cấu hình đều báo ghép đủ 20/20 frame, nhưng **EfficientLoFTR cho mosaic hỏng** — canvas bị kéo giãn chéo (1465×626 so với ~650×600 của các cấu hình khác) và chỉ phủ 55,6% canvas (village), 73,4% (grass). Ảnh mosaic xác nhận bị trượt/kéo xiên. Đây là **ca lỗi thật đầu tiên**: từng cặp đều có H "hợp lệ" (2.655–3.040 matches, 2.096+ inliers, RMSE inlier thấp) mà bản đồ vẫn vỡ ⇒ bằng chứng trực tiếp rằng **inlier count/ratio và RMSE inlier không đủ để kết luận ghép đúng**, và sai số tích luỹ mới là vấn đề (đúng tiền đề RQ1/RQ3).
+- Mosaic của 6 cấu hình còn lại đều phủ 95,9–99,6% canvas và nhìn liền mạch khi kiểm tra bằng mắt (sift_bf, orb_bf, xfeat_lighterglue đã xem trực tiếp).
+- Cùng ảnh xử lý 640 × 352, CPU 4 threads, sparse tối đa 2.000 keypoints, RANSAC 3 px; EfficientLoFTR semi-dense không giới hạn 2.000 điểm.
+- EfficientLoFTR dùng bản Transformers `zju-community/efficientloftr`, được README chính thức giới thiệu. Revision model và nguồn XFeat/LightGlue ghi trong manifest.
+- Cài: `uv pip install -r requirements_learned.txt`. Chọn kernel `.venv` rồi Run All notebook 03.
+- `notebooks/outputs/` (gitignore) có một trang vào duy nhất `index.html`, phẳng một cấp, mỗi notebook một thư mục cùng tên: `01_classical_baseline/<sequence>/`, `02_lightglue_pilot/<sequence>/`, `03_all_models/<UTC>/…` (trong đó có `pairs/` và `mosaic/`). Không lồng `outputs/notebooks/notebooks/`, không còn thư mục trung gian tên `runs/`. Ghi đè tên file phải sửa writer, không xoá thư mục.
+- Mở `notebooks/outputs/index.html`; từng run có `index.html`, `summary.csv` (tầng cặp), `mosaic_summary.csv` (tầng mosaic), `manifest.json`, `pairs/<sequence>/<model>/` và `mosaic/<sequence>/<model>/{mosaic.png,metrics.json}`.
+- Sinh lại trang báo cáo mà không chạy lại inference: gọi `rebuild("<thư-mục-run>")` trong cell báo cáo của notebook 03.
+- JSON tầng cặp ghi H từ ảnh sau sang ảnh trước ở hệ pixel đã resize; NPZ giữ correspondences/inlier mask. JSON tầng mosaic ghi `H_to_mosaic` (đã gồm scale + tịnh tiến canvas), kích thước canvas, `canvas_covered_fraction`, chuỗi cặp và lý do dừng nếu có.
+- **Chưa đo drift**: chưa đối chiếu `trajectory.txt`. `canvas_covered_fraction` là tỷ lệ pixel canvas có ảnh, không phải diện tích mặt đất.
+- Timing sau warmup gồm preprocessing/extraction/matching/chuyển điểm về CPU; không gồm tải model, đọc file, RANSAC, vẽ ảnh. Lặp lại cùng cấu hình cho kết quả khác nhau (ví dụ EfficientLoFTR 1,4–2,1 s tuỳ lần chạy), nên không được so trực tiếp với timing notebook 01/02 ở độ phân giải khác.
+- Chưa đo peak RAM/VRAM, chưa đánh giá bằng ground truth và chưa kết luận chất lượng/routing. Trên 3 cặp grass này classical cũng thành công; không được suy diễn LightGlue đã “cứu” classical.
+- Kiểm tra hình học tối thiểu nay nằm ở cell cuối notebook 03 (hướng H, ca thiếu correspondence, đủ 7 cấu hình, JSON nghiêm ngặt); chạy tự động khi Run All.

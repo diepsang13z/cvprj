@@ -1,0 +1,6 @@
+-r requirements.txt
+torch>=2.0
+torchvision>=0.15
+lightglue @ git+https://github.com/cvg/LightGlue.git@eb42fee2d71449efb0aa5c10549752b5d75384d8
+transformers==4.57.6
+tqdm>=4.66

@@ -91,9 +91,9 @@ Cần các định dạng trên → liên hệ tác giả: Shuhui Bu `<bushuhui@
 
 ## 6. Việc cần làm trong repo
 
-1. **Xóa `data/sample/rgb02/`**: đã kiểm tra MD5 — 406/406 file **giống hệt** `data/sample/rgb01/` (byte-identical), chỉ tốn thêm ~252 MB. `rgb01` đủ làm mẫu phát triển baseline.
-2. `data/sample/rgb01/` (406 frame, 1920×1080, cảnh đồng ruộng ven sông) — nhiều khả năng là **phantom3-village** (thumbnail village của dataset và bảng Li et al. 2023 đều là cảnh ruộng, 406 frame; lưu ý factory cũng 406 frame nhưng là cảnh nhà xưởng). Khi tải xong gói tầng 1 thì đối chiếu trực tiếp. **Sample hiện KHÔNG có** `config.cfg`/`trajectory.txt` nên không dùng được để đo drift.
-3. Giải nén về `data/npu/<sequence>/`, **không hardcode đường dẫn** (`AGENTS.md`); loader đọc theo tham số thư mục. `.gitignore` đã thêm dòng `data/` (2026-10-13) → dữ liệu mới giải nén sẽ không lọt vào git. Lưu ý: 812 ảnh `data/sample/` **vẫn đang được git track** (đã commit từ trước, pack 401 MiB) — muốn bỏ khỏi git phải chạy `git rm -r --cached data/sample` (chưa thực hiện, chờ nhóm quyết).
+1. **`data/sample/` đã xoá (2026-10-13):** xác minh bằng SHA-256 — `rgb02` trùng khít `rgb01`, và 406/406 tên file + 406/406 nội dung của `rgb01` trùng khít `data/phantom3-village-kfs/rgb`. Toàn bộ 812 ảnh (~504 MB) không có gì riêng biệt nên đã xoá; dùng trực tiếp sequence thật.
+2. `data/phantom3-village-kfs/` (406 frame, 1920×1080, cảnh đồng ruộng ven sông) **có kèm** `config.cfg` + `trajectory.txt` → dùng được để đo drift, tốt hơn hẳn sample cũ (sample không có metadata).
+3. Giải nén về `data/<sequence>/`, **không hardcode đường dẫn** (`AGENTS.md`); loader đọc theo tham số thư mục. `.gitignore` đã có dòng `data/` (2026-10-13). Lưu ý: 812 ảnh `data/sample/` **vẫn còn trong git index** (đã commit từ trước) dù file đã xoá khỏi working tree — commit kế tiếp sẽ ghi nhận việc xoá; muốn giảm pack phải commit rồi `git gc`.
 4. Dung lượng làm việc dự kiến: 1 sequence ~0.25–0.6 GB; chạy benchmark 5 sequence tầng 1 ~1.7 GB — vừa thoải mái Colab/Kaggle, không cần cắt thêm.
 
 ---
@@ -149,4 +149,4 @@ Trang này là **danh mục source code + dữ liệu** của tác giả (≈25 
 - Trang index: `adv-ci.com/blog/source/` — toàn bộ danh mục source/data.
 - Li et al. 2023 (Remote Sensing 15(8):2127) — bảng sequence dùng thử nghiệm: Phantom3-village/huangqi/factory, số frame.
 - Kiểm tra trực tiếp share Baidu (đã giải mã `pwd`, liệt kê thư mục): 14 file, tổng 4.295,7 MB; hai link `tm5q` và `mji5` trùng nội dung.
-- Kiểm tra cục bộ: `data/sample/` — 812 file, MD5 trùng lặp hoàn toàn giữa `rgb01` và `rgb02`.
+- Kiểm tra cục bộ (2026-10-13): `data/sample/` cũ đã xoá sau khi xác minh SHA-256 trùng hoàn toàn với `data/phantom3-village-kfs/rgb`; 8 sequence `-kfs` đã giải nén đều có `rgb/` + `config.cfg` (+ `trajectory.txt`, trừ centralPark).
