@@ -22,6 +22,7 @@ Thư mục `docs/decisions/` hoạt động append-only (`RDR-NNNN`). Đọc the
 - [`RDR-0004_lecturer_review_after_persen_proposal.md`](decisions/RDR-0004_lecturer_review_after_persen_proposal.md) — Giảm scope SV năm 2: dùng model có sẵn, sample ~10 GB, chạy Colab/Kaggle.
 - [`RDR-0005_finalize_npu_dronemap_dataset.md`](decisions/RDR-0005_finalize_npu_dronemap_dataset.md) — Chốt NPU Drone-Map là dataset duy nhất (loại bỏ DroneZaic do đã cũ).
 - [`RDR-0006_shortlist_models_for_experimentation.md`](decisions/RDR-0006_shortlist_models_for_experimentation.md) — Chốt danh sách cấu hình và mô hình (SIFT/ORB, SIFT/SP+LightGlue, XFeat, Efficient LoFTR) đưa vào chạy thử nghiệm.
+- [`RDR-0007_drift_metric_choice.md`](decisions/RDR-0007_drift_metric_choice.md) — Chốt metric đo drift là **chain vs direct** (tự nhất quán, đơn vị pixel), không phụ thuộc `trajectory.txt`; kèm ngưỡng hợp lệ 100 inlier và mức nền của matcher tham chiếu.
 
 ## 3. Logs & Working Notes (Cấp thư mục)
 
@@ -35,6 +36,7 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - [`notes/notebook_01_classical_baseline.md`](../notes/notebook_01_classical_baseline.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 01: Quy trình ghép ảnh cổ điển bằng SIFT và ORB.
 - [`notes/notebook_02_lightglue_pilot.md`](../notes/notebook_02_lightglue_pilot.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 02: Dùng AI LightGlue ghép ảnh ở độ phân giải gốc 1080p.
 - [`notes/notebook_03_all_models.md`](../notes/notebook_03_all_models.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 03: Đấu trường 7 mô hình và phát hiện ca vỡ bản đồ thực tế của EfficientLoFTR.
+- [`notes/notebook_04_drift_evaluation.md`](../notes/notebook_04_drift_evaluation.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 04: kiểm tra "cầu nối" giữa `trajectory.txt` và ma trận pixel (phát hiện đọc sai thứ tự quaternion; sửa xong cảnh `village` dùng được, cảnh `grass` hỏng), cách đo độ trôi **không cần** file toạ độ, kết quả `efficientloftr` vỡ bản đồ gấp 28–37 lần mức nền, và hai bài học về "nghi thước đo trước khi nghi mô hình".
 - [`notes/detector_matcher.md`](../notes/detector_matcher.md) — Giải thích khái niệm Detector, Matcher và vai trò trung tâm trong 3 RQ của nghiên cứu Failure-Aware Mosaicking.
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
@@ -42,6 +44,7 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - [`docs/logs/datasets/`](logs/datasets/) — Quét và phân tích dataset UAV mở.
   - [`0001_dataset_scan.md`](logs/datasets/0001_dataset_scan.md) — Shortlist dataset ứng viên theo tiêu chí `RDR-0002`.
   - [`0002_npu_dronemap_intro.md`](logs/datasets/0002_npu_dronemap_intro.md) — Hồ sơ dataset đã chốt (NPU Drone-Map): xuất xứ, nội dung, metadata, giới hạn.
+  - [`0003_trajectory_pose_verification.md`](logs/datasets/0003_trajectory_pose_verification.md) — Kiểm chứng quy ước `trajectory.txt`/`Plane=` + mã nguồn tác giả: quaternion theo thứ tự (x, y, z, w); sau khi sửa, cầu nối `village` đạt residual 0,88 px (cả chuỗi 1 → 21 px ≈ 3 m) và `grass` vẫn suy biến. Có mục ĐÍNH CHÍNH các kết luận sai ban đầu.
 - [`docs/logs/brainstorm/`](logs/brainstorm/) — Brainstorm gốc: chọn đề tài, hình dung RQ và dataset.
 
 ## 4. Reports & Deliverables (Cấp thư mục)
@@ -51,6 +54,8 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
 - [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot pretrained SIFT/SuperPoint + LightGlue; cài `requirements_learned.txt`, chọn kernel `.venv`, Run All. Đã kiểm tra CPU trên 3 cặp village mỗi cấu hình; chưa đánh giá drift/routing.
 - [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Chạy đủ 7 cấu hình RDR-0006 trên cùng cặp-frame; tự chứa toàn bộ code (adapter, pipeline, báo cáo, kiểm tra), không cần `.py`. Mở `notebooks/outputs/index.html` để vào kết quả.
+- [`04_drift_evaluation.ipynb`](../notebooks/04_drift_evaluation.ipynb) — **Notebook chẩn đoán**, không xuất bảng drift: kiểm chứng quy ước `trajectory.txt` và `Plane=` bằng ảnh thật, đo sai số tích luỹ, và liệt kê 3 lựa chọn metric để nhóm chốt `RDR`. Chi tiết ở `docs/logs/datasets/0003_trajectory_pose_verification.md`.
+
 ---
 
 ## Đường đọc nhanh

@@ -87,6 +87,22 @@ Bộ NPU Drone-Map **nguồn đầy đủ là 100+ GB** (theo trang chủ: "over
 
 Cần các định dạng trên → liên hệ tác giả: Shuhui Bu `<bushuhui@nwpu.edu.cn>`, Yong Zhao `<zd5945@126.com>`.
 
+### 5.1 Còn gì "cứu được" từ trang tác giả (kiểm chứng 2026-10-13)
+
+Rà lại `adv-ci.com/blog/source/` + `npu-drone-map-dataset/` sau khi gặp bế tắc về tham chiếu drift:
+
+| Mục | Dùng được gì | Có sẵn không |
+|---|---|---|
+| **Mã nguồn Map2DFusion** (`github.com/bushuhui/Map2DFusion`) | **Quyết định nhất**: `src/main.cpp` đọc `trajectory.txt` thành `pi::SE3d`; `PIL/src/base/types/SE3.h` cho biết **quaternion thứ tự $(x,y,z,w)$** và format mỗi dòng là `<tên ảnh> <SE3>`. `Plane=` là một **SE3** (không phải "điểm + pháp tuyến"). Nhờ đó cầu nối pose được sửa và sai số giảm từ 9,97 px xuống 0,88 px | **Có, tải tự do** |
+| **GCP** (`<sequence>-GCPs.zip`) | **Ground truth độc lập thật** (marker id + toạ độ GPS) → hiệu chỉnh/kiểm chứng tuyệt đối, đo được sai số mét | Trang dataset ghi có cho *một số* sequence, nhưng **không nằm trong share Baidu đang dùng** |
+| **`gps.txt`** (format unified) | GPS thô mỗi frame `(timestamp longitude latitude altitude gpsNumber)` → tham chiếu thứ hai độc lập với ảnh | Cần gói **unified**, không có trong link `-kfs` |
+| **`.SRT` / `log.DAT`** (format original) | GPS thô từ Phantom 3 | Cần gói **original** (~100 GB) |
+| **Tham số camera EICAM** | Chốt ngữ nghĩa `config.cfg` | Có link tải riêng trên trang dataset |
+| **Danh sách MD5** | Xác minh file tải về | Trang dataset ghi có |
+| **Link Baidu thứ hai** `pan.baidu.com/s/1kUt2ScR#path=/Dataset/NPU/DroneMap` (trên trang `source/`) | Đường dẫn tới **thư mục cha** `/Dataset/NPU/DroneMap` — có thể chứa cả original/unified/GCPs, khác với share `mji5` chỉ có 14 gói `-kfs` | Cần thử liệt kê |
+
+**Lưu ý quan trọng về nguồn gốc trajectory:** trang dự án Map2DFusion ghi *"A monocular SLAM system is used to estimate camera position and attitude … When GPS information is available, the estimated trajectory is transformed to WGS84 coordinates after time synchronized automatically."* ⇒ `trajectory.txt` trong gói `-kfs` là **quỹ đạo do SLAM tác giả tái dựng** (không phải thiết bị đo độc lập). Vì vậy nó dùng được để **đối chiếu**, không nên coi là ground truth tuyệt đối khi đánh giá phương pháp dựa trên ảnh.
+
 ---
 
 ## 6. Việc cần làm trong repo
