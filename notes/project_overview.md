@@ -19,7 +19,7 @@ Nhóm không ảo tưởng về tài nguyên, bám sát chỉ đạo tại `RDR-
 - **Nhân lực:** Sinh viên năm 2.
 - **Thiết bị:** Laptop cá nhân, không có dàn máy GPU khủng.
 - **Môi trường chạy:** Google Colab / Kaggle miễn phí (chấp nhận giới hạn RAM/GPU theo phiên).
-- **Dữ liệu:** Cắt 1 phần mẫu khoảng 10 GB (~vài nghìn frame) từ dataset chuẩn **NPU Drone-Map** (đã lưu mẫu tại `data/sample/`).
+- **Dữ liệu:** Cắt 1 phần mẫu khoảng 10 GB (~vài nghìn frame) từ dataset chuẩn **NPU Drone-Map**. Hiện có 8 sequence `-kfs` giải nén tại `data/` (~2,6 GB); chạy thử bằng `data/phantom3-village-kfs/`.
 - **Nguyên tắc công nghệ:** Không tự train AI từ đầu. Tận dụng tối đa thuật toán cổ điển (OpenCV) và các mô hình AI mã nguồn mở đã train sẵn tốt nhất hiện nay (SuperPoint, LightGlue).
 
 ---
@@ -67,7 +67,7 @@ Kế hoạch chia thành 4 bước tuần tự, mỗi bước có sản phẩm c
 
 ### Bước 1: Dựng khung ghép ảnh cổ điển (Classical Baseline)
 - Code pipeline cơ bản bằng Python + OpenCV: Đọc ảnh $\rightarrow$ Trích đặc trưng (ORB/SIFT) $\rightarrow$ Khớp điểm $\rightarrow$ RANSAC tính Homography $\rightarrow$ Warp & Blend.
-- Thử nghiệm trên 15–30 frame đầu tại `data/sample/rgb01/`.
+- Thử nghiệm trên 15–30 frame đầu của `data/phantom3-village-kfs/rgb/` (đã xong trong `notebooks/01_classical_baseline.ipynb`).
 - Kết quả cần đạt: Xuất ra được ảnh ghép đầu tiên và file log lưu ma trận toạ độ tích luỹ.
 
 ### Bước 2: Tích hợp Learned Matcher có sẵn (AI Baseline)

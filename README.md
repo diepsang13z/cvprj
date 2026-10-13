@@ -22,15 +22,15 @@ Môn AI2002 — nhóm 09.
 | **2. Research Theory & Notes** | `notes/` | Thuật ngữ, ghi chú lý thuyết |
 | **3. Literature Reference** | `refs/` | Thư viện 18 bài báo toàn văn (PDF), danh mục ở `refs/INDEX.md` |
 | **4. Research Records** | `docs/decisions/`, `docs/logs/` | Quyết định `RDR-NNNN` append-only và nhật ký tiến độ |
-| **5. Deliverables** | `reports/`, `templates/` | Đề cương (Word/PDF/slide) và mẫu môn học |
+| **5. Deliverables & Experiments** | `reports/`, `notebooks/` | Đề cương (Word/PDF/slide), mẫu môn học và thực nghiệm ghép ảnh |
 
 ## Cấu trúc thư mục
 
 | Thư mục | Nội dung |
 | --- | --- |
 | `docs/` | Router (`INDEX.md`), quyết định (`decisions/`), nhật ký (`logs/`) |
-| `notes/` | Thuật ngữ dự án (`glossary.md`) |
+| `notes/` | Thuật ngữ, ghi chú lý thuyết, dataset, mô hình |
 | `refs/` | Thư viện PDF tham khảo, danh mục ở `refs/INDEX.md` |
-| `reports/` | Deliverables: `proposal/` (Word/PDF/slide), `md/` (bản markdown) |
-| `templates/` | Mẫu Word gốc của đề cương |
-| `data/` | Sample frame thử nghiệm (không hardcode vào code) |
+| `reports/` | Deliverables: `proposal/`, `md/` (bản markdown), `templates/` (mẫu môn học) |
+| `notebooks/` | Thực nghiệm ghép ảnh; output ở `notebooks/outputs/` (đã gitignore), vào từ `outputs/index.html` |
+| `data/` | 8 sequence `-kfs` của NPU Drone-Map (đã gitignore, không hardcode đường dẫn) |

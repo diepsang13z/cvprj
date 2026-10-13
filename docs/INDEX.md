@@ -21,6 +21,7 @@ Thư mục `docs/decisions/` hoạt động append-only (`RDR-NNNN`). Đọc the
 - [`RDR-0003_confirm_rq_dataset.md`](decisions/RDR-0003_confirm_rq_dataset.md) — Chốt 3 RQ cốt lõi và dataset (NPU Drone-Map ưu tiên 1, DroneZaic dự phòng).
 - [`RDR-0004_lecturer_review_after_persen_proposal.md`](decisions/RDR-0004_lecturer_review_after_persen_proposal.md) — Giảm scope SV năm 2: dùng model có sẵn, sample ~10 GB, chạy Colab/Kaggle.
 - [`RDR-0005_finalize_npu_dronemap_dataset.md`](decisions/RDR-0005_finalize_npu_dronemap_dataset.md) — Chốt NPU Drone-Map là dataset duy nhất (loại bỏ DroneZaic do đã cũ).
+- [`RDR-0006_shortlist_models_for_experimentation.md`](decisions/RDR-0006_shortlist_models_for_experimentation.md) — Chốt danh sách cấu hình và mô hình (SIFT/ORB, SIFT/SP+LightGlue, XFeat, Efficient LoFTR) đưa vào chạy thử nghiệm.
 
 ## 3. Logs & Working Notes (Cấp thư mục)
 
@@ -29,6 +30,8 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - [`notes/glossary.md`](../notes/glossary.md) — Từ điển thuật ngữ thị giác máy tính, xử lý ảnh UAV và khái niệm 3 RQ.
 - [`notes/project_overview.md`](../notes/project_overview.md) — Bức tranh toàn cảnh dự án: bài toán, nguồn lực, RQ và kế hoạch triển khai.
 - [`notes/datasets.md`](../notes/datasets.md) — Dataset của dự án: 14 gói NPU Drone-Map, nội dung ảnh/metadata, thứ tự tải trong ngân sách 10 GB; phân loại toàn bộ mục còn lại trên adv-ci và lý do không dùng.
+- [`notes/orb_sift.md`](../notes/orb_sift.md) — Cơ chế hoạt động và so sánh trực diện hai thuật toán đặc trưng cổ điển (SIFT và ORB).
+- [`notes/models.md`](../notes/models.md) — Danh sách các mô hình và cấu hình chạy thử nghiệm (SIFT/ORB, LightGlue, XFeat, Efficient LoFTR), vai trò trong RQ2 và lưu ý kỹ thuật.
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
@@ -39,10 +42,11 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 
 ## 4. Reports & Deliverables (Cấp thư mục)
 
-- `reports/proposal/` — Đề cương đã nộp: Word, PDF, slide PPTX/PDF và asset.
-- `reports/md/` — Bản markdown (thuyết minh đề cương, kịch bản thuyết trình).
-- `templates/` — Mẫu Word gốc của học phần.
+- `reports/md/` — Bản markdown (thuyết minh đề cương).
+- `reports/templates/` — Mẫu và hướng dẫn học phần.
 - `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
+- [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot pretrained SIFT/SuperPoint + LightGlue; cài `requirements_learned.txt`, chọn kernel `.venv`, Run All. Đã kiểm tra CPU trên 3 cặp village mỗi cấu hình; chưa đánh giá drift/routing.
+- [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Chạy đủ 7 cấu hình RDR-0006 trên cùng cặp-frame; tự chứa toàn bộ code (adapter, pipeline, báo cáo, kiểm tra), không cần `.py`. Mở `notebooks/outputs/index.html` để vào kết quả.
 ---
 
 ## Đường đọc nhanh
