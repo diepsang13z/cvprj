@@ -1,0 +1,15 @@
+# Dữ liệu dataset (NPU Drone-Map) — không commit vào git, xem notes/datasets.md
+data/
+
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter checkpoints & outputs
+.ipynb_checkpoints/
+outputs/
+notebooks/outputs/

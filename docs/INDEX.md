@@ -28,10 +28,13 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 
 - [`notes/glossary.md`](../notes/glossary.md) — Từ điển thuật ngữ thị giác máy tính, xử lý ảnh UAV và khái niệm 3 RQ.
 - [`notes/project_overview.md`](../notes/project_overview.md) — Bức tranh toàn cảnh dự án: bài toán, nguồn lực, RQ và kế hoạch triển khai.
+- [`notes/datasets.md`](../notes/datasets.md) — Dataset của dự án: 14 gói NPU Drone-Map, nội dung ảnh/metadata, thứ tự tải trong ngân sách 10 GB; phân loại toàn bộ mục còn lại trên adv-ci và lý do không dùng.
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
 - [`docs/logs/datasets/`](logs/datasets/) — Quét và phân tích dataset UAV mở.
+  - [`0001_dataset_scan.md`](logs/datasets/0001_dataset_scan.md) — Shortlist dataset ứng viên theo tiêu chí `RDR-0002`.
+  - [`0002_npu_dronemap_intro.md`](logs/datasets/0002_npu_dronemap_intro.md) — Hồ sơ dataset đã chốt (NPU Drone-Map): xuất xứ, nội dung, metadata, giới hạn.
 - [`docs/logs/brainstorm/`](logs/brainstorm/) — Brainstorm gốc: chọn đề tài, hình dung RQ và dataset.
 
 ## 4. Reports & Deliverables (Cấp thư mục)
@@ -39,7 +42,7 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - `reports/proposal/` — Đề cương đã nộp: Word, PDF, slide PPTX/PDF và asset.
 - `reports/md/` — Bản markdown (thuyết minh đề cương, kịch bản thuyết trình).
 - `templates/` — Mẫu Word gốc của học phần.
-
+- `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
 ---
 
 ## Đường đọc nhanh
