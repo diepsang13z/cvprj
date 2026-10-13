@@ -1,0 +1,25 @@
+"Thực hiện 3 bài present topic thực hiện bất kì
+Log bắt buộc thời gian thực hiện tương ứng trong học kỳ này.
+
+Nộp: training logs + report (bắt buộc theo format IEEE conference, tối thiểu 4 trang - LaTeX). 
+Report cần bao gồm tối thiểu những nội dung chính sau:
++ Introduction: giới thiệu tổng quan về topic đã chọn? tại sao chọn? nhóm đã giải quyết vấn đề gì? có đóng góp như thế nào?
++ Related works: các nhóm tác giả khác đã làm những gì? Từ ưu/khuyết điểm đó thì nhóm đã giải quyết bài toán như thế nào?
++ Methodology: trình bày chi tiết về phương pháp mà nhóm đã đề xuất/ cải tiến,...
++ Experimental and Results: trình bày chi tiết (EDA) về các data mà nhóm đã sử dụng, các metrics đánh giá, cách training/finetune mô hình của nhóm, các kết quả đạt được khi so sánh với các phương pháp khác trên cùng data đó. Cần bao gồm cả phần thảo luận (discussion) về những ưu/nhược điểm của mô hình, ablation study (nếu cần thiết).
++ Conclusion: Tổng kết những gì đã làm, đã đạt được.
++ References (Tài liệu tham khảo). Report cần phải có đầy đủ các trích dẫn liên quan, chỉ những trích dẫn nào có nhắc đến trong bài thì mới có trong mục Tài liệu tham khảo(Ít nhất 30 bài).
+
+Dữ liệu được lấy từ paper"
+
+
+"Present 1: Giới thiệu bài toán và đưa ra đề xuất
+Present 2: Khảo sát đánh giá, có kết quả sơ bộ phương pháp đề xuất
+Present 3: Hoàn thành paper
+
+Có điểm cộng cho bài được
++ accepted
++ minor revision
++ major revision
+
+Tuỳ thuộc vào hội nghị/tạp chí có rank để được cộng điểm cao hay thấp"
