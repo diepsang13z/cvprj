@@ -1,71 +1,82 @@
-# Giải thích Notebook 03: Đấu trường 7 mô hình và phát hiện ca vỡ bản đồ thật
+# Giải thích và audit Notebook 03: Pilot chung cho 7 cấu hình
 
-Tài liệu giải thích file `notebooks/03_all_models.ipynb` theo ngôn ngữ bình dân, trực quan cho sinh viên.
+Đọc cùng [notebook](../notebooks/03_all_models.ipynb).
+Audit 2026-10-14: `ANALYZED` — đọc code/artifact, kiểm tra hình học và hash; chưa chạy lại inference.
 
----
+## 1. Mục đích
 
-## 1. File này sinh ra để làm gì?
+Đặt các cấu hình vào cùng điều kiện xử lý để quan sát matching và mosaic:
+`sift_bf`, `orb_bf`, `sift_lightglue`, `superpoint_lightglue`,
+`xfeat_mnn`, `xfeat_lighterglue`, `efficientloftr`.
+Đây là khảo sát cấu hình pretrained, chưa phải benchmark đủ rộng hoặc xếp hạng mô hình tổng quát.
 
-Đây là **file thực nghiệm lớn nhất và quan trọng nhất** của giai đoạn khảo sát mô hình.
-Thay vì thử lắt nhắt từng cái, notebook này đưa **tất cả 7 cấu hình thuật toán và AI** vào cùng một "đấu trường", ép chúng chạy trên cùng tập dữ liệu, cùng độ phân giải (nén về cạnh 640 pixel để chạy nhanh trên máy cá nhân) và xuất ra báo cáo web HTML đối chiếu toàn diện.
+- Hai sequence: `phantom3-village-kfs`, `phantom3-grass-kfs`.
+- Tầng cặp: 3 cặp đầu mỗi sequence, tổng cộng 42 lần đo cho 7 cấu hình.
+- Tầng mosaic: 20 frame đầu mỗi sequence, tổng cộng 14 mosaic.
+- CPU 4 threads, cạnh dài tối đa 640 px, kích thước làm tròn xuống bội 32.
+- Sparse đặt tối đa 2.000 keypoint; EfficientLoFTR semi-dense không bị ép cùng số correspondence.
 
----
+Không nên gán một sequence luôn “dễ” hoặc “khó”: mức khó phụ thuộc matcher, cửa sổ và phép đo.
 
-## 2. Danh sách 7 "đối thủ" tham gia đấu trường
+## 2. Luồng code và điểm mạnh
 
-1. **`sift_bf`:** SIFT cổ điển của OpenCV (Chuẩn mực truyền thống).
-2. **`orb_bf`:** ORB cổ điển của OpenCV (Tốc độ ánh sáng, siêu nhẹ).
-3. **`sift_lightglue`:** Con lai giữa SIFT truyền thống và AI LightGlue.
-4. **`superpoint_lightglue`:** Bộ đôi AI nổi tiếng của giới thị giác máy tính.
-5. **`xfeat_mnn`:** Mô hình AI siêu nhẹ (CVPR 2024), thiết kế riêng để chạy thời gian thực trên robot/drone.
-6. **`xfeat_lighterglue`:** XFeat kết hợp với phiên bản thu nhỏ của LightGlue (vừa nhanh vừa chính xác).
-7. **`efficientloftr`:** Mô hình AI không cần tìm điểm góc (detector-free, CVPR 2024), chuyên trị các cảnh trơn nhẵn mất chi tiết.
+1. Adapter `load_matcher()` nhận RGB và trả hai mảng điểm trong hệ pixel đầu vào.
+2. `geometry()` dùng RANSAC 3 px, kiểm tra H hữu hạn/hạng 3, đủ inlier và RMSE hữu hạn.
+3. `build_mosaic()` tích lũy H, dừng ở cặp thất bại; `canvas_and_mosaic()` warp/blend 50/50.
+4. `run()` ghi cấu hình, hash ảnh, correspondence, metric, H và ảnh theo từng run UTC riêng.
+5. `write_reports()` xuất HTML/CSV; `rebuild()` dựng lại HTML từ artifact, không chạy model.
 
----
+Warmup tách khỏi timing, revision mô hình ghi trong manifest, không âm thầm fallback CPU khi yêu cầu CUDA.
+Đây là các điểm tốt để kế thừa cho thực nghiệm tiếp theo.
 
-## 3. Hai tầng thực nghiệm trong Code
+## 3. Số liệu phải gắn với run
 
-Code chia làm 2 tầng rõ rệt:
+Run đối chiếu: `notebooks/outputs/03_all_models/20261013T164937_145955Z/`.
+Notebook hiện lưu output cho 9/9 code cell, không lưu exception.
+`mosaic_summary.csv` cho thấy cả 14 trường hợp giữ đủ 20/20 frame.
 
-### Tầng 1: So khớp cặp frame lẻ (`pairs/`)
+| Cấu hình / sequence | Canvas | Phủ canvas |
+|---|---|---|
+| SIFT+BF / `village` | 647×604 | 98,59% |
+| EfficientLoFTR / `village` | 1465×626 | 55,59% |
+| EfficientLoFTR / `grass` | 946×1073 | 73,40% |
 
-- Cho từng mô hình chạy thử trên 3 cặp ảnh đầu tiên của cả 2 cảnh: cảnh dễ (`village` - ruộng đồng) và cảnh khó (`grass` - bãi cỏ trơn nhẵn).
-- Đo đạc: Số điểm nối được, số điểm chuẩn (inliers), sai số RMSE và thời gian tính toán của 1 cặp ảnh.
+Canvas khác thường là tín hiệu cần kiểm tra, không phải metric độ chính xác độc lập.
+Ghép đủ frame không chứng minh đúng hình học; phủ canvas cao cũng không chứng minh mosaic không méo.
+Notebook 04 bổ sung phép đo chain-vs-direct trên run này, nhưng không phải ground truth ngoài thực địa.
 
-### Tầng 2: Nối liên hoàn 20 frame để tạo Full bản đồ (`mosaic/`)
+Chưa đủ bằng chứng quy nguyên nhân riêng cho “sai số góc quay nhỏ tích lũy” hoặc kết luận mô hình
+EfficientLoFTR nói chung không phù hợp: cần tách ảnh hưởng adapter, preprocessing, checkpoint và dữ liệu.
+Quan sát hiện tại hỗ trợ nhu cầu kiểm tra lỗi đăng ký; chưa chứng minh chỉ báo/routing/recovery của RQ1–RQ3.
 
-- Lấy 20 bức ảnh liên tiếp, ép từng mô hình phải nối dồn từ ảnh 1 đến ảnh 20 để tạo ra bức ảnh panorama to đùng.
-- Kiểm tra xem ma trận toạ độ cộng dồn có bị "lệch lạc" làm rách bản đồ hay không.
-- Vẽ toàn bộ 7 bức ảnh bản đồ của từng sequence lên màn hình notebook để mắt người so sánh trực quan.
+## 4. Audit: đã kiểm gì, còn thiếu gì?
 
----
+| Hạng mục | Kết quả audit | Giới hạn |
+|---|---|---|
+| Hình học | Phép tịnh tiến được khôi phục đúng; 3 correspondence bị từ chối | Chưa bao phủ mọi cấu hình suy biến/projective |
+| Blend | Ba ảnh hằng 0/100/200 cho pixel 125 | Đúng blend tuần tự, không phải trung bình đều |
+| Hash đầu vào | 40/40 ảnh hiện tại khớp manifest của run trên | Không tự xác nhận code/checkpoint/môi trường hoàn toàn giống run cũ |
+| Tái lập | Run riêng, manifest, JSON nghiêm ngặt, NPZ giữ điểm | Chưa chạy lặp lại toàn bộ để kiểm tra độ ổn định |
+| Resize | 1920×1080 được đưa về 640×352 | Hai trục có tỷ lệ khác nhau; cần giữ đúng biến đổi tọa độ khi so ảnh gốc |
+| Tiêu chí thành công | H hợp lệ về số học | Không kiểm tra độc lập rằng đăng ký đúng |
+| Thống kê | Mỗi cặp đo một lượt sau warmup | Chưa có khoảng bất định hay benchmark nhiều sequence/cửa sổ |
+| Assertions cuối | Có kiểm tra hình học hữu ích, nhưng ép `frames_stitched >= 2` | Ca thất bại ngay cặp đầu vẫn là kết quả thí nghiệm hợp lệ, không nhất thiết lỗi code |
 
-## 4. Phát hiện "đắt giá" nhất cho bài nghiên cứu (Research Finding)
+`match_seconds` chỉ đo matcher/preprocessing/chuyển điểm về CPU, không gồm RANSAC.
+`chain_total_seconds` gồm matching, RANSAC và dựng mosaic, không gồm đọc ảnh trước đó hoặc ghi kết quả.
+Không so trực tiếp với timing Notebook 01/02 mà bỏ qua khác biệt phạm vi, độ phân giải và điều kiện máy.
+Chưa đo peak RAM/VRAM, điện năng hoặc throughput trên drone.
 
-Khi chạy xong tầng 2, một phát hiện cực kỳ thú vị đã xuất hiện:
+Kiểm tra adapter learned với nguồn upstream/checkpoint độc lập **chưa được thực hiện trong audit này**.
+Vì thế không thể dùng các kiểm tra geometry đã pass để chứng nhận cả 7 adapter đều đúng.
 
-- **6 mô hình đầu tiên (SIFT, ORB, LightGlue, XFeat):** Đều ghép ra bản đồ **rất đẹp, liền mạch**, ruộng đồng thẳng thớm, độ phủ đạt 96% - 99%. Trong đó `orb_bf` và `xfeat_mnn` chạy siêu nhanh (~0.5 - 2 giây cho cả 20 frame).
-- **Riêng `efficientloftr` bị VỠ NÁT BẢN ĐỒ:**
-  - Khung ảnh bị kéo giãn xiên xẹo thành một vệt chéo dị dạng, diện tích phủ tụt xuống chỉ còn **55.6%**.
-  - **Điểm nghịch lý:** Ở Tầng 1, `efficientloftr` báo cáo số liệu **đẹp như mơ** (hơn 2.600 điểm nối, hơn 2.000 điểm inlier, sai số RMSE cực nhỏ). Nhưng khi tích lũy dồn qua 20 frame, sai số góc quay nhỏ tích tụ dần khiến cả bản đồ bị vặn xoắn hoàn toàn!
+## 5. Đọc artifact
 
-> 💡 **Ý nghĩa khoa học:** Đây chính là **bằng chứng thực tế đầu tiên** chứng minh cho câu hỏi nghiên cứu **RQ1** của nhóm: _Chỉ nhìn vào số lượng điểm inlier của từng cặp frame là KHÔNG ĐỦ để kết luận bản đồ có ghép thành công hay không. Phải có cơ chế dự báo rủi ro trôi dạt (drift) tích luỹ._
+- `manifest.json`: cấu hình run, revision và hash ảnh nguồn.
+- `summary.csv`, `mosaic_summary.csv`: bảng CSV, không phải workbook Excel.
+- `pairs/<sequence>/<method>/`: `metrics.json`, ảnh nối điểm và `.npz` correspondence/inlier mask.
+- `mosaic/<sequence>/<method>/`: ảnh mosaic và metrics có `H_to_mosaic`, số frame, lý do dừng.
+- `index.html`: báo cáo; sự tồn tại của trang không thay thế kiểm tra tính đầy đủ của run.
 
----
-
-## 5. Kết quả đầu ra nằm ở đâu?
-
-Toàn bộ kết quả được tự động lưu theo từng mốc thời gian tại:
-`notebooks/outputs/03_all_models/<ngày_giờ>/`
-
-- `index.html`: **Trang web báo cáo tổng hợp** hiển thị đầy đủ bảng biểu so sánh và 28 bức ảnh đối chiếu trực tiếp.
-- `summary.csv`: File Excel số liệu của Tầng 1 (cặp frame).
-- `mosaic_summary.csv`: File Excel số liệu của Tầng 2 (toàn cảnh bản đồ: diện tích, độ phủ, thời gian).
-- `pairs/`: Chứa ảnh nối điểm và file toạ độ `.npz` của từng cặp.
-- `mosaic/`: Chứa file ảnh bản đồ to `mosaic.png` của từng mô hình.
-
----
-
-## 6. Tóm tắt 1 câu
-
-> **Notebook 03 là bài test tổng lực đem cả 7 mô hình ra chạy đua để vừa đo đạc tốc độ/độ chính xác, vừa xuất ra bản đồ toàn cảnh và phát hiện ra ca ghép hỏng thực tế làm bằng chứng cho đề tài.**
+**Kết luận:** tốt làm nền thực nghiệm chung. Cần mở rộng mẫu, đo lặp lại và audit adapter
+trước khi xếp hạng mô hình; notebook chưa được sửa trong lần audit này.

@@ -67,7 +67,7 @@ Kế hoạch chia thành 4 bước tuần tự, mỗi bước có sản phẩm c
 
 ### Bước 1: Dựng khung ghép ảnh cổ điển (Classical Baseline)
 - Code pipeline cơ bản bằng Python + OpenCV: Đọc ảnh $\rightarrow$ Trích đặc trưng (ORB/SIFT) $\rightarrow$ Khớp điểm $\rightarrow$ RANSAC tính Homography $\rightarrow$ Warp & Blend.
-- Thử nghiệm trên 15–30 frame đầu của `data/phantom3-village-kfs/rgb/` (đã xong trong `notebooks/01_classical_baseline.ipynb`).
+- Baseline đã chạy trên 20 frame đầu của `data/phantom3-village-kfs/rgb/` trong `notebooks/01_classical_baseline.ipynb`; chất lượng/giới hạn được ghi ở [note audit 01](notebook_01_classical_baseline.md).
 - Kết quả cần đạt: Xuất ra được ảnh ghép đầu tiên và file log lưu ma trận toạ độ tích luỹ.
 
 ### Bước 2: Tích hợp Learned Matcher có sẵn (AI Baseline)
@@ -81,5 +81,5 @@ Kế hoạch chia thành 4 bước tuần tự, mỗi bước có sản phẩm c
 
 ### Bước 4: Chạy Benchmark diện rộng & Viết báo cáo
 - Chạy toàn bộ pipeline trên tập dữ liệu ~10 GB của NPU Drone-Map trên Colab/Kaggle.
-- Xuất biểu đồ so sánh: Tốc độ (FPS/Latency) vs Chất lượng (RMSE, Inlier Ratio, % Diện tích phủ).
+- Xuất biểu đồ chi phí–chất lượng với phạm vi timing rõ ràng; tách RMSE/inlier nội tại khỏi sai số tham chiếu, và tỷ lệ phủ canvas khỏi diện tích mặt đất. Xem audit [03](notebook_03_all_models.md), [04](notebook_04_drift_evaluation.md), [05](notebook_05_failure_aware_pipeline.md) trước khi dùng số liệu.
 - Đưa số liệu thực nghiệm vào báo cáo nghiệm thu cuối kỳ.

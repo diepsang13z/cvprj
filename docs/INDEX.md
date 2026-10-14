@@ -23,6 +23,7 @@ Thư mục `docs/decisions/` hoạt động append-only (`RDR-NNNN`). Đọc the
 - [`RDR-0005_finalize_npu_dronemap_dataset.md`](decisions/RDR-0005_finalize_npu_dronemap_dataset.md) — Chốt NPU Drone-Map là dataset duy nhất (loại bỏ DroneZaic do đã cũ).
 - [`RDR-0006_shortlist_models_for_experimentation.md`](decisions/RDR-0006_shortlist_models_for_experimentation.md) — Chốt danh sách cấu hình và mô hình (SIFT/ORB, SIFT/SP+LightGlue, XFeat, Efficient LoFTR) đưa vào chạy thử nghiệm.
 - [`RDR-0007_drift_metric_choice.md`](decisions/RDR-0007_drift_metric_choice.md) — Chốt metric đo drift là **chain vs direct** (tự nhất quán, đơn vị pixel), không phụ thuộc `trajectory.txt`; kèm ngưỡng hợp lệ 100 inlier và mức nền của matcher tham chiếu.
+- [`RDR-0008_step_level_metric_and_risk_trigger.md`](decisions/RDR-0008_step_level_metric_and_risk_trigger.md) — **Proposed**: thước đo sai số **cấp bước** (mở rộng `RDR-0007`), 4 chỉ báo rủi ro chính thức, ngưỡng kích hoạt τ_ncc = 0,93 theo ngân sách leo thang 25%, chiến lược phục hồi mặc định là tách submosaic.
 
 ## 3. Logs & Working Notes (Cấp thư mục)
 
@@ -33,14 +34,18 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - [`notes/datasets.md`](../notes/datasets.md) — Dataset của dự án: 14 gói NPU Drone-Map, nội dung ảnh/metadata, thứ tự tải trong ngân sách 10 GB; phân loại toàn bộ mục còn lại trên adv-ci và lý do không dùng.
 - [`notes/orb_sift.md`](../notes/orb_sift.md) — Cơ chế hoạt động và so sánh trực diện hai thuật toán đặc trưng cổ điển (SIFT và ORB).
 - [`notes/models.md`](../notes/models.md) — Danh sách các mô hình và cấu hình chạy thử nghiệm (SIFT/ORB, LightGlue, XFeat, Efficient LoFTR), vai trò trong RQ2 và lưu ý kỹ thuật.
-- [`notes/notebook_01_classical_baseline.md`](../notes/notebook_01_classical_baseline.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 01: Quy trình ghép ảnh cổ điển bằng SIFT và ORB.
-- [`notes/notebook_02_lightglue_pilot.md`](../notes/notebook_02_lightglue_pilot.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 02: Dùng AI LightGlue ghép ảnh ở độ phân giải gốc 1080p.
-- [`notes/notebook_03_all_models.md`](../notes/notebook_03_all_models.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 03: Đấu trường 7 mô hình và phát hiện ca vỡ bản đồ thực tế của EfficientLoFTR.
-- [`notes/notebook_04_drift_evaluation.md`](../notes/notebook_04_drift_evaluation.md) — Hướng dẫn dễ hiểu cho sinh viên về Notebook 04: kiểm tra "cầu nối" giữa `trajectory.txt` và ma trận pixel (phát hiện đọc sai thứ tự quaternion; sửa xong cảnh `village` dùng được, cảnh `grass` hỏng), cách đo độ trôi **không cần** file toạ độ, kết quả `efficientloftr` vỡ bản đồ gấp 28–37 lần mức nền, và hai bài học về "nghi thước đo trước khi nghi mô hình".
+- [`notes/notebook_01_classical_baseline.md`](../notes/notebook_01_classical_baseline.md) — Giải thích và audit baseline SIFT/ORB: luồng ghép, timing, lỗi RMSE bằng 0 khi không có phép đo, thiếu provenance.
+- [`notes/notebook_02_lightglue_pilot.md`](../notes/notebook_02_lightglue_pilot.md) — Giải thích và audit LightGlue: 3 cặp và mosaic 20 frame ảnh gốc; giới hạn timing, độ phủ canvas và kết luận tài nguyên.
+- [`notes/notebook_03_all_models.md`](../notes/notebook_03_all_models.md) — Giải thích và audit pilot 7 cấu hình: run/manifest/hash, kết quả canvas, giới hạn adapter và benchmark.
+- [`notes/notebook_04_drift_evaluation.md`](../notes/notebook_04_drift_evaluation.md) — Giải thích và audit pose + chain-vs-direct: không phải ground truth độc lập, thang đo chưa được ảnh tự xác nhận, đoạn đo `village` tới frame 19 / `grass` tới frame 6.
+- [`notes/notebook_05_failure_aware_pipeline.md`](../notes/notebook_05_failure_aware_pipeline.md) — Giải thích và audit RQ1/RQ2/RQ3 theo report hiện tại: đã sửa crash routing, còn sai Spearman/gate tham chiếu, chưa nối routing–recovery hoặc xác nhận tái lập toàn notebook.
 - [`notes/detector_matcher.md`](../notes/detector_matcher.md) — Giải thích khái niệm Detector, Matcher và vai trò trung tâm trong 3 RQ của nghiên cứu Failure-Aware Mosaicking.
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
+  - [`2026_10_14_diepsang13z.md`](logs/progress/2026_10_14_diepsang13z.md) — Quét 160 bước chọn cửa sổ có lỗi thật, viết Notebook 05 (RQ1/RQ2/RQ3), đề xuất `RDR-0008`.
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
+- [`docs/logs/experiments/`](logs/experiments/) — Nhật ký thực nghiệm dài (quét trước khi thiết kế thí nghiệm).
+  - [`0001_failure_scan_windows.md`](logs/experiments/0001_failure_scan_windows.md) — Nhật ký quét 160 bước × 2 sequence và chọn cửa sổ `village` 80–125 / `grass` 0–45. Đọc kèm audit 05: ghép đủ frame không chứng minh không có lỗi hình học.
 - [`docs/logs/datasets/`](logs/datasets/) — Quét và phân tích dataset UAV mở.
   - [`0001_dataset_scan.md`](logs/datasets/0001_dataset_scan.md) — Shortlist dataset ứng viên theo tiêu chí `RDR-0002`.
   - [`0002_npu_dronemap_intro.md`](logs/datasets/0002_npu_dronemap_intro.md) — Hồ sơ dataset đã chốt (NPU Drone-Map): xuất xứ, nội dung, metadata, giới hạn.
@@ -52,9 +57,10 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
 - `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
-- [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot pretrained SIFT/SuperPoint + LightGlue; cài `requirements_learned.txt`, chọn kernel `.venv`, Run All. Đã kiểm tra CPU trên 3 cặp village mỗi cấu hình; chưa đánh giá drift/routing.
-- [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Chạy đủ 7 cấu hình RDR-0006 trên cùng cặp-frame; tự chứa toàn bộ code (adapter, pipeline, báo cáo, kiểm tra), không cần `.py`. Mở `notebooks/outputs/index.html` để vào kết quả.
-- [`04_drift_evaluation.ipynb`](../notebooks/04_drift_evaluation.ipynb) — **Notebook chẩn đoán**, không xuất bảng drift: kiểm chứng quy ước `trajectory.txt` và `Plane=` bằng ảnh thật, đo sai số tích luỹ, và liệt kê 3 lựa chọn metric để nhóm chốt `RDR`. Chi tiết ở `docs/logs/datasets/0003_trajectory_pose_verification.md`.
+- [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot SIFT/SuperPoint + LightGlue: 3 cặp và mosaic 20 frame ảnh gốc; chưa đánh giá drift/routing trong notebook này.
+- [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Pilot 7 cấu hình RDR-0006: cặp-frame và mosaic, run riêng với manifest/hash; không phải benchmark đủ rộng.
+- [`04_drift_evaluation.ipynb`](../notebooks/04_drift_evaluation.ipynb) — Chẩn đoán trajectory/plane **và** xuất `drift_selfconsistent.json` theo chain-vs-direct. Xem audit 04 trước khi diễn giải thang đo hoặc so sánh đoạn đo.
+- [`05_failure_aware_pipeline.ipynb`](../notebooks/05_failure_aware_pipeline.ipynb) — Phân tích chỉ báo, mô phỏng routing và thử recovery riêng; chưa nối end-to-end. Kết quả ở `notebooks/outputs/05_failure_aware/`; phương pháp trong RDR-0008 còn Proposed.
 
 ---
 

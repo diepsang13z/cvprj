@@ -64,13 +64,13 @@ Cộng cả 3 tầng = **4.29 GB < 10 GB** → không cần đánh đổi; chỉ
 ```
 <sequence>/                      (giải nén từ <sequence>-kfs.tar.gz)
 ├── rgb/                         ảnh keyframe undistorted, tên = unix timestamp
-├── trajectory.txt               pose từng keyframe: rotation + translation (ground truth quỹ đạo)
+├── trajectory.txt               pose từng keyframe: rotation + translation do SLAM tái dựng
 └── config.cfg                   thông số camera nội tại (định dạng Svar/EICAM)
 ```
 
-- **`trajectory.txt` = mấu chốt của dự án:** là pose ground truth để đo **drift tích luỹ** (so $H_{0\to t}$ dựng lại từ pipeline với quỹ đạo chuẩn) — đúng yêu cầu "lưu ma trận homography tích luỹ + log metric" trong `AGENTS.md`.
-- **Không được xóa/để lại rời `config.cfg` và `trajectory.txt`** khi copy `rgb/` vào thư mục làm việc: mất metadata là mất khả năng đo drift.
-- Chưa kiểm chứng trực tiếp nội dung archive (Baidu chặn tải ngoài client/không có tài khoản) — mô tả trên là theo trang chủ dataset + video demo Map2DFusion.
+- **`trajectory.txt` là nguồn đối chiếu**, không phải ground truth đo độc lập. Metric chính đã chốt ở RDR-0007 là chain-vs-direct từ ảnh; xem [audit Notebook 04](notebook_04_drift_evaluation.md) về giới hạn tham chiếu và thang đo.
+- **Giữ `config.cfg` và `trajectory.txt` đi cùng `rgb/`** để giữ provenance và khả năng chẩn đoán pose/camera. Thiếu trajectory không ngăn phép đo chain-vs-direct, nhưng thiếu metadata làm mất các phép đối chiếu liên quan.
+- Mô tả gói dựa trên trang tác giả; audit notebook đã đọc dữ liệu giải nén `village`/`grass`, không xác minh toàn bộ nội dung 14 archive.
 
 ---
 

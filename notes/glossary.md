@@ -39,12 +39,12 @@ Tài liệu giải thích các thuật ngữ chuyên ngành thị giác máy tí
 | **Failure Prediction (RQ1)** | Dự báo lỗi đăng ký hình học | Khả năng tính toán các **chỉ báo rẻ** (blur score, số inliers, độ bao phủ không gian, sai số chiếu lại) ngay sau khi khớp frame để dự đoán xem ma trận $H$ này có làm hỏng bản đồ tích luỹ về sau không. |
 | **Reprojection Error (RE)** | Sai số chiếu lại | Khoảng cách Euclidean (tính bằng pixel) giữa toạ độ điểm thực tế trên ảnh 2 và toạ độ điểm từ ảnh 1 được chiếu qua ma trận $H$. |
 | **Cumulative Drift** | Sai số trôi tích luỹ (Drift) | Hiện tượng sai số nhỏ ở từng cặp frame nhân dồn qua thời gian ($H_{0 \to t}$), khiến các frame sau cùng bị bóp méo, lệch vị trí hàng chục mét hoặc biến dạng hình thang cực độ. |
-| **Matcher Routing / Risk Gate (RQ2)** | Cơ chế phân luồng bộ khớp theo rủi ro | Chiến lược chạy bộ khớp cổ điển (ORB/SIFT) trước; chỉ khi Gate phát hiện frame có rủi ro thất bại cao mới kích hoạt AI nặng (SIFT + LightGlue) để cứu, giúp tối ưu cả tốc độ lẫn chất lượng. |
+| **Matcher Routing / Risk Gate (RQ2)** | Cơ chế phân luồng bộ khớp theo rủi ro | Chạy matcher cổ điển trước, chỉ gọi learned matcher khi bị gắn cờ rủi ro. Mục tiêu là cân bằng chi phí và chất lượng, không bảo đảm learned matcher luôn tốt hơn; Notebook 05 đang mô phỏng chính sách này. |
 | **Pareto Frontier** | Biên tối ưu Pareto | Đường cong thể hiện sự đánh đổi tối ưu: không thể tăng thêm chất lượng mosaic mà không chấp nhận độ trễ (latency) cao hơn. |
-| **Confidence-Triggered Recovery (RQ3)** | Phục hồi theo mức tin cậy | Hành động ứng phó tự động khi cả classical và learned matcher đều không đạt độ tin cậy: |
+| **Confidence-Triggered Recovery (RQ3)** | Phục hồi theo mức tin cậy | Chiến lược xử lý bước ghép bị gắn cờ. Thiết kế có thể đặt sau routing; Notebook 05 hiện so recovery với matcher cố định, chưa nối sau learned escalation. |
 | ↳ **Frame Rejection** | Loại bỏ khung hình | Bỏ hẳn frame hiện tại, không ghép vào bản đồ để tránh làm "nhiễm độc" ma trận tích luỹ; chờ frame kế tiếp. |
 | ↳ **Keyframe Rematching / Backoff** | Khớp lại với Keyframe lịch sử | Thay vì ghép với frame liền kề $t-1$, hệ thống tìm trong bộ nhớ các Keyframe cũ có vùng phủ chồng lấn để ghép trực tiếp, ngắt đứt chuỗi tích luỹ lỗi. |
-| ↳ **Submosaic / Mini-mosaic Splitting** | Tách cụm bản đồ con | Khi phát hiện chuyển động quay gắt hoặc mất dấu kéo dài: đóng cụm mosaic hiện tại lại, mở một Submosaic mới độc lập, sau đó ghép nối các Submosaic ở tầng cao hơn. |
+| ↳ **Submosaic / Mini-mosaic Splitting** | Tách cụm bản đồ con | Đóng cụm hiện tại và mở cụm mới với hệ tọa độ riêng khi rủi ro cao. Notebook 05 chưa ghép nối các cụm ở tầng cao hơn; giữ mọi frame không đồng nghĩa tạo được một bản đồ liên tục. |
 
 ---
 
@@ -56,5 +56,5 @@ Tài liệu giải thích các thuật ngữ chuyên ngành thị giác máy tí
 | **RTK (Real-Time Kinematic)** | Định vị vi sai thời gian thực | Công nghệ GPS độ chính xác cao (sai số $1\text{--}3\text{ cm}$) gắn trên drone chuyên dụng, giúp biết chính xác toạ độ tâm chụp của từng frame. |
 | **Telemetry (.SRT / EXIF log)** | Dữ liệu đo xa / Nhật ký bay | File phụ đề/metadata đi kèm video drone chứa toạ độ GPS, độ cao (altitude), vận tốc, và các góc quay camera (yaw, pitch, roll) theo từng mili-giây. |
 | **Georeferencing** | Định vị địa lý (Gắn toạ độ) | Quá trình gán hệ toạ độ thực (WGS84, UTM, VN-2000) vào từng pixel của ảnh mosaic. *(Dự án hiện tại là bản đồ cục bộ, không bắt buộc georeference).* |
-| **RMSE (Root Mean Square Error)** | Sai số căn bậc hai trung bình | Thước đo độ lệch chuẩn hình học giữa toạ độ điểm trên bản đồ mosaic và toạ độ mặt đất chuẩn (Ground Truth). |
+| **RMSE (Root Mean Square Error)** | Sai số căn bậc hai trung bình | Căn của trung bình bình phương sai số; phải nêu sai số giữa đại lượng nào và trong hệ tọa độ nào. RMSE inlier trong các notebook là reprojection error trên chính điểm dùng fit H, không phải sai số so với ground truth mặt đất. |
 | **SSIM / PSNR** | Độ tương đồng cấu trúc & Tỷ số tín hiệu/nhiễu | Các chỉ số chất lượng ảnh: **SSIM** (0 đến 1) đo độ sắc nét và cấu trúc vân bề mặt; **PSNR** (dB) đo độ nhiễu và biến dạng màu sắc tại vùng giáp ranh. |
