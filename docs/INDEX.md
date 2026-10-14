@@ -25,6 +25,7 @@ Thư mục `docs/decisions/` hoạt động append-only (`RDR-NNNN`). Đọc the
 - [`RDR-0007_drift_metric_choice.md`](decisions/RDR-0007_drift_metric_choice.md) — Chốt metric đo drift là **chain vs direct** (tự nhất quán, đơn vị pixel), không phụ thuộc `trajectory.txt`; kèm ngưỡng hợp lệ 100 inlier và mức nền của matcher tham chiếu.
 - [`RDR-0008_step_level_metric_and_risk_trigger.md`](decisions/RDR-0008_step_level_metric_and_risk_trigger.md) — **Proposed**: thước đo sai số **cấp bước** (mở rộng `RDR-0007`), 4 chỉ báo rủi ro chính thức, ngưỡng kích hoạt τ_ncc = 0,93 theo ngân sách leo thang 25%, chiến lược phục hồi mặc định là tách submosaic.
 - [`RDR-0009_reference_list_scope.md`](decisions/RDR-0009_reference_list_scope.md) — Không áp đặt hạn mức cứng $\ge 30$ tài liệu tham khảo; ưu tiên trích dẫn thực chất, tinh gọn 15–22 bài nòng cốt đã đọc và phân loại trong `refs/INDEX.md`.
+- [`RDR-0010_presentation_feedback_actions.md`](decisions/RDR-0010_presentation_feedback_actions.md) — Tiếp thu góp ý sau buổi thuyết trình: cấm chạy CPU máy cá nhân (chuyển 100% sang Colab/Kaggle + lưu log), làm lại Related Work chi tiết (hiện trạng / thiếu sót / chứng minh ưu việt), chuẩn hóa format paper & ref theo chuẩn IEEE qua Google Scholar, vẽ baseline vào paper, bổ sung phần phương pháp đo lường (metrics).
 
 ## 3. Logs & Working Notes (Cấp thư mục)
 
@@ -58,6 +59,7 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
 - [`reports/paper/`](../reports/paper/) — **Bản nháp bài báo IEEE**, hai bản cùng số liệu: `main.tex` → `main.pdf` (tiếng Anh) và `main_vi.tex` → `main_vi.pdf` (tiếng Việt, cần font Times New Roman của Windows vì font trong bundle TeX không có dấu). Hình dữ liệu: `make_figures.py` (biểu đồ từ `report.json`) và `make_mosaics.py` (ảnh mosaic phát lại homography đã lưu, tự kiểm tra drift khớp `report.json` trước khi ghi ảnh). **Quy ước trình bày:** không dùng dấu gạch dài (em dash); `check_tables.py` là cổng kiểm tra bắt buộc, đối chiếu mọi con số trong 3 bảng với `report.json`, đối chiếu cột "Chiều" với `INDICATOR_SUSPICION` trong notebook, và chặn em dash. Đọc kèm mục Limitations; `RDR-0008` còn Proposed nên ngưỡng $\tau$ trong bài là đề xuất, chưa phải kết luận đã chốt của nhóm.
+  - [`reports/paper/presentation_script.md`](../reports/paper/presentation_script.md) — Kịch bản thuyết trình paper 3–5 phút cho nhóm báo cáo với GVHD kèm bảng tra cứu số liệu nhanh.
 - [`reports/present_02/`](../reports/present_02/) — Slide Present 2, hai bản: `open_slide/` (deck open-slide 12 trang, có speaker notes + export PDF/PPTX, chạy `pnpm dev`) và `index.html` (bản offline mở bằng trình duyệt). Chi tiết ở `README.md` trong thư mục.
 - `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
 - [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot SIFT/SuperPoint + LightGlue: 3 cặp và mosaic 20 frame ảnh gốc; chưa đánh giá drift/routing trong notebook này.
