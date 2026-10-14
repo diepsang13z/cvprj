@@ -38,11 +38,11 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - [`notes/notebook_02_lightglue_pilot.md`](../notes/notebook_02_lightglue_pilot.md) — Giải thích và audit LightGlue: 3 cặp và mosaic 20 frame ảnh gốc; giới hạn timing, độ phủ canvas và kết luận tài nguyên.
 - [`notes/notebook_03_all_models.md`](../notes/notebook_03_all_models.md) — Giải thích và audit pilot 7 cấu hình: run/manifest/hash, kết quả canvas, giới hạn adapter và benchmark.
 - [`notes/notebook_04_drift_evaluation.md`](../notes/notebook_04_drift_evaluation.md) — Giải thích và audit pose + chain-vs-direct: không phải ground truth độc lập, thang đo chưa được ảnh tự xác nhận, đoạn đo `village` tới frame 19 / `grass` tới frame 6.
-- [`notes/notebook_05_failure_aware_pipeline.md`](../notes/notebook_05_failure_aware_pipeline.md) — Giải thích và audit RQ1/RQ2/RQ3 theo report hiện tại: đã sửa crash routing, còn sai Spearman/gate tham chiếu, chưa nối routing–recovery hoặc xác nhận tái lập toàn notebook.
+- [`notes/notebook_05_failure_aware_pipeline.md`](../notes/notebook_05_failure_aware_pipeline.md) — Giải thích và audit RQ1/RQ2/RQ3 (mục 9: đính chính sau khi sửa lỗi tính toán và chạy lại toàn notebook): gate tham chiếu 100 inlier đã áp thật, AUC một chiều khai báo trước, drift kiểm bằng replay; còn lại: assertion nghiên cứu, ngân sách τ khi không ngưỡng nào hợp lệ, latency chỉ tính matcher.
 - [`notes/detector_matcher.md`](../notes/detector_matcher.md) — Giải thích khái niệm Detector, Matcher và vai trò trung tâm trong 3 RQ của nghiên cứu Failure-Aware Mosaicking.
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
-  - [`2026_10_14_diepsang13z.md`](logs/progress/2026_10_14_diepsang13z.md) — Quét 160 bước chọn cửa sổ có lỗi thật, viết Notebook 05 (RQ1/RQ2/RQ3), đề xuất `RDR-0008`.
+  - [`2026_10_14_diepsang13z.md`](logs/progress/2026_10_14_diepsang13z.md) — Quét 160 bước chọn cửa sổ có lỗi thật, viết Notebook 05 (RQ1/RQ2/RQ3), đề xuất `RDR-0008`, sửa lỗi tính toán và chạy lại Notebook 05.
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
 - [`docs/logs/experiments/`](logs/experiments/) — Nhật ký thực nghiệm dài (quét trước khi thiết kế thí nghiệm).
   - [`0001_failure_scan_windows.md`](logs/experiments/0001_failure_scan_windows.md) — Nhật ký quét 160 bước × 2 sequence và chọn cửa sổ `village` 80–125 / `grass` 0–45. Đọc kèm audit 05: ghép đủ frame không chứng minh không có lỗi hình học.

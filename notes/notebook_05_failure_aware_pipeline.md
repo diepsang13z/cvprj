@@ -8,10 +8,10 @@ Tài liệu phân biệt ý tưởng, số liệu đã lưu và kết luận cò
 | Trường | Giá trị |
 |---|---|
 | Origin Skill / Mode | `experiment-agent` / `validate` |
-| Origin Date / Version Label | 2026-10-14 / `validation_v2` |
-| Verification Status | `ANALYZED` — kiểm tra cô lập và artifact, chưa tái chạy toàn thí nghiệm |
-| Overall Confidence | `RED_FLAG` — có lỗi tính toán và giới hạn phương pháp |
-| Report đối chiếu | `notebooks/outputs/05_failure_aware/report.json`, stamp `20261014T062804_316326Z` |
+| Origin Date / Version Label | 2026-10-14 / `validation_v2` → `validation_v3` (mục 9) |
+| Verification Status | `VERIFIED` — notebook chạy lại trọn từ trên xuống sau khi sửa lỗi (mục 9) |
+| Overall Confidence | `AMBER` — lỗi tính toán đã sửa và có self-check; giới hạn phương pháp ở mục 7 vẫn nguyên |
+| Report đối chiếu | `notebooks/outputs/05_failure_aware/report.json`, stamp `20261014T070805_406984Z` |
 | Quyết định phương pháp | [RDR-0008](../docs/decisions/RDR-0008_step_level_metric_and_risk_trigger.md), **Proposed** |
 
 ## 1. Notebook làm gì và chưa làm gì?
@@ -165,3 +165,34 @@ Chưa sửa các lỗi còn lại hoặc phê chuẩn ngưỡng trong RDR-0008.
 **Ưu tiên:** sửa tính đúng và gate tham chiếu → chạy lại có provenance nhất quán →
 đánh giá sequence giữ riêng → đo latency đầy đủ và routing nối recovery.
 Notebook là thực nghiệm khám phá ba RQ, chưa phải lời giải hoàn chỉnh cho UAV thực tế.
+
+## 9. ĐÍNH CHÍNH sau khi sửa lỗi tính toán (2026-10-14, `validation_v3`)
+
+Các mục dưới đây **thay thế** phát hiện tương ứng ở trên; phần audit gốc giữ nguyên để đối chiếu.
+Notebook đã chạy lại trọn từ trên xuống (`report.json` stamp `20261014T070805_406984Z`), nên mọi bảng mục 4–6
+phải đọc lại theo artifact mới.
+
+| Lỗi ở bản `validation_v2` | Cách sửa trong notebook | Kết quả sau khi sửa |
+|---|---|---|
+| `report.json` còn số Spearman của bản cũ (`village`/SIFT/NCC = −0,6262) dù code đã đúng | sinh lại artifact bằng một lần chạy trọn, có self-check trước khi ghi | ρ = -0,6358 (đúng như audit tính lại) |
+| `MIN_INLIERS = 100` chỉ khai báo, assertion kiểm 30 | cổng tham chiếu áp thật: bước dưới ngưỡng **bị loại khỏi RQ1** (`n_invalid_reference`), vẫn giữ trong chuỗi RQ2/RQ3 và đếm `reference_invalid_used`; in cảnh báo khi quét | `grass` loại 7 bước (min 60 inlier), `village` loại 0 |
+| AUC lấy `max(AUC, 1−AUC)` sau khi đã nhìn nhãn | chiều từng chỉ báo khai báo trước (`INDICATOR_SUSPICION`); AUC < 0,5 = tách ngược chiều kỳ vọng | `matches` 0,402 và `inliers` 0,409 — thấp hơn 0,5, tức **ngược chiều**, không còn 0,598/0,591 |
+| `chain_from_steps()` ném `KeyError` khi row lỗi thiếu H | dừng chuỗi, ghi `chained_steps`; assertion buộc chuỗi RQ2 nối hết bước | không còn đường ném lỗi; chuỗi nối đủ 45 bước |
+| `try_anchor()` có thể chọn frame **chưa đặt** vào bản đồ (tra `H_to_root` -> `KeyError` hoặc drift sai gốc) | chỉ neo vào các frame **đã đặt** gần nhất, bỏ frame vừa ghép hỏng | ca `placed=[0,2]` không còn thử frame 1 |
+| Assertion "drift ≤ tổng sai số các bước" sai tổng quát (H co giãn được) | thay bằng phép replay: mọi bước đặt bằng **đúng H tham chiếu** -> drift phải bằng 0, kiểm cho cả chuỗi RQ2 lẫn pipeline RQ3 | lưới bắt lỗi trộn hệ toạ độ vẫn còn, nhưng đúng về toán |
+| `scan_*.json` ghi giữa chừng, `report.json` ghi cuối -> chạy lỗi để lại artifact trộn hai lần chạy | mọi artifact ghi **một lần ở cell cuối**, sau các self-check | file trên đĩa luôn cùng một lần chạy |
+
+Số liệu sau khi sửa (cửa sổ `village`, 45 bước, cùng ngưỡng): chỉ-SIFT 3,2 s / 75,3 px; chỉ SuperPoint+LightGlue
+60,4 s / 82,4 px; phân luồng τ = 0,93 leo thang 16% số bước -> 13,3 s / 28,5 px; leo thang ở ảnh gốc 73,6 s / 35,8 px.
+RQ3 (matcher cố định, cùng τ = 0,93): `village`/SIFT giữ 46/46 frame khi không cứu, drop 14, anchor 14,
+split 46 frame / 8 mảnh; `grass`/EfficientLoFTR: split 46 frame / 45 mảnh.
+
+**Liên quan `RDR-0008` (Proposed) — không sửa vì RDR append-only:** AUC/thời gian RDR trích thuộc lần chạy cũ và
+**chiều AUC đã bị lật** (`matches`/`inliers` nay 0,402/0,409 -> kết luận "loại khỏi vai trò chỉ báo" **mạnh hơn**);
+mọi con số chất lượng giữ nguyên (0,770–0,855; drift 28,5 px; 1,49 px so với 4,51 px), chỉ thời gian lệch ~10%.
+
+**Còn lại chưa sửa** (không phải lỗi tính toán, phải nêu khi báo cáo): assertion ở mục 7 vẫn là *kỳ vọng
+nghiên cứu* nên sẽ vỡ ở sequence khác; `choose_tau()` vẫn im lặng rơi về `TAU_NCC` khi không ngưỡng nào
+nằm trong ngân sách; đồng hồ RQ2 chỉ tính thời gian matcher, chưa gồm RANSAC/warp/quyết định risk;
+`try_anchor` sau khi sửa vẫn chưa được thiết kế thành “buộc nhận sau N lần bỏ” nên cascade bỏ frame
+vẫn chưa được chặn.
