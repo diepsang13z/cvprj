@@ -57,7 +57,8 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
-- [`reports/present_02/`](../reports/present_02/) — Bản trình chiếu tương tác Present 2 (`index.html`), chuẩn 16:9 responsive kèm ảnh thực nghiệm trích từ Notebook 03 và 05.
+- [`reports/paper/`](../reports/paper/) — **Bản nháp bài báo IEEE**, hai bản cùng số liệu: `main.tex` → `main.pdf` (tiếng Anh) và `main_vi.tex` → `main_vi.pdf` (tiếng Việt, cần font Times New Roman của Windows vì font trong bundle TeX không có dấu). Hình dữ liệu: `make_figures.py` (biểu đồ từ `report.json`) và `make_mosaics.py` (ảnh mosaic phát lại homography đã lưu, tự kiểm tra drift khớp `report.json` trước khi ghi ảnh). **Quy ước trình bày:** không dùng dấu gạch dài (em dash); `check_tables.py` là cổng kiểm tra bắt buộc, đối chiếu mọi con số trong 3 bảng với `report.json`, đối chiếu cột "Chiều" với `INDICATOR_SUSPICION` trong notebook, và chặn em dash. Đọc kèm mục Limitations; `RDR-0008` còn Proposed nên ngưỡng $\tau$ trong bài là đề xuất, chưa phải kết luận đã chốt của nhóm.
+- [`reports/present_02/`](../reports/present_02/) — Slide Present 2, hai bản: `open_slide/` (deck open-slide 12 trang, có speaker notes + export PDF/PPTX, chạy `pnpm dev`) và `index.html` (bản offline mở bằng trình duyệt). Chi tiết ở `README.md` trong thư mục.
 - `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
 - [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot SIFT/SuperPoint + LightGlue: 3 cặp và mosaic 20 frame ảnh gốc; chưa đánh giá drift/routing trong notebook này.
 - [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Pilot 7 cấu hình RDR-0006: cặp-frame và mosaic, run riêng với manifest/hash; không phải benchmark đủ rộng.
