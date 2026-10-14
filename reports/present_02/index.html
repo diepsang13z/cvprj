@@ -400,9 +400,13 @@
     <!-- SLIDE 1: Title -->
     <div class="slide title-slide active" data-slide="1">
       <div class="slide-badge">BÁO CÁO TIẾN ĐỘ PRESENT 2 · DAP391M</div>
-      <h1 class="title-hero">Failure-Aware and Resource-Adaptive<br>2D Aerial Mosaicking from UAV Video</h1>
+      <h1 class="title-hero">Failure-Aware & Resource-Adaptive<br>2D Aerial Mosaicking from UAV Video</h1>
+      <div style="font-size: 20px; color: var(--text); font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <span style="color: var(--success); font-family: var(--font-mono); font-size: 14px; font-weight: 700; background: rgba(16, 185, 129, 0.15); padding: 3px 8px; border-radius: 4px;">TẠM DỊCH</span>
+        <span>Ghép ảnh 2D từ video UAV tự nhận biết lỗi và thích ứng tài nguyên</span>
+      </div>
       <p class="title-sub">
-        Khảo sát đánh giá độ bền vững của các bộ ghép đặc trưng và đề xuất giải pháp ghép ảnh UAV thích ứng rủi ro trên máy tính cá nhân
+        Làm sao dán hàng trăm bức ảnh rời rạc từ flycam thành 1 bản đồ lớn mà không bị méo, không làm đơ máy tính, và tự cứu vãn bản đồ khi bay qua địa hình hiểm trở?
       </p>
 
       <div class="meta-box">
@@ -416,7 +420,7 @@
         </div>
         <div class="meta-item">
           <span class="meta-label">Trạng thái thực nghiệm</span>
-          <span class="meta-val" style="color: var(--accent);">Hoàn tất Notebook 01–05 (Verified)</span>
+          <span class="meta-val" style="color: var(--accent);">Hoàn tất Notebook 01-05 (Verified)</span>
         </div>
       </div>
     </div>
@@ -501,7 +505,7 @@
           </p>
           <ul class="card-text" style="padding-left: 18px; font-size: 14px;">
             <li><span style="color: var(--success);">Ưu:</span> Khớp bền vững vùng ít vân, góc xoay lớn.</li>
-            <li><span style="color: var(--danger);">Nhược:</span> Nặng gấp 10–20× trên CPU; nếu mô hình vỡ (EfficientLoFTR) thì sai số cực nặng.</li>
+            <li><span style="color: var(--danger);">Nhược:</span> Nặng gấp 10-20× trên CPU; nếu mô hình vỡ (EfficientLoFTR) thì sai số cực nặng.</li>
           </ul>
         </div>
 
@@ -522,7 +526,7 @@
       <div class="slide-header">
         <div>
           <div class="slide-badge">03 · DỮ LIỆU THỰC NGHIỆM</div>
-          <h2 class="slide-title">Phân tích Đặc trưng Dữ liệu (EDA) — NPU Drone-Map</h2>
+          <h2 class="slide-title">Phân tích Đặc trưng Dữ liệu (EDA): NPU Drone-Map</h2>
           <div class="slide-subtitle">Trích xuất Ground Truth camera, quỹ đạo bay và đối lập thị giác 2 kịch bản</div>
         </div>
         <div class="slide-meta">DJI Phantom 3<br>1080p Nadir Keyframes</div>
@@ -594,7 +598,7 @@
           <div class="card">
             <div class="card-title">📊 6 Mô hình còn lại</div>
             <p class="card-text" style="font-size: 14px;">
-              SIFT, ORB, LightGlue (SIFT/SP), XFeat (MNN/LighterGlue) đều ghép thành công 20/20 frame, độ phủ 96–99%. XFeat-MNN chạy nhanh nhất (~2.0s trên CPU cho cả 20 frame).
+              SIFT, ORB, LightGlue (SIFT/SP), XFeat (MNN/LighterGlue) đều ghép thành công 20/20 frame, độ phủ 96-99%. XFeat-MNN chạy nhanh nhất (~2.0s trên CPU cho cả 20 frame).
             </p>
           </div>
         </div>
@@ -669,7 +673,7 @@
               </tbody>
             </table>
             <p class="card-text" style="font-size: 13px; margin-top: 8px;">
-              * Đo trên cùng chuỗi 20 frame. EfficientLoFTR trôi gấp 28–37 lần mức nền của phương pháp!
+              * Đo trên cùng chuỗi 20 frame. EfficientLoFTR trôi gấp 28-37 lần mức nền của phương pháp!
             </p>
           </div>
         </div>
@@ -806,7 +810,7 @@
           <h2 class="slide-title">Hiệu quả Phân luồng Thích ứng (Matcher Routing)</h2>
           <div class="slide-subtitle">Tối ưu hoá Pareto: Đạt độ trôi thấp nhất mà không lãng phí tài nguyên CPU</div>
         </div>
-        <div class="slide-meta">Cửa sổ village<br>45 bước (80–125)</div>
+        <div class="slide-meta">Cửa sổ village<br>45 bước (80-125)</div>
       </div>
 
       <div class="slide-body grid-2">
@@ -931,9 +935,9 @@
                 <tr><th>Thời gian</th><th>Hạng mục công việc đã thực hiện</th><th>Kết quả đầu ra</th></tr>
               </thead>
               <tbody>
-                <tr><td>Tuần 1–3</td><td>Khảo sát văn hiến Wave 1–3, nộp đề cương</td><td>Proposal, RDR-0001 → 0004</td></tr>
-                <tr><td>Tuần 4–5</td><td>Xây dựng baseline SIFT/ORB & pilot LightGlue</td><td>Notebook 01 & 02</td></tr>
-                <tr><td>Tuần 6–7</td><td>Đấu trường 7 mô hình, phát hiện lỗi LoFTR</td><td>Notebook 03, HTML report</td></tr>
+                <tr><td>Tuần 1-3</td><td>Khảo sát văn hiến Wave 1-3, nộp đề cương</td><td>Proposal, RDR-0001 → 0004</td></tr>
+                <tr><td>Tuần 4-5</td><td>Xây dựng baseline SIFT/ORB & pilot LightGlue</td><td>Notebook 01 & 02</td></tr>
+                <tr><td>Tuần 6-7</td><td>Đấu trường 7 mô hình, phát hiện lỗi LoFTR</td><td>Notebook 03, HTML report</td></tr>
                 <tr><td>Tuần 8</td><td>Kiểm chứng pose, chốt metric Chain vs Direct</td><td>Notebook 04, RDR-0007</td></tr>
                 <tr><td>Tuần 9</td><td>Hiện thực hoá 3 RQ, audit code & sweep ngưỡng</td><td>Notebook 05, RDR-0008</td></tr>
               </tbody>
@@ -947,7 +951,7 @@
             <ul class="card-text" style="padding-left: 18px; font-size: 15px; display: flex; flex-direction: column; gap: 10px;">
               <li><strong>Viết toàn văn Paper IEEE (LaTeX):</strong> Tối thiểu 4 trang theo đúng format quy định trong `presen_research_based_learning_requirements.txt`.</li>
               <li><strong>Tài liệu tham khảo tinh gọn:</strong> Theo quyết định `RDR-0009`, trích dẫn 18 bài báo nòng cốt đã phân loại chuẩn xác trong `refs/INDEX.md`.</li>
-              <li><strong>Mở rộng thử nghiệm:</strong> Đo kiểm chứng tính tổng quát của ngưỡng τ trên thêm 1–2 sequence của NPU Drone-Map.</li>
+              <li><strong>Mở rộng thử nghiệm:</strong> Đo kiểm chứng tính tổng quát của ngưỡng τ trên thêm 1-2 sequence của NPU Drone-Map.</li>
               <li><strong>Chuẩn bị nghiệm thu Present 3:</strong> Hoàn thiện slide bảo vệ cuối kỳ.</li>
             </ul>
           </div>
