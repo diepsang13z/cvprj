@@ -24,6 +24,7 @@ Thư mục `docs/decisions/` hoạt động append-only (`RDR-NNNN`). Đọc the
 - [`RDR-0006_shortlist_models_for_experimentation.md`](decisions/RDR-0006_shortlist_models_for_experimentation.md) — Chốt danh sách cấu hình và mô hình (SIFT/ORB, SIFT/SP+LightGlue, XFeat, Efficient LoFTR) đưa vào chạy thử nghiệm.
 - [`RDR-0007_drift_metric_choice.md`](decisions/RDR-0007_drift_metric_choice.md) — Chốt metric đo drift là **chain vs direct** (tự nhất quán, đơn vị pixel), không phụ thuộc `trajectory.txt`; kèm ngưỡng hợp lệ 100 inlier và mức nền của matcher tham chiếu.
 - [`RDR-0008_step_level_metric_and_risk_trigger.md`](decisions/RDR-0008_step_level_metric_and_risk_trigger.md) — **Proposed**: thước đo sai số **cấp bước** (mở rộng `RDR-0007`), 4 chỉ báo rủi ro chính thức, ngưỡng kích hoạt τ_ncc = 0,93 theo ngân sách leo thang 25%, chiến lược phục hồi mặc định là tách submosaic.
+- [`RDR-0009_reference_list_scope.md`](decisions/RDR-0009_reference_list_scope.md) — Không áp đặt hạn mức cứng $\ge 30$ tài liệu tham khảo; ưu tiên trích dẫn thực chất, tinh gọn 15–22 bài nòng cốt đã đọc và phân loại trong `refs/INDEX.md`.
 
 ## 3. Logs & Working Notes (Cấp thư mục)
 
@@ -56,6 +57,7 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
+- [`reports/present_02/`](../reports/present_02/) — Bản trình chiếu tương tác Present 2 (`index.html`), chuẩn 16:9 responsive kèm ảnh thực nghiệm trích từ Notebook 03 và 05.
 - `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
 - [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot SIFT/SuperPoint + LightGlue: 3 cặp và mosaic 20 frame ảnh gốc; chưa đánh giá drift/routing trong notebook này.
 - [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Pilot 7 cấu hình RDR-0006: cặp-frame và mosaic, run riêng với manifest/hash; không phải benchmark đủ rộng.

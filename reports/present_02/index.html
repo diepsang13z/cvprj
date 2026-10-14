@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Present 2: Failure-Aware 2D UAV Aerial Mosaicking</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-elevated: #1a2333;
+      --border: #243247;
+      --border-bright: #3b82f6;
+      --text: #f3f4f6;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.2);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* Presentation Viewport (Auto 16:9 scaling) */
+    #viewport {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1920px;
+      height: 1080px;
+      transform-origin: center center;
+      background: var(--surface);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Progress bar */
+    #progress-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      z-index: 100;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #10b981);
+      transition: width 0.3s ease;
+    }
+
+    /* Slide Deck Container */
+    #deck {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 70px 90px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      transform: translateY(12px);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      z-index: 10;
+    }
+
+    /* Header Components */
+    .slide-header {
+      margin-bottom: 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    .slide-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 12px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .slide-title {
+      font-size: 40px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .slide-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .slide-meta {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-dim);
+      text-align: right;
+    }
+
+    /* Body Layouts */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      gap: 40px;
+      overflow: hidden;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 36px;
+      width: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 28px;
+      width: 100%;
+    }
+
+    .col-left {
+      flex: 1.1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .col-right {
+      flex: 0.9;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Card Components */
+    .card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card.highlight {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.05) 0%, var(--surface-elevated) 100%);
+    }
+
+    .card.danger {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, var(--surface-elevated) 100%);
+    }
+
+    .card-title {
+      font-size: 19px;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    /* Visual Image Frames */
+    .media-frame {
+      position: relative;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .media-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .media-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #e2e8f0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Tables */
+    .table-custom {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+      text-align: left;
+    }
+
+    .table-custom th {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-weight: 600;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .table-custom td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .table-custom tr.highlight-row {
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .table-custom tr.highlight-row td {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .pill-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .pill-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .pill-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+    /* Footer & Controls */
+    #slide-footer {
+      padding: 16px 90px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(11, 17, 30, 0.95);
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text-dim);
+      z-index: 50;
+    }
+
+    .controls-hint {
+      display: flex;
+      gap: 16px;
+    }
+
+    .key-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .key {
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    /* Title Slide Specifics */
+    .title-slide {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 0 160px;
+    }
+
+    .title-hero {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 24px;
+    }
+
+    .title-sub {
+      font-size: 24px;
+      color: var(--text-muted);
+      max-width: 1000px;
+      line-height: 1.5;
+      margin-bottom: 48px;
+    }
+
+    .meta-box {
+      display: flex;
+      gap: 40px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 20px 36px;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: left;
+    }
+
+    .meta-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+    }
+
+    .meta-val {
+      font-weight: 600;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+<div id="viewport">
+  <div id="progress-container"><div id="progress-bar"></div></div>
+
+  <div id="deck">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide title-slide active" data-slide="1">
+      <div class="slide-badge">BÁO CÁO TIẾN ĐỘ PRESENT 2 · DAP391M</div>
+      <h1 class="title-hero">Failure-Aware and Resource-Adaptive<br>2D Aerial Mosaicking from UAV Video</h1>
+      <p class="title-sub">
+        Khảo sát đánh giá độ bền vững của các bộ ghép đặc trưng và đề xuất giải pháp ghép ảnh UAV thích ứng rủi ro trên máy tính cá nhân
+      </p>
+
+      <div class="meta-box">
+        <div class="meta-item">
+          <span class="meta-label">Nhóm nghiên cứu</span>
+          <span class="meta-val">Nhóm Đề tài UAV 2D Mosaicking</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Giảng viên hướng dẫn</span>
+          <span class="meta-val">Bộ môn Thị giác máy tính (CV)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Trạng thái thực nghiệm</span>
+          <span class="meta-val" style="color: var(--accent);">Hoàn tất Notebook 01–05 (Verified)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem & Research Questions -->
+    <div class="slide" data-slide="2">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">01 · BÀI TOÁN & ĐỘNG LỰC</div>
+          <h2 class="slide-title">Bài toán ghép ảnh UAV & 3 Câu hỏi Nghiên cứu</h2>
+          <div class="slide-subtitle">Vấn đề tích luỹ sai số và rủi ro vỡ bản đồ khi bay qua địa hình phức tạp</div>
+        </div>
+        <div class="slide-meta">RDR-0003<br>Định vị phạm vi</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <div class="card highlight">
+            <div class="card-title">🎯 Bài toán đặt ra</div>
+            <p class="card-text">
+              Ghép chuỗi video UAV góc thẳng đứng (nadir) thành bản đồ 2D liên tục (không georeference) phục vụ cứu hộ, nông nghiệp và trinh sát nhanh trên thiết bị tính toán giới hạn (laptop cá nhân).
+            </p>
+          </div>
+
+          <div class="card danger">
+            <div class="card-title">⚠️ Thách thức cốt lõi: Tích luỹ sai số (Drift)</div>
+            <p class="card-text">
+              Ghép tuần tự từng cặp ảnh ($H_{0 \to t} = H_0 \cdot H_1 \dots H_t$) khiến sai số nhỏ ở từng frame bị nhân dồn. Khi gặp mặt cỏ trơn nhẵn hoặc quay gắt, bản đồ bị vặn xoắn và vỡ nát hoàn toàn.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card">
+            <div class="card-title">🔍 3 Câu hỏi Nghiên cứu (RQs)</div>
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 6px;">
+              <div style="border-left: 3px solid var(--accent); padding-left: 12px;">
+                <strong style="color: #fff;">RQ1 · Failure Prediction:</strong>
+                <p class="card-text" style="font-size: 14px;">Chỉ báo rẻ tiền cấp bước nào (inliers, RMSE, tương quan quang học) dự báo chính xác lỗi đăng ký?</p>
+              </div>
+              <div style="border-left: 3px solid var(--success); padding-left: 12px;">
+                <strong style="color: #fff;">RQ2 · Matcher Routing:</strong>
+                <p class="card-text" style="font-size: 14px;">Phân luồng 2 tầng (mặc định SIFT nhẹ; chỉ gọi Deep Learning khi rủi ro cao) tối ưu thế nào giữa chất lượng và độ trễ?</p>
+              </div>
+              <div style="border-left: 3px solid var(--warning); padding-left: 12px;">
+                <strong style="color: #fff;">RQ3 · Confidence Recovery:</strong>
+                <p class="card-text" style="font-size: 14px;">Khi đã gọi AI mà vẫn rủi ro, chiến lược nào (bỏ frame, rematch, tách submosaic) bảo toàn dữ liệu bản đồ?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Related Works & Gaps -->
+    <div class="slide" data-slide="3">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">02 · TỔNG QUAN NGHIÊN CỨU</div>
+          <h2 class="slide-title">Các nghiên cứu liên quan & Khoảng trống học thuật</h2>
+          <div class="slide-subtitle">So sánh hướng tiếp cận truyền thống, học sâu và vị trí đóng góp của đề tài</div>
+        </div>
+        <div class="slide-meta">Khảo sát văn hiến<br>18 bài báo nòng cốt (refs/)</div>
+      </div>
+
+      <div class="slide-body grid-3">
+        <div class="card">
+          <div class="card-title">🏛️ Cổ điển (Classical Pipeline)</div>
+          <p class="card-text">
+            <strong>Hwang et al. (2026), Li et al. (2023):</strong> Dùng SIFT/ORB + RANSAC thuần túy.
+          </p>
+          <ul class="card-text" style="padding-left: 18px; font-size: 14px;">
+            <li><span style="color: var(--success);">Ưu:</span> Cực nhẹ, chạy tốt trên CPU thời gian thực.</li>
+            <li><span style="color: var(--danger);">Nhược:</span> Bất lực ở địa hình trơn nhẵn (mặt cỏ, ruộng nước); dừng chuỗi ngay khi RANSAC hỏng.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🧠 Học sâu (Learned Matchers)</div>
+          <p class="card-text">
+            <strong>Kim & Kim (2025), LightGlue (2023):</strong> Dùng Transformer/GNN đối sánh đặc trưng.
+          </p>
+          <ul class="card-text" style="padding-left: 18px; font-size: 14px;">
+            <li><span style="color: var(--success);">Ưu:</span> Khớp bền vững vùng ít vân, góc xoay lớn.</li>
+            <li><span style="color: var(--danger);">Nhược:</span> Nặng gấp 10–20× trên CPU; nếu mô hình vỡ (EfficientLoFTR) thì sai số cực nặng.</li>
+          </ul>
+        </div>
+
+        <div class="card highlight">
+          <div class="card-title">💡 Khoảng trống & Đóng góp</div>
+          <p class="card-text">
+            <strong>Khoảng trống:</strong> Chưa có hệ thống nào tự đo rủi ro từng bước bằng chỉ số rẻ tiền để **phân luồng thích ứng tài nguyên**.
+          </p>
+          <div style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 6px; font-size: 14px; color: #fff; margin-top: 4px;">
+            👉 <strong>Đề tài đề xuất:</strong> Failure-Aware Engine kết hợp cả 2: Nhanh như Cổ điển nhưng Bền vững như Học sâu khi gặp rủi ro.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Data & EDA -->
+    <div class="slide" data-slide="4">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">03 · DỮ LIỆU THỰC NGHIỆM</div>
+          <h2 class="slide-title">Phân tích Đặc trưng Dữ liệu (EDA) — NPU Drone-Map</h2>
+          <div class="slide-subtitle">Trích xuất Ground Truth camera, quỹ đạo bay và đối lập thị giác 2 kịch bản</div>
+        </div>
+        <div class="slide-meta">DJI Phantom 3<br>1080p Nadir Keyframes</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Thuộc tính kỹ thuật</th><th>phantom3-village</th><th>phantom3-grass</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Độ phân giải / Kênh</td><td>1920 × 1080 (Full HD, RGB)</td><td>1920 × 1080 (Full HD, RGB)</td></tr>
+              <tr><td>Tiêu cự camera ($f_x, f_y$)</td><td>1220.0, 1220.0</td><td>1220.0, 1220.0</td></tr>
+              <tr><td>Độ cao giả định (Plane=)</td><td>~194 m (mặt đất phẳng)</td><td>Bay thấp sát đất</td></tr>
+              <tr><td>Số lượng Keyframes</td><td>406 frames (Dài 7.67 km)</td><td>648 frames (Lượn cục bộ)</td></tr>
+              <tr><td>Bước nhảy bay trung bình</td><td><strong>18.9 m / bước</strong> (Max 36.8m)</td><td><strong>0.82 m / bước</strong> (Max 27.3m)</td></tr>
+              <tr><td>Đặc trưng bề mặt</td><td><span class="pill pill-success">Đa dạng góc cạnh</span></td><td><span class="pill pill-danger">Mất vân, lặp vân</span></td></tr>
+            </tbody>
+          </table>
+          <p class="card-text" style="font-size: 14px;">
+            * Dữ liệu do GS. Shuhui Bu (NWPU) công bố (IROS 2016), keyframes đã được undistort sẵn.
+          </p>
+        </div>
+
+        <div class="col-right" style="display: grid; grid-template-rows: 1fr 1fr; gap: 16px;">
+          <div class="media-frame">
+            <img src="assets/sample_village.jpg" alt="Village Sample">
+            <div class="media-caption">
+              <span><b>phantom3-village</b> (Nông thôn, nhà cửa, bờ kênh)</span>
+              <span class="pill pill-success">Rich Texture · Thách thức: Trôi góc quay</span>
+            </div>
+          </div>
+          <div class="media-frame">
+            <img src="assets/sample_grass.jpg" alt="Grass Sample">
+            <div class="media-caption">
+              <span><b>phantom3-grass</b> (Bãi cỏ trơn, cây bụi nhỏ)</span>
+              <span class="pill pill-danger">Low Texture · Thách thức: Match giả</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: 7-Model Benchmark & The Real Map Failure -->
+    <div class="slide" data-slide="5">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">04 · KHẢO SÁT 7 MÔ HÌNH</div>
+          <h2 class="slide-title">Đấu trường 7 Mô hình & Phát hiện Ca Vỡ Bản đồ Thật</h2>
+          <div class="slide-subtitle">Nghịch lý inlier: Điểm số nội tại đẹp nhưng bản đồ biến dạng nặng nề</div>
+        </div>
+        <div class="slide-meta">Notebook 03 Output<br>Run 20261013T164937Z</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <div class="card danger">
+            <div class="card-title">💥 Phát hiện "Nghịch lý Inlier" (The Inlier Paradox)</div>
+            <p class="card-text">
+              Ở tầng cặp ảnh lẻ, mô hình <strong>EfficientLoFTR</strong> báo cáo số liệu cực đẹp: <strong>>2.000 inliers</strong>, RMSE nội tại chỉ 0.4px. Nhưng khi tích luỹ qua 20 frame:
+            </p>
+            <ul class="card-text" style="padding-left: 18px; font-size: 14px;">
+              <li>Canvas bị kéo giãn xiên xẹo dị dạng: <strong>1465 × 626 px</strong> (thay vì ~650 × 600 px).</li>
+              <li>Độ phủ canvas tụt dốc xuống chỉ còn <strong>55.6%</strong> (village) và <strong>73.4%</strong> (grass).</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-title">📊 6 Mô hình còn lại</div>
+            <p class="card-text" style="font-size: 14px;">
+              SIFT, ORB, LightGlue (SIFT/SP), XFeat (MNN/LighterGlue) đều ghép thành công 20/20 frame, độ phủ 96–99%. XFeat-MNN chạy nhanh nhất (~2.0s trên CPU cho cả 20 frame).
+            </p>
+          </div>
+        </div>
+
+        <div class="col-right" style="display: grid; grid-template-rows: 1.1fr 1fr; gap: 16px;">
+          <div class="media-frame" style="border: 2px solid var(--danger);">
+            <img src="assets/mosaic_loftr_broken.png" alt="Deformed Mosaic">
+            <div class="media-caption">
+              <span style="color: #f87171;"><b>EfficientLoFTR Mosaic</b>: Bản đồ bị trượt chéo hoàn toàn</span>
+              <span class="pill pill-danger">Phủ 55.6% · Hỏng nặng</span>
+            </div>
+          </div>
+          <div class="media-frame" style="border: 2px solid var(--success);">
+            <img src="assets/mosaic_sift.png" alt="Normal SIFT Mosaic">
+            <div class="media-caption">
+              <span style="color: #34d399;"><b>SIFT Baseline Mosaic</b>: Ruộng đồng vuông vắn thẳng hàng</span>
+              <span class="pill pill-success">Phủ 98.6% · Chuẩn</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Self-Consistent Metric: Chain vs Direct -->
+    <div class="slide" data-slide="6">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">05 · THƯỚC ĐO ĐỘ TRÔI ĐỘC LẬP</div>
+          <h2 class="slide-title">Đo Độ trôi Tích luỹ (Drift) không phụ thuộc Trajectory</h2>
+          <div class="slide-subtitle">Phát hiện bẫy dữ liệu SLAM ngoài và giải pháp chốt tại RDR-0007</div>
+        </div>
+        <div class="slide-meta">Notebook 04 Output<br>RDR-0007 (Accepted)</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <div class="card">
+            <div class="card-title">⚠️ Bẫy dữ liệu từ `trajectory.txt`</div>
+            <p class="card-text">
+              Nhóm phát hiện toạ độ trong dataset thực chất do <strong>SLAM đơn kính tái dựng</strong>, không phải GPS độc lập. Ở cảnh `grass`, toạ độ bị suy biến khiến công thức chiếu nổ tung. Do đó không thể dùng để làm Ground Truth đo mét.
+            </p>
+          </div>
+
+          <div class="card highlight">
+            <div class="card-title">📐 Giải pháp RDR-0007: Sai số vòng (Chain vs Direct)</div>
+            <p class="card-text">
+              So sánh ma trận tích lũy tuần tự ($H^{\text{chain}}_{i \to 0}$) với ma trận ghép thẳng trực tiếp ($H^{\text{direct}}_{i \to 0}$) bằng SIFT ảnh gốc trên 5 điểm mốc (4 góc + tâm). Đơn vị là <strong>pixel ảnh gốc</strong>.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card">
+            <div class="card-title">🏆 Bảng định lượng Độ trôi Tích luỹ (Drift)</div>
+            <table class="table-custom">
+              <thead>
+                <tr><th>Mô hình</th><th>Drift village (px)</th><th>Drift grass (px)</th></tr>
+              </thead>
+              <tbody>
+                <tr class="highlight-row">
+                  <td>sift_bf (Mức nhiễu nền)</td><td>46.7 px</td><td>1.7 px</td>
+                </tr>
+                <tr><td>sift_lightglue</td><td>47.0 px</td><td>1.8 px</td></tr>
+                <tr><td>xfeat_lighterglue</td><td>47.6 px</td><td>3.4 px</td></tr>
+                <tr><td>superpoint_lightglue</td><td>61.1 px</td><td>1.8 px</td></tr>
+                <tr><td>orb_bf</td><td>73.2 px</td><td>2.8 px</td></tr>
+                <tr style="background: rgba(239, 68, 68, 0.15); color: #f87171;">
+                  <td><strong>efficientloftr</strong></td>
+                  <td><strong>1311.5 px (28×)</strong></td>
+                  <td><strong>62.9 px (37×)</strong></td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="card-text" style="font-size: 13px; margin-top: 8px;">
+              * Đo trên cùng chuỗi 20 frame. EfficientLoFTR trôi gấp 28–37 lần mức nền của phương pháp!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Proposed Architecture -->
+    <div class="slide" data-slide="7">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">06 · PHƯƠNG PHÁP ĐỀ XUẤT</div>
+          <h2 class="slide-title">Kiến trúc Pipeline Failure-Aware Mosaicking</h2>
+          <div class="slide-subtitle">Cơ chế phát hiện rủi ro, phân luồng thích ứng tài nguyên và tự cứu bản đồ</div>
+        </div>
+        <div class="slide-meta">Notebook 05 Architecture<br>RDR-0008 (Proposed)</div>
+      </div>
+
+      <div class="slide-body">
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+            
+            <div class="card" style="border-top: 4px solid var(--accent);">
+              <div class="slide-badge">TẦNG 1 · BẮT BỆNH (RQ1)</div>
+              <div class="card-title">Cổng Rủi ro Quang học</div>
+              <p class="card-text">
+                Frame mới được ghép nhanh bằng <strong>SIFT ở 640px</strong>. Sau khi chiếu, tính hệ số tương quan chéo chuẩn hóa (Photo-NCC):
+              </p>
+              <div style="font-family: var(--font-mono); font-size: 14px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px;">
+                Risk = (NCC &lt; 0.93) || (InlierRatio &lt; 0.3)
+              </div>
+            </div>
+
+            <div class="card" style="border-top: 4px solid var(--success);">
+              <div class="slide-badge">TẦNG 2 · PHÂN LUỒNG (RQ2)</div>
+              <div class="card-title">Leo thang Tài nguyên</div>
+              <p class="card-text">
+                - Nếu <strong>An toàn</strong>: Dán frame vào bản đồ, không tốn thêm tài nguyên.<br>
+                - Nếu <strong>Rủi ro</strong>: Kích hoạt <strong>SuperPoint + LightGlue</strong> xử lý riêng cho bước đó để vượt qua vùng mất vân.
+              </p>
+            </div>
+
+            <div class="card" style="border-top: 4px solid var(--warning);">
+              <div class="slide-badge">TẦNG 3 · CỨU NGUY (RQ3)</div>
+              <div class="card-title">Tự phục hồi Bản đồ</div>
+              <p class="card-text">
+                Nếu bước ghép vẫn rủi ro sau khi gọi AI (địa hình hỏng hoàn toàn):
+                Chủ động kích hoạt <strong>Tách Submosaic</strong> để cô lập lỗi, không để ma trận lỗi bẻ gãy chuỗi bản đồ tiếp theo.
+              </p>
+            </div>
+
+          </div>
+
+          <div class="card highlight" style="flex-direction: row; justify-content: space-around; align-items: center; padding: 18px;">
+            <div style="text-align: center;">
+              <span class="slide-badge">Bình thường</span>
+              <div style="font-size: 20px; font-weight: 700; color: #fff;">SIFT 640px</div>
+              <div style="font-size: 13px; color: var(--text-dim);">~0.07s / frame</div>
+            </div>
+            <div style="font-size: 24px; color: var(--accent);">➔ [Risk Gate τ=0.93] ➔</div>
+            <div style="text-align: center;">
+              <span class="slide-badge" style="background: rgba(16,185,129,0.15); color: #34d399;">Leo thang 16%</span>
+              <div style="font-size: 20px; font-weight: 700; color: #fff;">SuperPoint + LightGlue</div>
+              <div style="font-size: 13px; color: var(--text-dim);">~1.2s / frame</div>
+            </div>
+            <div style="font-size: 24px; color: var(--warning);">➔ [Vẫn hỏng] ➔</div>
+            <div style="text-align: center;">
+              <span class="slide-badge" style="background: rgba(245,158,11,0.15); color: #fbbf24;">Cứu nguy</span>
+              <div style="font-size: 20px; font-weight: 700; color: #fff;">Tách Submosaic</div>
+              <div style="font-size: 13px; color: var(--text-dim);">Bảo toàn 100% video</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: RQ1 Experimental Results -->
+    <div class="slide" data-slide="8">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">07 · KẾT QUẢ RQ1</div>
+          <h2 class="slide-title">Đánh giá 8 Chỉ báo Dự báo Sai số Đăng ký</h2>
+          <div class="slide-subtitle">Thực nghiệm trên 45 bước có lỗi thật tại cửa sổ village (21 bước sai lệch >2px)</div>
+        </div>
+        <div class="slide-meta">Notebook 05 Verified<br>Stamp 20261014T070805Z</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Chỉ báo rẻ</th><th>Tương quan Spearman (ρ)</th><th>AUC bắt lỗi</th><th>Đánh giá</th></tr>
+            </thead>
+            <tbody>
+              <tr class="highlight-row">
+                <td>photo_bad_frac</td><td>+0.759</td><td><strong>0.855</strong></td><td><span class="pill pill-success">Rất nhạy</span></td>
+              </tr>
+              <tr class="highlight-row">
+                <td>rmse_px (RANSAC)</td><td>+0.788</td><td><strong>0.839</strong></td><td><span class="pill pill-warning">Dễ bị lừa</span></td>
+              </tr>
+              <tr class="highlight-row">
+                <td>overlap_ratio</td><td>-0.634</td><td><strong>0.788</strong></td><td><span class="pill pill-success">Khá tốt</span></td>
+              </tr>
+              <tr class="highlight-row">
+                <td>photo_ncc</td><td>-0.636</td><td><strong>0.770</strong></td><td><span class="pill pill-success">Rất tốt (chốt)</span></td>
+              </tr>
+              <tr><td>inlier_ratio</td><td>-0.389</td><td>0.726</td><td>Dự phòng</td></tr>
+              <tr style="color: #f87171;">
+                <td>inliers (Số điểm chuẩn)</td><td>+0.239</td><td><strong>0.409</strong></td><td><span class="pill pill-danger">Ngược chiều</span></td>
+              </tr>
+              <tr style="color: #f87171;">
+                <td>matches (Số điểm nối)</td><td>+0.251</td><td><strong>0.402</strong></td><td><span class="pill pill-danger">Vô dụng</span></td>
+              </tr>
+              <tr><td>hull_area_ratio</td><td>+0.005</td><td>0.571</td><td>Đoán mò</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="col-right">
+          <div class="media-frame" style="height: 100%;">
+            <img src="assets/summary_rq1_rq3.png" alt="RQ1 Scatter Plot" style="object-fit: contain;">
+            <div class="media-caption">
+              <span><b>Biểu đồ RQ1 & RQ3</b>: Trái: NCC phân tách rõ ca sai (>2px); Phải: Đường cong drift RQ3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: RQ2 Experimental Results -->
+    <div class="slide" data-slide="9">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">08 · KẾT QUẢ RQ2</div>
+          <h2 class="slide-title">Hiệu quả Phân luồng Thích ứng (Matcher Routing)</h2>
+          <div class="slide-subtitle">Tối ưu hoá Pareto: Đạt độ trôi thấp nhất mà không lãng phí tài nguyên CPU</div>
+        </div>
+        <div class="slide-meta">Cửa sổ village<br>45 bước (80–125)</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Chính sách chạy</th><th>Tỷ lệ gọi AI</th><th>Thời gian</th><th>Drift cuối</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Chỉ dùng SIFT nhẹ</td><td>0% (0/45)</td><td>3.2 s</td><td>75.3 px</td></tr>
+              <tr style="color: #f87171;">
+                <td>Chỉ dùng AI (SuperPoint+LG)</td><td>100% (45/45)</td><td>60.4 s</td><td><strong>82.4 px (tệ hơn!)</strong></td>
+              </tr>
+              <tr class="highlight-row">
+                <td><strong>Phân luồng đề xuất (τ=0.93)</strong></td>
+                <td><strong>16% (7/45)</strong></td>
+                <td><strong>13.3 s</strong></td>
+                <td><strong>28.5 px (Tốt nhất)</strong></td>
+              </tr>
+              <tr><td>Phân luồng + Leo thang 1080p</td><td>16% (7/45)</td><td>73.6 s</td><td>35.8 px</td></tr>
+            </tbody>
+          </table>
+
+          <div class="card highlight" style="margin-top: 10px;">
+            <div class="card-title">💡 Phát hiện mấu chốt cho bài báo</div>
+            <p class="card-text">
+              - <strong>Bật AI toàn phần cho mọi frame không hề tối ưu:</strong> Chậm gấp 19× nhưng bản đồ trôi tới 82.4 px (do đặc trưng thô ở 640px tích tụ sai số).<br>
+              - <strong>Phân luồng thông minh ở τ = 0.93:</strong> Chỉ gọi AI ở 16% bước khó, giúp <strong>giảm 62% độ trôi</strong> và chạy <strong>nhanh gấp 4.5×</strong> so với chạy AI toàn phần!
+            </p>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card">
+            <div class="card-title">📈 Quét Ngưỡng Kích hoạt τ (Sweeping)</div>
+            <p class="card-text" style="font-size: 14px;">
+              Quét lưới τ từ 0.90 đến 0.99 với ngân sách leo thang tối đa 25%:
+            </p>
+            <ul class="card-text" style="font-size: 14px; padding-left: 18px;">
+              <li>τ = 0.90: Leo thang 0% $\rightarrow$ Drift 75.3 px.</li>
+              <li>τ = 0.92: Leo thang 9% (4 bước) $\rightarrow$ Drift 38.5 px.</li>
+              <li><strong>τ = 0.93: Leo thang 16% (7 bước) $\rightarrow$ Drift 28.5 px (Điểm Pareto).</strong></li>
+              <li>τ = 0.95: Leo thang 53% $\rightarrow$ Vượt ngân sách 25%, drift tăng lên 56.2 px do dao động.</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Ablation Study: Ảnh gốc vs 640px</div>
+            <p class="card-text" style="font-size: 14px;">
+              Tại 7 bước khó, leo thang ở ảnh gốc 1080p đạt sai số bước siêu nhỏ (1.49 px vs 4.51 px), nhưng tổng thời gian vọt lên 73.6 s. Phân luồng ở 640px là lựa chọn tối ưu cho máy tính cá nhân.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: RQ3 & Recovery -->
+    <div class="slide" data-slide="10">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">09 · KẾT QUẢ RQ3 & THẢO LUẬN</div>
+          <h2 class="slide-title">So sánh 4 Chiến lược Phục hồi & Giới hạn Khoa học</h2>
+          <div class="slide-subtitle">Hiện tượng sụp đổ dây chuyền (Cascade) và giải pháp chia để trị Submosaic</div>
+        </div>
+        <div class="slide-meta">Cùng ngưỡng τ=0.93<br>46 frames</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Kịch bản bay / Cấu hình</th><th>Chiến lược</th><th>Frame giữ</th><th>Số mảnh</th><th>Drift max</th></tr>
+            </thead>
+            <tbody>
+              <tr><td rowspan="4">village (SIFT nhẹ)</td><td>Không cứu</td><td>46/46</td><td>1</td><td>84.6 px</td></tr>
+              <tr style="color: #f87171;"><td>Bỏ frame (Drop)</td><td>14/46</td><td>1</td><td>21.7 px (Mất 70%)</td></tr>
+              <tr style="color: #f87171;"><td>Rematch keyframe</td><td>14/46</td><td>1</td><td>21.7 px (Mất 70%)</td></tr>
+              <tr class="highlight-row"><td><strong>Tách Submosaic</strong></td><td><strong>46/46</strong></td><td><strong>8</strong></td><td><strong>21.7 px (Bảo toàn)</strong></td></tr>
+              <tr><td rowspan="2">grass (LoFTR vỡ)</td><td>Không cứu</td><td>46/46</td><td>1</td><td>671.3 px</td></tr>
+              <tr class="highlight-row"><td>Tách Submosaic</td><td>46/46</td><td>45</td><td>2.7 px</td></tr>
+            </tbody>
+          </table>
+
+          <div class="card danger" style="margin-top: 10px;">
+            <div class="card-title">⚠️ Cái bẫy của chiến lược "Bỏ frame"</div>
+            <p class="card-text" style="font-size: 14px;">
+              Bỏ 1 frame làm khoảng cách tới frame sau xa gấp đôi $\rightarrow$ bước sau càng dễ bị gắn cờ $\rightarrow$ nở thành 32 lần trigger làm rụng mất 70% video! Tách submosaic là cách duy nhất bảo toàn 100% video.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card">
+            <div class="card-title">🔬 Thảo luận & Giới hạn Khoa học (Honest Limitations)</div>
+            <div class="card-text" style="font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
+              <p>1. <strong>Độ trôi Submosaic:</strong> Tách 8 mảnh thì drift nội bộ mảnh nhỏ (21.7 px), nhưng chưa có bước nắn chỉnh toàn cục (bundle adjustment) giữa các mảnh.</p>
+              <p>2. <strong>Tính chất cổng NCC:</strong> Photo-NCC là kiểm tra hậu đăng ký (sau khi đã tính $H$), chưa dự báo trước khi match.</p>
+              <p>3. <strong>Thước đo tham chiếu:</strong> Toàn bộ sai số là so với SIFT 4000 đặc trưng, chưa có toạ độ mặt đất thực địa tuyệt đối (GCP).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Timeline & Next Steps -->
+    <div class="slide" data-slide="11">
+      <div class="slide-header">
+        <div>
+          <div class="slide-badge">10 · TIẾN ĐỘ & KẾ HOẠCH</div>
+          <h2 class="slide-title">Nhật ký Tiến độ Học kỳ & Kế hoạch Paper IEEE</h2>
+          <div class="slide-subtitle">Minh chứng thực hiện trong học kỳ và lộ trình hoàn thiện báo cáo khoa học</div>
+        </div>
+        <div class="slide-meta">Present 2 Milestone<br>Tuần 9 / Học kỳ FA26</div>
+      </div>
+
+      <div class="slide-body grid-2">
+        <div class="col-left">
+          <div class="card">
+            <div class="card-title">📅 Timeline Log trong Học kỳ</div>
+            <table class="table-custom" style="font-size: 14px;">
+              <thead>
+                <tr><th>Thời gian</th><th>Hạng mục công việc đã thực hiện</th><th>Kết quả đầu ra</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Tuần 1–3</td><td>Khảo sát văn hiến Wave 1–3, nộp đề cương</td><td>Proposal, RDR-0001 → 0004</td></tr>
+                <tr><td>Tuần 4–5</td><td>Xây dựng baseline SIFT/ORB & pilot LightGlue</td><td>Notebook 01 & 02</td></tr>
+                <tr><td>Tuần 6–7</td><td>Đấu trường 7 mô hình, phát hiện lỗi LoFTR</td><td>Notebook 03, HTML report</td></tr>
+                <tr><td>Tuần 8</td><td>Kiểm chứng pose, chốt metric Chain vs Direct</td><td>Notebook 04, RDR-0007</td></tr>
+                <tr><td>Tuần 9</td><td>Hiện thực hoá 3 RQ, audit code & sweep ngưỡng</td><td>Notebook 05, RDR-0008</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card highlight">
+            <div class="card-title">🚀 Kế hoạch Giai đoạn 3 (Hoàn thành Paper)</div>
+            <ul class="card-text" style="padding-left: 18px; font-size: 15px; display: flex; flex-direction: column; gap: 10px;">
+              <li><strong>Viết toàn văn Paper IEEE (LaTeX):</strong> Tối thiểu 4 trang theo đúng format quy định trong `presen_research_based_learning_requirements.txt`.</li>
+              <li><strong>Tài liệu tham khảo tinh gọn:</strong> Theo quyết định `RDR-0009`, trích dẫn 18 bài báo nòng cốt đã phân loại chuẩn xác trong `refs/INDEX.md`.</li>
+              <li><strong>Mở rộng thử nghiệm:</strong> Đo kiểm chứng tính tổng quát của ngưỡng τ trên thêm 1–2 sequence của NPU Drone-Map.</li>
+              <li><strong>Chuẩn bị nghiệm thu Present 3:</strong> Hoàn thiện slide bảo vệ cuối kỳ.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation & Counter -->
+  <div id="slide-footer">
+    <div class="controls-hint">
+      <span class="key-hint"><span class="key">←</span> <span class="key">→</span> Chuyển slide</span>
+      <span class="key-hint"><span class="key">Space</span> Tiếp tục</span>
+      <span class="key-hint"><span class="key">F</span> Toàn màn hình</span>
+      <span class="key-hint"><span class="key">Home</span> / <span class="key">End</span> Đầu / Cuối</span>
+    </div>
+    <div id="slide-counter" style="font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--accent);">
+      01 / 11
+    </div>
+  </div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progress-bar');
+  const slideCounter = document.getElementById('slide-counter');
+  const viewport = document.getElementById('viewport');
+  let currentSlide = 0;
+
+  // Auto 16:9 Scale Handler
+  function resizeViewport() {
+    const targetWidth = 1920;
+    const targetHeight = 1080;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const scale = Math.min(windowWidth / targetWidth, windowHeight / targetHeight);
+    viewport.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+
+  window.addEventListener('resize', resizeViewport);
+  resizeViewport();
+
+  // Navigation Logic
+  function updateSlide(index) {
+    if (index < 0 || index >= slides.length) return;
+    slides[currentSlide].classList.remove('active');
+    currentSlide = index;
+    slides[currentSlide].classList.add('active');
+
+    // Progress & Counter
+    const progress = ((currentSlide + 1) / slides.length) * 100;
+    progressBar.style.width = `${progress}%`;
+    const num = String(currentSlide + 1).padStart(2, '0');
+    const total = String(slides.length).padStart(2, '0');
+    slideCounter.innerText = `${num} / ${total}`;
+  }
+
+  // Keyboard Navigation
+  window.addEventListener('keydown', (e) => {
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'Space':
+      case 'PageDown':
+        e.preventDefault();
+        updateSlide(currentSlide + 1);
+        break;
+      case 'ArrowLeft':
+      case 'PageUp':
+      case 'Backspace':
+        e.preventDefault();
+        updateSlide(currentSlide - 1);
+        break;
+      case 'Home':
+        e.preventDefault();
+        updateSlide(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        updateSlide(slides.length - 1);
+        break;
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+        break;
+    }
+  });
+
+  // Click on edges to navigate
+  viewport.addEventListener('click', (e) => {
+    if (e.target.closest('#slide-footer')) return;
+    const rect = viewport.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x > rect.width * 0.75) updateSlide(currentSlide + 1);
+    else if (x < rect.width * 0.25) updateSlide(currentSlide - 1);
+  });
+</script>
+
+</body>
+</html>
