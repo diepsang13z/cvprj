@@ -75,25 +75,42 @@ fig.tight_layout(pad=0.4)
 fig.savefig(FIG / "fig_rq1_rq3.pdf")
 plt.close(fig)
 
-# --- Fig: tau sweep ----------------------------------------------------------
-fig, ax = plt.subplots(figsize=(3.4, 2.4))
+# --- Fig: Baseline vs. Proposed drift & tau sweep ----------------------------
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.0, 2.5))
 rows = [r for r in report["rq2"] if r["sequence"] == "phantom3-village-kfs"]
 base = {r["policy"]: r for r in rows if r["policy"] in ("classical", "learned")}
+routed_opt = next(r for r in rows if r["policy"] == "routed" and r["tau_ncc"] == 0.93)
+
+# (a) Baseline vs Proposed drift curves
+frames = list(range(len(base["classical"]["drift_series"])))
+ax1.plot(frames, base["classical"]["drift_series"], "tab:blue", ls="--", lw=1.2, label="Baseline: SIFT-only (classical)")
+ax1.plot(frames, base["learned"]["drift_series"], "tab:green", ls="-.", lw=1.2, label="Baseline: SP+LG (all-learned)")
+ax1.plot(frames, routed_opt["drift_series"], "tab:red", ls="-", lw=1.5, label="Proposed: Router ($\\tau=0.93$)")
+ax1.set_xlabel("frame index")
+ax1.set_ylabel("cumulative drift (px)")
+ax1.set_title("(a) Cumulative drift: Baselines vs. Proposed", fontsize=8)
+ax1.legend(fontsize=5.5, loc="upper left")
+ax1.tick_params(labelsize=7)
+ax1.grid(True, linestyle=":", alpha=0.5)
+
+# (b) Threshold sweep
 sweep = sorted([r for r in rows if r["policy"] == "routed"], key=lambda r: r["tau_ncc"])
 for r in sweep:
-    ax.annotate(f"{r['tau_ncc']:.2f}", (r["escalation_rate"] * 100, r["final_drift_px"]),
+    ax2.annotate(f"{r['tau_ncc']:.2f}", (r["escalation_rate"] * 100, r["final_drift_px"]),
                 textcoords="offset points", xytext=(3, 3), fontsize=5.5)
-ax.plot([r["escalation_rate"] * 100 for r in sweep], [r["final_drift_px"] for r in sweep],
+ax2.plot([r["escalation_rate"] * 100 for r in sweep], [r["final_drift_px"] for r in sweep],
         "o-", color="tab:red", ms=3, lw=1.2, label="routed sweep")
-ax.axhline(base["classical"]["final_drift_px"], color="tab:blue", ls="--", lw=1.0, label="SIFT everywhere")
-ax.axhline(base["learned"]["final_drift_px"], color="tab:green", ls="--", lw=1.0, label="SP+LG everywhere")
-ax.axvline(25, color="k", ls=":", lw=0.8)
-ax.set_xlabel("escalation rate (% of steps)")
-ax.set_ylabel("final drift (px)")
-ax.legend(fontsize=5.5, loc="upper left")
-ax.tick_params(labelsize=7)
+ax2.axhline(base["classical"]["final_drift_px"], color="tab:blue", ls="--", lw=1.0, label="Baseline: SIFT everywhere")
+ax2.axhline(base["learned"]["final_drift_px"], color="tab:green", ls="-.", lw=1.0, label="Baseline: SP+LG everywhere")
+ax2.axvline(25, color="k", ls=":", lw=0.8, label="25% budget limit")
+ax2.set_xlabel("escalation rate (% of steps)")
+ax2.set_ylabel("final drift (px)")
+ax2.set_title("(b) RQ2 threshold sweep & budget", fontsize=8)
+ax2.legend(fontsize=5.0, loc="upper left")
+ax2.tick_params(labelsize=7)
+ax2.grid(True, linestyle=":", alpha=0.5)
+
 fig.tight_layout(pad=0.3)
 fig.savefig(FIG / "fig_tau.pdf")
 plt.close(fig)
-
 print("figures written to", FIG)

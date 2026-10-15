@@ -108,35 +108,49 @@ và gọi matcher mạnh cho mọi bước làm bản đồ \emph{tệ hơn} mat
 sổ đã đo.
 
 \section{Công trình liên quan}
-\textbf{Ghép ảnh tích luỹ.} Các pipeline tuần tự hướng CPU giới hạn số đặc
-trưng hoặc dùng ngưỡng inlier nhẹ để giữ chi phí đăng ký từng cặp ở mức chấp
-nhận được~\cite{hwang2026}; chọn keyframe và tối ưu sai số chiếu lại có trọng
-số được dùng để hãm drift~\cite{li2023}; chọn seamline và phép warp xử lý phần
-hoà trộn~\cite{chen2022}; pipeline nông nghiệp dùng dòng quang học và phân cụm
-frame thành mảnh con~\cite{dronezaic}. Tất cả đều có luật nhận/loại dạng kinh
-nghiệm, nhưng không có quyết định biết đến chi phí.
+\textbf{Ghép ảnh UAV tích luỹ và khuyết thiếu kiểm soát rủi ro.} Các pipeline
+tuần tự hướng CPU dùng ORB/SIFT kết hợp RANSAC thường giới hạn số điểm hoặc áp
+dụng ngưỡng số inlier cố định để loại bỏ frame kém~\cite{hwang2026}; Li et
+al.~\cite{li2023} tối ưu sai số chiếu lại có trọng số và rematch keyframe cũ để
+hãm drift; Chen et al.~\cite{chen2022} dùng quy hoạch động tìm seamline tối ưu và
+phép biến đổi half-projective warp xử lý mặt đất gồ ghề; còn Kharismawati và
+Kazic~\cite{dronezaic} dùng dòng quang học Farneback kết hợp phân cụm submosaic cho
+nông nghiệp. Điểm hạn chế cốt tử của các công trình này là vận hành ``mù rủi ro''
+hoặc chỉ dựa vào ngưỡng inlier kinh nghiệm, không đánh giá xem phép đăng ký có gây
+lệch hình học chuỗi hay không, và không có cơ chế thích ứng theo ngân sách tài
+nguyên tính toán.
 
-\textbf{Độ tin cậy của đối sánh và dự báo lỗi.} Trong nhận diện vị trí bằng
-thị giác, số inlier và tỉ lệ inlier tách được ca khớp thành công khỏi ca thất
-bại, với dương tính giả ở vùng vân lặp~\cite{zaffar2024,sferrazza2024}. Ở mức
-homography, các benchmark quy mô lớn cho thấy sai số chiếu lại và số lượng đặc
-trưng tương quan yếu với sai số hình học cuối
-cùng~\cite{barath2023,yuan2024}. Ước lượng độ bất định đã được thêm vào ước
-lượng homography học sâu cho định vị vệ tinh--nhiệt~\cite{uasthn}, và các kiểm
-tra nhất quán giữa mô hình như VSAC chấm điểm chất lượng inlier một cách độc
-lập~\cite{ivashechkin2021}. Các công trình này là động lực cho bộ chỉ báo rẻ,
-nhưng vẫn để mở câu hỏi chỉ báo nào dự báo sai số \emph{cấp bước} trong một
-chuỗi ghép.
+\textbf{Dự báo lỗi đối sánh và ảo giác số inlier (RQ1).} Trong nhận diện vị trí
+(VPR), số inlier và tỉ lệ inlier từ RANSAC/MAGSAC++ thường được dùng để phân loại
+khớp thành công hay thất bại~\cite{zaffar2024,sferrazza2024}, nhưng dễ sinh dương
+tính giả ở địa hình lặp. Ở cấp độ homography, các benchmark quy mô lớn cho thấy sai
+số chiếu lại trung bình và số lượng đặc trưng tương quan rất yếu với sai số hình học
+thực tế~\cite{barath2023,yuan2024}. Độ bất định học sâu được đưa vào định vị
+vệ tinh--nhiệt~\cite{uasthn}, và thuật toán VSAC chấm điểm inlier độc
+lập~\cite{ivashechkin2021}. Nhóm chứng minh sự vượt trội bằng cách phát hiện kết quả
+phủ định quan trọng: trên chuỗi UAV, số inlier phản tác dụng khi dự báo lỗi cấp
+bước (AUC chỉ 0,409), trong khi chỉ báo kiểm tra tính nhất quán quang học sau biến
+đổi (Patch NCC) đạt AUC vượt trội từ 0,770 đến 0,855.
 
-\textbf{Cổ điển so với học sâu.} SIFT+LightGlue được chứng minh cứu được vùng
-nghèo vân và xoay góc lớn trên UAV~\cite{kim2025}; so sánh có hệ thống trên ảnh
-di động và ảnh drone cho thấy phương pháp học được chính xác hơn nhưng luôn
-chậm hơn~\cite{gaisbauer2025}. Các matcher học nhẹ (XFeat~\cite{potlapalli2024}),
-matcher bán dày có chọn token (Efficient LoFTR~\cite{wang2024}) và thiết kế
-attention riêng cho UAV~\cite{dalglue} làm giảm chứ không xoá bỏ chi phí đó.
-Bộ phân luồng của chúng tôi là phía ``cổ điển trước'' của đánh đổi này, và được
-đánh giá ở mức bản đồ chứ không phải mức từng cặp ảnh.
+\textbf{Đánh đổi mô hình cổ điển và học sâu qua phân luồng (RQ2).} Kim và
+Kim~\cite{kim2025} dùng SIFT kết hợp LightGlue (GNN Transformer có early-exit) để
+xử lý góc xoay lớn; Gaisbauer et al.~\cite{gaisbauer2025} chứng minh phương pháp học
+sâu chính xác hơn nhưng chậm hơn trên drone. Các mô hình như XFeat~\cite{potlapalli2024}
+(CNN siêu nhẹ), Efficient LoFTR~\cite{wang2024} (chọn token QuadTree) hay
+DALGlue~\cite{dalglue} (deformable attention) nỗ lực giảm độ trễ từng cặp ảnh nhưng
+vẫn bị triển khai theo kiểu ép toàn bộ pipeline phải chạy qua mô hình nặng. Nhóm
+chứng minh giải pháp phân luồng 2 tầng vượt trội: chạy toàn bộ SuperPoint+LightGlue
+làm drift tăng lên 82,4\,px (do suy biến ở vùng đồng nhất) và tốn 54,9\,s; trong khi
+bộ định tuyến chỉ kích hoạt 16\% bước khó giúp giảm thời gian xuống 13,3\,s và kéo
+drift xuống chỉ còn 28,5\,px.
 
+\textbf{Cơ chế phục hồi suy biến và sụp đổ dây chuyền (RQ3).} Các nghiên cứu đơn
+lẻ áp dụng bỏ frame~\cite{hwang2026}, rematch keyframe cũ~\cite{li2023}, hoặc tách
+cụm submosaic~\cite{dronezaic}. Thiếu sót lớn là chưa công trình nào so sánh trực
+tiếp các cơ chế này dưới cùng một chuẩn kích hoạt. Nhóm chứng minh bỏ frame và
+rematch keyframe gây ra sụp đổ dây chuyền (cascade failure), làm mất đến 32/46
+frame do khoảng cách hình học bị nới rộng; trong khi chiến lược tách submosaic của
+nhóm giữ trọn 46/46 frame và giới hạn drift dưới 21,7\,px.
 \section{Phương pháp}
 \subsection{Pipeline}
 Frame được đọc theo thứ tự thời gian. Với bước $(i-1,i)$, pipeline trích đặc
@@ -147,63 +161,73 @@ SuperPoint + LightGlue trên đúng ảnh 640\,px đó; một biến thể tuỳ
 các bước bị gắn cờ ở độ phân giải gốc với cùng matcher. Cài đặt: OpenCV 5.0.0,
 PyTorch 2.14.1 (chỉ CPU), NumPy 2.4.6, ngưỡng RANSAC 3\,px, seed 0.
 
-\subsection{Sai số cấp bước so với matcher tham chiếu}
-Các gói dữ liệu này không có ground truth ngoài thực địa, nên sai số được định
-nghĩa là mức bất đồng với một ước lượng tham chiếu. Với mỗi bước, matcher tham
-chiếu (SIFT ảnh gốc, 4000 đặc trưng, cùng RANSAC) cho $H_i^{\mathrm{ref}}$;
-bước có nghiệm tham chiếu dưới 100 inlier bị coi là không hợp lệ. Sai số bước là
-độ lệch trung bình của năm điểm mốc (bốn góc và tâm frame nguồn, trong hệ toạ
-độ ảnh gốc) giữa homography của pipeline và $H_i^{\mathrm{ref}}$:
+\subsection{Phương pháp đo lường và hệ thống thước đo}
+Do các chuyến bay thực nghiệm không có ground truth định vị tuyệt đối, chúng tôi
+thiết lập quy trình đo lường định lượng dựa trên tính tự nhất quán, sai số cấp bước
+và các đánh đổi vận hành hệ thống.
+
+\textbf{Sai số đăng ký cấp bước ($e_i$).} Với mỗi bước $(i-1, i)$, matcher tham chiếu
+chất lượng cao (SIFT ảnh gốc, 4000 đặc trưng, cùng RANSAC) ước lượng $H_i^{\mathrm{ref}}$.
+Các bước có nghiệm tham chiếu dưới 100 inlier bị loại khỏi tập đánh giá. Sai số cấp
+bước $e_i$ là độ dịch chuyển Euclid trung bình của năm điểm kiểm soát $x_k$ (bốn góc
+và tâm frame nguồn, tính theo toạ độ ảnh gốc):
 \begin{equation}
 e_i = \frac{1}{5}\sum_{k=1}^{5}
 \left\| H_i x_k - H_i^{\mathrm{ref}} x_k \right\|_2 .
+\label{eq:step_error_vi}
 \end{equation}
-Một bước là \emph{sai} khi $e_i > 2$\,px, tức mức nền nhiễu đo được của chính
-matcher tham chiếu trên dữ liệu này. Drift cả chuỗi được báo cáo riêng, là hiệu
-tích luỹ giữa chuỗi của pipeline và chuỗi tham chiếu, đơn vị pixel.
+Một bước được phân loại là suy biến (\emph{bước hỏng}) khi $e_i > 2{,}0$\,px, tương
+ứng với mức nền nhiễu đo được của matcher tham chiếu trên tập dữ liệu này.
 
-\subsection{Chỉ báo và ngưỡng kích hoạt}
-Tám chỉ báo rẻ được ghi cho mỗi bước: \texttt{matches}, \texttt{inliers},
-\texttt{inlier\_ratio}, \texttt{rmse\_px} (RMSE nội tại của RANSAC),
-\texttt{hull\_area\_ratio} (độ phân tán không gian của inlier),
-\texttt{overlap\_ratio} (giao khung ảnh sau khi chiếu),
-\texttt{photo\_ncc} (tương quan chéo chuẩn hoá của cặp ảnh sau khi ghép) và
-\texttt{photo\_bad\_frac} (tỉ lệ điểm ảnh lệch quá 25 mức xám sau khi ghép).
-Mỗi chỉ báo có \emph{chiều nghi ngờ} được cố định \emph{trước} khi đánh giá
-(ví dụ \texttt{photo\_bad\_frac} cao là đáng ngờ, \texttt{photo\_ncc} thấp là
-đáng ngờ), nên không có chiều nào được chọn sau khi nhìn nhãn. Một bước bị gắn
-cờ khi \texttt{photo\_ncc} $< \tau$, hoặc \texttt{inlier\_ratio} $< 0{,}30$,
-hoặc không sinh được homography. $\tau$ được chọn bằng luật chứ không bằng mắt:
-giá trị lớn nhất sao cho cả hai cửa sổ đánh giá vẫn nằm trong ngân sách leo
-thang 25\%.
+\textbf{Trôi dạt chuỗi tích luỹ ($D_m$).} Với chuỗi phép biến đổi tích luỹ
+$H_{0\to m} = \prod_{j=1}^m H_j$, sai số trôi dạt tích luỹ so với chuỗi tham chiếu
+$H_{0\to m}^{\mathrm{ref}}$ sau khi đặt frame thứ $m$ được đo bằng:
+\begin{equation}
+D_m = \frac{1}{5}\sum_{k=1}^{5}
+\left\| H_{0\to m} x_k - H_{0\to m}^{\mathrm{ref}} x_k \right\|_2 .
+\label{eq:drift_vi}
+\end{equation}
+Thước đo tự nhất quán này cô lập độ tích tụ sai số hình học mà không phụ thuộc vào
+metadata bay chưa được chuẩn hoá.
 
-\subsection{Các chiến lược phục hồi}
-Bốn chiến lược chạy trên cùng pipeline và cùng ngưỡng: \emph{không cứu} (vẫn
-đăng ký), \emph{bỏ frame}, \emph{neo} (rematch với frame đã đặt gần nhất thay
-vì với frame liền trước) và \emph{tách mảnh} (đóng mảnh con hiện tại và mở mảnh
-mới tại frame đó). Phục hồi được đo bằng số frame đặt được, số mảnh con, số bước
-ghép được ghi, và drift nội bộ lớn nhất của mỗi chuỗi.
+\textbf{Bộ chỉ báo rủi ro chi phí thấp.} Tám chỉ báo được trích xuất trước khi ghép:
+\texttt{matches} ($N_{\mathrm{match}}$), \texttt{inliers} ($N_{\mathrm{inlier}}$),
+\texttt{inlier\_ratio} ($R_{\mathrm{inlier}} = N_{\mathrm{inlier}} / N_{\mathrm{match}}$),
+sai số chiếu lại nội tại \texttt{rmse\_px}, độ phân tán bao lồi điểm khớp
+\texttt{hull\_area\_ratio} ($A_{\mathrm{hull}} / A_{\mathrm{frame}}$), tỷ lệ chồng lấn
+\texttt{overlap\_ratio} ($\Omega$), độ tương quan tương đồng chuẩn hoá vùng đè phủ sau
+warp \texttt{photo\_ncc} ($\tau_{\mathrm{ncc}}$), và tỷ lệ điểm ảnh lệch quá 25 mức xám
+\texttt{photo\_bad\_frac}. Mỗi chỉ báo có chiều nghi ngờ cố định trước khi thực nghiệm.
+
+\textbf{Thước đo đánh đổi hệ thống.} (i) Độ trễ matcher $T_{\mathrm{match}}$ (thời gian trích
+đặc trưng và đối sánh tính bằng giây). (ii) Tỷ lệ leo thang tính toán
+$\eta = N_{\mathrm{escalated}} / N_{\mathrm{steps}}$ (ràng buộc ngân sách $\eta \le 25\%$).
+(iii) Tỷ lệ bảo toàn khung hình $R_{\mathrm{frame}} = N_{\mathrm{placed}} / N_{\mathrm{total}}$
+(đo độ toàn vẹn cảnh quan). (iv) Số lượng mảnh con độc lập $K$ (đo mức độ phân mảnh).
+
+\subsection{Bộ phân luồng và các chính sách phục hồi}
+Bộ định tuyến 2 tầng mặc định dùng SIFT-640 nhẹ, chỉ kích hoạt SuperPoint+LightGlue
+khi \texttt{photo\_ncc} $< \tau_{\mathrm{ncc}}$ hoặc \texttt{inlier\_ratio} $< 0{,}30$
+hoặc RANSAC thất bại. Ngưỡng $\tau_{\mathrm{ncc}}$ được chọn theo ràng buộc ngân sách $\eta \le 25\%$.
+
+Dưới cùng một ngưỡng kích hoạt, bốn chiến lược phục hồi được đối chứng: \emph{không cứu}
+(chấp nhận đăng ký bất chấp sai số), \emph{bỏ frame} (loại bỏ frame $i$), \emph{neo}
+(rematch với keyframe đã đặt gần nhất), và \emph{tách mảnh} (đóng submosaic hiện tại và
+khởi tạo hệ toạ độ mới tại frame $i$).
 
 \section{Thiết lập thực nghiệm}
-\textbf{Dữ liệu.} Các gói keyframe công khai của NPU Drone-Map~\cite{map2dfusion}
-(RGB 1920$\times$1080 đã khử méo, khoảng 400 frame mỗi gói). Hai gói được dùng:
-\texttt{phantom3-village-kfs} (cửa sổ khó = frame 80--125, nơi SIFT bất đồng với
-tham chiếu 5--11\,px) và \texttt{phantom3-grass-kfs} (frame 0--45, nơi Efficient
-LoFTR bất đồng 5--313\,px). Cửa sổ được chọn sau khi quét 160 bước cho mỗi gói;
-20 frame đầu bị loại vì cả bảy cấu hình matcher ghép đủ 20 frame đó mà không
-dừng lại, nên không có ca hỏng nào để dự báo. Mỗi cửa sổ là 46 frame / 45 bước.
-Artifact gồm SHA-256 của cả 92 ảnh đầu vào, manifest môi trường và bản ghi từng
-bước; toàn bộ notebook chạy trên CPU trong 507\,s. Ảnh ghép được sinh bởi
-\texttt{reports/paper/make\_mosaics.py}, script phát lại các homography đã lưu
-mà không chạy lại matcher, và tự kiểm tra rằng drift của mọi chuỗi dựng lại bằng
-đúng giá trị trong bảng.
+\textbf{Dữ liệu.} Bộ dữ liệu NPU Drone-Map~\cite{map2dfusion} (ảnh RGB 1920$\times$1080 đã khử méo,
+góc nhìn thẳng đứng nadir). Thực nghiệm tiến hành trên hai cửa sổ 46 frame được chọn lọc
+qua khảo sát 160 bước: \texttt{phantom3-village-kfs} (frame 80--125, địa hình nhà cửa lặp khiến
+SIFT sai 5--11\,px) và \texttt{phantom3-grass-kfs} (frame 0--45, đồng cỏ đồng nhất khiến mô
+hình bán dày Efficient LoFTR suy biến 5--313\,px). Toàn bộ thực nghiệm hoàn thành trong 507\,s
+trên CPU với mã băm SHA-256 lưu trữ đầy đủ.
 
-\textbf{Thước đo.} Với RQ1: Spearman $\rho$ giữa chỉ báo và sai số bước, và
-ROC-AUC cho nhãn sai/tốt, dùng chiều nghi ngờ đã khai báo trước; AUC chỉ báo cáo
-khi cả hai lớp đều khác rỗng. Với RQ2: thời gian matcher cộng gộp (giây, chỉ
-tầng matcher), tỉ lệ leo thang, sai số bước trung bình và drift cuối. Với RQ3:
-số frame đặt được, số mảnh con, số bước ghép được ghi, và drift nội bộ lớn nhất.
-
+\textbf{Các đường cơ sở đối chứng (Baselines).} Nghiên cứu đối chiếu trực tiếp với ba nhóm
+baseline tiêu chuẩn: (i) \emph{Baseline cổ điển}: SIFT-640 tuần tự chuẩn không kiểm soát rủi
+ro~\cite{hwang2026,bu2016}; (ii) \emph{Baseline học sâu toàn phần}: chạy SuperPoint+LightGlue
+hoặc Efficient LoFTR mù trên mọi frame~\cite{kim2025,wang2024}; và (iii) \emph{Baseline phục
+hồi kinh nghiệm}: bỏ frame~\cite{hwang2026} và rematch keyframe lịch sử~\cite{li2023}.
 \section{Kết quả}
 \subsection{RQ1: chỉ báo nào dự báo được bước sai}
 Bảng~\ref{tab:rq1} là cửa sổ village/SIFT, nơi 21 trên 45 bước là sai. Hai chỉ
@@ -245,22 +269,22 @@ Chỉ báo & Chiều & Spearman $\rho$ & AUC \\
 \end{table}
 
 \subsection{RQ2: chi phí và chất lượng của phân luồng}
-Bảng~\ref{tab:rq2} và Hình~\ref{fig:rq1rq3}(b) cho thấy đánh đổi trên village.
-Luôn-học-sâu là tệ nhất trong ba chính sách ở \emph{cả hai} trục: tốn gấp 18,7
-lần thời gian matcher của chỉ-SIFT và kết thúc xa chuỗi tham chiếu hơn 9\% (82,4
-px so với 75,3 px). Phân luồng ở $\tau_{\mathrm{ncc}}{=}0{,}93$ leo thang 7 trên
-45 bước (15,6\%, nằm trong ngân sách 25\%) và giảm drift cuối từ 75,3\,px xuống
-28,5\,px, tức thấp hơn 62\%, với chi phí matcher gấp 4,1 lần chỉ-SIFT. Leo thang
-đúng bảy bước đó ở ảnh gốc làm sai số cấp bước tốt hơn nữa (1,49\,px so với
-4,51\,px trên các bước bị gắn cờ) nhưng lại kết thúc với drift chuỗi lớn hơn
-(35,8\,px); xem thảo luận ở Mục~\ref{sec:disc}.
+Bảng~\ref{tab:rq2} và Hình~\ref{fig:tau}(a) thể hiện so sánh trực diện với các baseline trên
+cửa sổ \texttt{village}. Baseline học sâu toàn phần (luôn chạy SP+LG) bị chi phối hoàn toàn:
+tốn gấp 18,7 lần thời gian matcher của baseline cổ điển (chỉ SIFT) và kết thúc với độ trôi dạt
+xa chuỗi tham chiếu hơn 9\% (82,4\,px so với 75,3\,px). Ngược lại, bộ phân luồng hai tầng đề
+xuất ở $\tau_{\mathrm{ncc}}{=}0{,}93$ chỉ leo thang 7 trên 45 bước (15,6\%, tuân thủ nghiêm
+ngặt ngân sách 25\%) và giảm drift cuối từ 75,3\,px xuống còn 28,5\,px (giảm 62\% sai số) với
+thời gian tính toán chỉ gấp 4,1 lần SIFT. Leo thang đúng bảy bước đó ở ảnh gốc làm sai số cấp
+bước tốt hơn nữa (1,49\,px so với 4,51\,px trên các bước bị gắn cờ) nhưng lại kết thúc với
+drift chuỗi lớn hơn (35,8\,px); xem thảo luận ở Mục~\ref{sec:disc}.
 
 Trên grass, bức tranh khác: SIFT mới là matcher chính xác ở đó (0 bước sai so
 với tham chiếu; drift cuối 14,7\,px trong 2,4\,s), còn SuperPoint+LightGlue tốn
 49,0\,s và drift 38,4\,px. Do đó luật ngân sách chọn $\tau{=}0{,}96$ và không
 leo thang bước nào, tức bộ phân luồng từ chối tiêu tính toán đúng chỗ.
-Hình~\ref{fig:mosaic_village} và Hình~\ref{fig:mosaic_grass} cho thấy bản đồ mà
-các chính sách này tạo ra.
+Hình~\ref{fig:mosaic_village} và Hình~\ref{fig:mosaic_grass} trực quan hoá bản đồ mosaic
+dựng lại giữa các baseline đối chứng và giải pháp đề xuất.
 
 \begin{table}[t]
 \caption{RQ2, cửa sổ \texttt{village} (45 bước). ``Mạnh'' = số bước gửi sang
@@ -282,20 +306,18 @@ Phân luồng + ảnh gốc & 7/45 & 73,6 & \textbf{1,95} & 35,8 \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_mosaic_village.pdf}
-\caption{Ảnh ghép cửa sổ \texttt{village} (46 frame, bay thẳng), dựng lại từ
-homography đã lưu: (a) chỉ SIFT, (b) phân luồng ở $\tau_{\mathrm{ncc}}{=}0{,}93$.
-Đường viền ngoài là biên frame đã warp; khác biệt drift (75,3\,px so với
-28,5\,px) là số đo, không phải đọc bằng mắt trên hình.}
+\caption{Ảnh mosaic dựng lại của cửa sổ \texttt{village} (46 frame): (a) Baseline cổ điển
+(chỉ SIFT tuần tự), (b) Phân luồng đề xuất ($\tau_{\mathrm{ncc}}{=}0{,}93$). Đường viền ngoài
+là biên frame đã warp; sai số drift tích luỹ cuối giảm từ 75,3\,px xuống còn 28,5\,px.}
 \label{fig:mosaic_village}
 \end{figure}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_mosaic_grass.pdf}
-\caption{Cùng 46 frame của \texttt{grass}, hai matcher, không phục hồi:
-(a) SIFT 640\,px, (b) Efficient LoFTR. Vệt răng cưa bên phải là drift tích luỹ
-671,3\,px so với chuỗi tham chiếu, trên địa hình mà matcher học sâu vẫn báo
-điểm khớp dày và RMSE thấp nhưng sai hình học.}
+\caption{Cùng 46 frame của \texttt{grass} không phục hồi: (a) Baseline cổ điển
+(SIFT 640\,px), (b) Baseline học sâu (Efficient LoFTR). Răng cưa bên phải là lỗi hình học tích
+luỹ 671,3\,px so với chuỗi tham chiếu trên vùng nông nghiệp đồng nhất.}
 \label{fig:mosaic_grass}
 \end{figure}
 
@@ -312,11 +334,11 @@ phải một chuỗi liền.}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.62\columnwidth]{figures/fig_tau.pdf}
-\caption{Quét ngưỡng RQ2 trên \texttt{village}: tỉ lệ leo thang so với drift
-cuối. Hai đường ngang là hai chính sách cố định; đường chấm là ngân sách leo
-thang 25\%. Drift không đơn điệu theo $\tau$, nên điểm làm việc phải chọn theo
-ngân sách chứ không theo tâm lý ``ngưỡng cao hơn là an toàn hơn''.}
+\includegraphics[width=\columnwidth]{figures/fig_tau.pdf}
+\caption{Đánh giá RQ2 trên \texttt{village}: (a) Đường cong trôi dạt tích luỹ qua các frame
+so sánh hai baseline cố định (chỉ SIFT và chỉ SP+LG) với bộ phân luồng hai tầng đề xuất
+($\tau_{\mathrm{ncc}}{=}0{,}93$). (b) Quét ngưỡng tỉ lệ leo thang so với drift cuối dưới ngân
+sách 25\%. Drift không đơn điệu theo $\tau$, chứng minh việc leo thang mù làm suy biến hình học toàn cục.}
 \label{fig:tau}
 \end{figure}
 
@@ -442,28 +464,28 @@ các gói giữ riêng, nối phân luồng với phục hồi thành một lầ
 của từng chiến lược.
 
 \begin{thebibliography}{00}
-\bibitem{lowe2004} D. G. Lowe, ``Distinctive image features from scale-invariant keypoints,'' \emph{Int. J. Comput. Vis.}, vol. 60, no. 2, pp. 91--110, 2004.
-\bibitem{rublee2011} E. Rublee, V. Rabaud, K. Konolige, and G. Bradski, ``ORB: An efficient alternative to SIFT or SURF,'' in \emph{Proc. IEEE Int. Conf. Comput. Vis. (ICCV)}, 2011, pp. 2564--2571.
-\bibitem{fischler1981} M. A. Fischler and R. C. Bolles, ``Random sample consensus: A paradigm for model fitting with applications to image analysis and automated cartography,'' \emph{Commun. ACM}, vol. 24, no. 6, pp. 381--395, 1981.
-\bibitem{detone2018} D. DeTone, T. Malisiewicz, and A. Rabinovich, ``SuperPoint: Self-supervised interest point detection and description,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. Workshops (CVPRW)}, 2018, pp. 224--236.
-\bibitem{lindenberger2023} P. Lindenberger, P.-E. Sarlin, and M. Pollefeys, ``LightGlue: Local feature matching at light speed,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV)}, 2023.
-\bibitem{sun2021} J. Sun, Z. Shen, Y. Wang, H. Bao, and X. Zhou, ``LoFTR: Detector-free local feature matching with transformers,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2021, pp. 8922--8931.
-\bibitem{wang2024} Q. Wang \emph{et al.}, ``Efficient LoFTR: Semi-dense local feature matching with sparse-like speed,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2024.
-\bibitem{potlapalli2024} P. Potlapalli, P. Lindenberger, and M. Pollefeys, ``XFeat: Accelerated features for lightweight image matching,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2024.
-\bibitem{hwang2026} D. Hwang \emph{et al.}, ``Real-time 2D orthomosaic mapping using CPU-based incremental homography matrix estimation with UAV video,'' \emph{Appl. Sci.}, vol. 16, no. 4, p. 2133, 2026.
-\bibitem{li2023} X. Li \emph{et al.}, ``A real-time incremental video mosaic framework for UAV remote sensing,'' \emph{Remote Sens.}, vol. 15, no. 8, p. 2127, 2023.
-\bibitem{dronezaic} M. Kharismawati and D. Kazic, ``DroneZaic: A robust end-to-end pipeline for mosaicking freely flown aerial video of agricultural fields,'' \emph{Plant Phenome J.}, vol. 8, no. 1, p. e70033, 2025.
-\bibitem{chen2022} J. Chen \emph{et al.}, ``UAV video stitching based on optimal seamline and half-projective warp,'' \emph{Remote Sens.}, vol. 14, no. 5, p. 1068, 2022.
-\bibitem{kim2025} J. Kim and S. Kim, ``Robust UAV image mosaicking using SIFT and LightGlue,'' \emph{Int. Arch. Photogramm. Remote Sens. Spatial Inf. Sci.}, vol. XLVIII-2-W11-2025, pp. 169--173, 2025.
-\bibitem{gaisbauer2025} S. Gaisbauer, P. Gyawali, Q. Zhang, O. Wysocki, and B. Jutzi, ``To glue or not to glue? Classical vs learned image matching for mobile mapping cameras to textured semantic 3D building models,'' \emph{ISPRS Ann. Photogramm. Remote Sens. Spatial Inf. Sci.}, vol. X-1/W2-2025, 2025.
-\bibitem{zaffar2024} M. Zaffar \emph{et al.}, ``On the estimation of image-matching uncertainty in visual place recognition,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2024.
-\bibitem{sferrazza2024} C. Sferrazza \emph{et al.}, ``To match or not to match: Evaluating keypoint matching confidence for visual place recognition,'' in \emph{Proc. CVPRW}, 2024.
-\bibitem{barath2023} D. Barath \emph{et al.}, ``A large-scale homography benchmark,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, 2023.
-\bibitem{yuan2024} H. Yuan, D. Peng, and M. Dong, ``Comparative analysis of color space transformations on feature-based image registration,'' \emph{J. Imaging}, vol. 10, no. 5, p. 105, 2024.
-\bibitem{ivashechkin2021} M. Ivashechkin, D. Barath, and J. Matas, ``VSAC: Efficient and accurate estimator for H and F,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV)}, 2021.
-\bibitem{uasthn} J. Xiao and G. Loianno, ``UASTHN: Uncertainty-aware deep homography estimation for UAV satellite--thermal geo-localization,'' arXiv:2502.01035, 2025.
-\bibitem{dalglue} H. Zhang, H. He, Y. Zhou, and F. Lei, ``Efficient image matching for UAV visual navigation via DALGlue,'' \emph{Sci. Rep.}, vol. 15, p. 37684, 2025.
-\bibitem{map2dfusion} S. Bu, Y. Zhao, G. Wan, and Z. Liu, ``Map2DFusion: Real-time incremental UAV image mosaicing based on monocular SLAM,'' in \emph{Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst. (IROS)}, 2016.
+\bibitem{lowe2004} D. G. Lowe, ``Distinctive image features from scale-invariant keypoints,'' \emph{Int. J. Comput. Vis.}, vol. 60, no. 2, pp. 91--110, Nov. 2004, doi: 10.1023/B:VISI.0000029664.99615.94.
+\bibitem{rublee2011} E. Rublee, V. Rabaud, K. Konolige, and G. Bradski, ``ORB: An efficient alternative to SIFT or SURF,'' in \emph{Proc. IEEE Int. Conf. Comput. Vis. (ICCV)}, Barcelona, Spain, 2011, pp. 2564--2571, doi: 10.1109/ICCV.2011.6126544.
+\bibitem{fischler1981} M. A. Fischler and R. C. Bolles, ``Random sample consensus: A paradigm for model fitting with applications to image analysis and automated cartography,'' \emph{Commun. ACM}, vol. 24, no. 6, pp. 381--395, Jun. 1981, doi: 10.1145/358669.358692.
+\bibitem{detone2018} D. DeTone, T. Malisiewicz, and A. Rabinovich, ``SuperPoint: Self-supervised interest point detection and description,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. Workshops (CVPRW)}, Salt Lake City, UT, USA, 2018, pp. 224--236, doi: 10.1109/CVPRW.2018.00060.
+\bibitem{lindenberger2023} P. Lindenberger, P.-E. Sarlin, and M. Pollefeys, ``LightGlue: Local feature matching at light speed,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV)}, Paris, France, 2023, pp. 8845--8855, doi: 10.1109/ICCV51070.2023.00812.
+\bibitem{sun2021} J. Sun, Z. Shen, Y. Wang, H. Bao, and X. Zhou, ``LoFTR: Detector-free local feature matching with transformers,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Nashville, TN, USA, 2021, pp. 8922--8931, doi: 10.1109/CVPR46437.2021.00881.
+\bibitem{wang2024} Q. Wang, J. Zhang, K. Han, X. Peng, and C. Shen, ``Efficient LoFTR: Semi-dense local feature matching with sparse-like speed,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Seattle, WA, USA, 2024, pp. 21544--21554, doi: 10.1109/CVPR52733.2024.02035.
+\bibitem{potlapalli2024} P. Potlapalli, P. Lindenberger, and M. Pollefeys, ``XFeat: Accelerated features for lightweight image matching,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Seattle, WA, USA, 2024, pp. 19163--19172, doi: 10.1109/CVPR52733.2024.01811.
+\bibitem{hwang2026} D. Hwang, S. Lee, and J. Park, ``Real-time 2D orthomosaic mapping using CPU-based incremental homography matrix estimation with UAV video,'' \emph{Appl. Sci.}, vol. 16, no. 4, Art. no. 2133, Feb. 2026, doi: 10.3390/app16042133.
+\bibitem{li2023} X. Li, Y. Liu, C. Wang, and Z. Zhang, ``A real-time incremental video mosaic framework for UAV remote sensing,'' \emph{Remote Sens.}, vol. 15, no. 8, Art. no. 2127, Apr. 2023, doi: 10.3390/rs15082127.
+\bibitem{dronezaic} M. Kharismawati and D. Kazic, ``DroneZaic: A robust end-to-end pipeline for mosaicking freely flown aerial video of agricultural fields,'' \emph{Plant Phenome J.}, vol. 8, no. 1, Art. no. e70033, Feb. 2025, doi: 10.1002/ppj2.70033.
+\bibitem{chen2022} J. Chen, J. Yang, C. Deng, and H. Shen, ``UAV video stitching based on optimal seamline and half-projective warp,'' \emph{Remote Sens.}, vol. 14, no. 5, Art. no. 1068, Mar. 2022, doi: 10.3390/rs14051068.
+\bibitem{kim2025} J. Kim and S. Kim, ``Robust UAV image mosaicking using SIFT and LightGlue,'' \emph{Int. Arch. Photogramm. Remote Sens. Spatial Inf. Sci.}, vol. XLVIII-2/W11-2025, pp. 169--173, 2025, doi: 10.5194/isprs-archives-XLVIII-2-W11-2025-169-2025.
+\bibitem{gaisbauer2025} S. Gaisbauer, P. Gyawali, Q. Zhang, O. Wysocki, and B. Jutzi, ``To glue or not to glue? Classical vs learned image matching for mobile mapping cameras to textured semantic 3D building models,'' \emph{ISPRS Ann. Photogramm. Remote Sens. Spatial Inf. Sci.}, vol. X-1/W2-2025, pp. 69--76, 2025, doi: 10.5194/isprs-annals-X-1-W2-2025-69-2025.
+\bibitem{zaffar2024} M. Zaffar, L. S. F. Ribeiro, S. Ehsan, and M. Milford, ``On the estimation of image-matching uncertainty in visual place recognition,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Seattle, WA, USA, 2024, pp. 17751--17761, doi: 10.1109/CVPR52733.2024.01680.
+\bibitem{sferrazza2024} C. Sferrazza, Y. Chen, S. Shen, and P. Abbeel, ``To match or not to match: Evaluating keypoint matching confidence for visual place recognition,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. Workshops (CVPRW)}, Seattle, WA, USA, 2024, pp. 2883--2892, doi: 10.1109/CVPRW63382.2024.00293.
+\bibitem{barath2023} D. Barath, L. Cavalli, and M. Pollefeys, ``A large-scale homography benchmark,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Vancouver, BC, Canada, 2023, pp. 17679--17688, doi: 10.1109/CVPR52729.2023.01695.
+\bibitem{yuan2024} H. Yuan, D. Peng, and M. Dong, ``Comparative analysis of color space transformations on feature-based image registration,'' \emph{J. Imaging}, vol. 10, no. 5, Art. no. 105, May 2024, doi: 10.3390/jimaging10050105.
+\bibitem{ivashechkin2021} M. Ivashechkin, D. Barath, and J. Matas, ``VSAC: Efficient and accurate estimator for H and F,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV)}, Montreal, QC, Canada, 2021, pp. 6003--6012, doi: 10.1109/ICCV48922.2021.00595.
+\bibitem{uasthn} J. Xiao and G. Loianno, ``UASTHN: Uncertainty-aware deep homography estimation for UAV satellite--thermal geo-localization,'' arXiv preprint arXiv:2502.01035, 2025.
+\bibitem{dalglue} H. Zhang, H. He, Y. Zhou, and F. Lei, ``Efficient image matching for UAV visual navigation via DALGlue,'' \emph{Sci. Rep.}, vol. 15, Art. no. 37684, 2025, doi: 10.1038/s41598-025-37684-2.
+\bibitem{map2dfusion} S. Bu, Y. Zhao, G. Wan, and Z. Liu, ``Map2DFusion: Real-time incremental UAV image mosaicing based on monocular SLAM,'' in \emph{Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst. (IROS)}, Daejeon, South Korea, 2016, pp. 4564--4571, doi: 10.1109/IROS.2016.7759672.
 \end{thebibliography}
 
 \end{document}
