@@ -74,9 +74,16 @@ Cộng cả 3 tầng = **4.29 GB < 10 GB** → không cần đánh đổi; chỉ
 
 ---
 
-## 5. Dữ liệu KHÔNG có trong link public (và có cần không)
+## 5. Giải thích dung lượng: 100+ GB công bố vs. ~4.29 GB thực tế và vì sao < 5 GB là đủ
 
-Bộ NPU Drone-Map **nguồn đầy đủ là 100+ GB** (theo trang chủ: "over 100GB data and more captured sequences will be added", gồm video gốc + unified + keyframes + GCP của tất cả sequence). Link Baidu public **chỉ phát hành 4.3 GB keyframes** — phần khác (~96 GB) chưa từng được công bố bản tải.
+### 5.1 Vì sao tác giả công bố 100+ GB nhưng link public chỉ có ~4.29 GB?
+- **Định dạng gốc của tác giả:** Con số 100+ GB ("over 100GB data") bao gồm toàn bộ video thô độ phân giải cao (`.MOV`/`.MP4` 30--60 FPS), log GPS tần số cao, log cảm biến thô (`log.DAT`), và tập toạ độ điểm khống chế mặt đất (GCPs).
+- **Phạm vi chia sẻ công khai:** Trên link Baidu Pan, tác giả **chỉ trích xuất và chia sẻ định dạng Keyframe Sequence (`*-kfs.tar.gz`)** gồm đúng 14 file với tổng dung lượng nén **~4.29 GB** (giải nén ra ảnh là ~6.5 GB). Phần dữ liệu video thô còn lại (~96 GB) được lưu trữ nội bộ tại phòng lab và chưa từng mở link download trực tiếp công khai.
+
+### 5.2 Vì sao nghiên cứu này chỉ cần < 5 GB (thực tế chỉ cần ~1--2 GB) là hoàn toàn đủ?
+1. **Khử trùng lặp khung hình (No Video Redundancy):** Ghép ảnh 2D chỉ cần các frame có độ đè phủ (overlap) từ 60--80%. Video 30 FPS chứa hàng chục nghìn frame gần như trùng khít nhau. Gói keyframe `*-kfs` đã được lấy mẫu chuẩn (~1--2 FPS), loại bỏ 95% frame dư thừa mà vẫn bảo toàn đầy đủ hình học bay.
+2. **Không làm Georeference tuyệt đối & 3D SfM:** Đề tài tập trung vào bản đồ hiện trạng cục bộ 2D (local mosaic) bằng homography, nằm ngoài phạm vi định vị toạ độ địa lý WGS84 hay dựng mô hình 3D. Do đó hoàn toàn không cần đến hàng chục GB dữ liệu GCPs hay log GPS thô.
+3. **Trọng tâm là 3 câu hỏi Failure-Aware (RQ1--RQ3):** Giá trị khoa học nằm ở việc thử thách pipeline trên các kịch bản bay đặc thù (nghèo vân như `grass`, lặp cấu trúc như `village`), chứ không nằm ở số lượng gigabyte. Thực tế toàn bộ paper IEEE của nhóm chỉ cần 2 sequence (~635 MB) đã chứng minh đầy đủ các luận điểm định lượng.
 
 | Định dạng | Nội dung | Có trong Baidu share? | Dự án có cần? |
 |---|---|---|---|
@@ -86,8 +93,7 @@ Bộ NPU Drone-Map **nguồn đầy đủ là 100+ GB** (theo trang chủ: "over
 | **GCPs** (`<sequence>-GCPs.zip`) | tọa độ GPS điểm khống chế | Không | Không (mosaic dự án không georeference) |
 
 Cần các định dạng trên → liên hệ tác giả: Shuhui Bu `<bushuhui@nwpu.edu.cn>`, Yong Zhao `<zd5945@126.com>`.
-
-### 5.1 Còn gì "cứu được" từ trang tác giả (kiểm chứng 2026-10-13)
+### 5.3 Còn gì "cứu được" từ trang tác giả (kiểm chứng 2026-10-13)
 
 Rà lại `adv-ci.com/blog/source/` + `npu-drone-map-dataset/` sau khi gặp bế tắc về tham chiếu drift:
 
