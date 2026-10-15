@@ -32,5 +32,7 @@ Môn AI2002 — nhóm 09.
 | `notes/` | Thuật ngữ, ghi chú lý thuyết, dataset, mô hình |
 | `refs/` | Thư viện PDF tham khảo, danh mục ở `refs/INDEX.md` |
 | `reports/` | Deliverables: `proposal/`, `md/` (bản markdown), `templates/` (mẫu môn học) |
-| `notebooks/` | Thực nghiệm ghép ảnh; output ở `notebooks/outputs/` (đã gitignore), vào từ `outputs/index.html` |
+| `notebooks/` | [Công việc độc lập theo model/RQ](notebooks/README.md), chỉ chạy trên Colab/Kaggle hosted runtime; `notebooks/outputs/` giữ kết quả lịch sử |
 | `data/` | 8 sequence `-kfs` của NPU Drone-Map (đã gitignore, không hardcode đường dẫn) |
+
+**Không thực thi notebook/pipeline trên máy cá nhân**, kể cả GPU hoặc Colab local runtime. Xem [RULES.md §8](RULES.md#8-thực-nghiệm-chỉ-chạy-trên-cloud).

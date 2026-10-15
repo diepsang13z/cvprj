@@ -56,3 +56,12 @@ Ba nguồn tách theo vòng đời thay đổi; **không giữ một file trạn
 ## 7. Thêm quy tắc mới
 
 Thêm mục đánh số tiếp theo ngay tại đây. Khi mâu thuẫn, `RULES.md` thắng mọi mô tả khác trong repo.
+
+## 8. Thực nghiệm chỉ chạy trên cloud
+
+- **Tuyệt đối không thực thi notebook hoặc pipeline/model thực nghiệm trên máy tính cá nhân**, kể cả khi máy có GPU. Không dùng Colab kết nối local runtime.
+- Chỉ chạy trên runtime do Google Colab hoặc Kaggle cấp. CPU cổ điển (SIFT/ORB) cũng phải chạy trên cloud; chọn GPU cho model học sâu khi cần.
+- Quy định này cụ thể hoá `RDR-0010`, nhằm tránh tải tính toán kéo dài trên thiết bị cá nhân; không đồng nghĩa mọi tác vụ CPU đều làm hỏng phần cứng.
+- Trên máy cá nhân chỉ đọc/sửa notebook và kiểm tra tĩnh JSON, cú pháp, đường dẫn. Không Run All, chạy cell, `nbconvert --execute`, `papermill`, hoặc chạy script thay notebook để lách quy định.
+- Mỗi công việc có notebook riêng và thư mục kết quả riêng theo run. Lưu cấu hình, môi trường, nguồn dữ liệu và log/artifact lên bộ nhớ bền vững trước khi kết thúc phiên cloud.
+- Không ghi đè kết quả đã dùng trong paper. Người tổng hợp chỉ ghép artifact cùng cấu hình/dữ liệu; ghi rõ nguồn từng run, không trộn thời gian CPU/GPU thành một benchmark.

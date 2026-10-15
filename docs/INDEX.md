@@ -46,7 +46,7 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
   - [`2026_10_14_diepsang13z.md`](logs/progress/2026_10_14_diepsang13z.md) — Quét 160 bước chọn cửa sổ có lỗi thật, viết Notebook 05 (RQ1/RQ2/RQ3), đề xuất `RDR-0008`, sửa lỗi tính toán và chạy lại Notebook 05.
-  - [`2026_10_15_diepsang13z.md`](logs/progress/2026_10_15_diepsang13z.md) — Chuẩn hoá references theo chuẩn IEEE qua Google Scholar, vẽ đường Baseline vào đồ thị paper (`fig_tau.pdf`), viết mục Phương pháp đo lường & Thước đo (Metrics) và định nghĩa 3 nhóm Baseline.
+  - [`2026_10_15_diepsang13z.md`](logs/progress/2026_10_15_diepsang13z.md) — Cập nhật paper; bổ sung tách notebook theo model/RQ, bàn giao artifact và quy định chỉ chạy trên cloud; ghi rõ kiểm tra tĩnh và giới hạn chưa chạy cloud.
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
 - [`docs/logs/experiments/`](logs/experiments/) — Nhật ký thực nghiệm dài (quét trước khi thiết kế thí nghiệm).
   - [`0001_failure_scan_windows.md`](logs/experiments/0001_failure_scan_windows.md) — Nhật ký quét 160 bước × 2 sequence và chọn cửa sổ `village` 80–125 / `grass` 0–45. Đọc kèm audit 05: ghép đủ frame không chứng minh không có lỗi hình học.
@@ -60,14 +60,14 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
-- [`reports/paper/`](../reports/paper/) — **Bản nháp bài báo IEEE**, hai bản cùng số liệu: `main.tex` → `main.pdf` (tiếng Anh) và `main_vi.tex` → `main_vi.pdf` (tiếng Việt, cần font Times New Roman của Windows vì font trong bundle TeX không có dấu). Hình dữ liệu: `make_figures.py` (biểu đồ từ `report.json`) và `make_mosaics.py` (ảnh mosaic phát lại homography đã lưu, tự kiểm tra drift khớp `report.json` trước khi ghi ảnh). **Quy ước trình bày:** không dùng dấu gạch dài (em dash); `check_tables.py` là cổng kiểm tra bắt buộc, đối chiếu mọi con số trong 3 bảng với `report.json`, đối chiếu cột "Chiều" với `INDICATOR_SUSPICION` trong notebook, và chặn em dash. Đọc kèm mục Limitations; `RDR-0008` còn Proposed nên ngưỡng $\tau$ trong bài là đề xuất, chưa phải kết luận đã chốt của nhóm.
+- [`reports/paper/`](../reports/paper/) — **Bản nháp bài báo IEEE**, hai bản cùng số liệu: `main.tex` → `main.pdf` (tiếng Anh) và `main_vi.tex` → `main_vi.pdf` (tiếng Việt, cần font Times New Roman). `make_figures.py` và `make_mosaics.py` đọc artifact lịch sử; không tự chuyển sang run cloud mới. `check_tables.py` đối chiếu bảng với `report.json`, đọc `INDICATOR_SUSPICION` từ `notebooks/shared/failure_core.py` bằng text (không import model), và chặn em dash. `RDR-0008` còn Proposed; đọc kèm Limitations.
   - [`reports/paper/presentation_script.md`](../reports/paper/presentation_script.md) — Kịch bản thuyết trình paper 3–5 phút cho nhóm báo cáo với GVHD kèm bảng tra cứu số liệu nhanh.
 - [`reports/present_02/`](../reports/present_02/) — Slide Present 2, hai bản: `open_slide/` (deck open-slide 12 trang, có speaker notes + export PDF/PPTX, chạy `pnpm dev`) và `index.html` (bản offline mở bằng trình duyệt). Chi tiết ở `README.md` trong thư mục.
-- `notebooks/` — Thực nghiệm ghép ảnh: `01_classical_baseline.ipynb` (Classical Baseline ORB/SIFT, tích lũy Homography, log metric).
-- [`02_lightglue_pilot.ipynb`](../notebooks/02_lightglue_pilot.ipynb) — Pilot SIFT/SuperPoint + LightGlue: 3 cặp và mosaic 20 frame ảnh gốc; chưa đánh giá drift/routing trong notebook này.
-- [`03_all_models.ipynb`](../notebooks/03_all_models.ipynb) — Pilot 7 cấu hình RDR-0006: cặp-frame và mosaic, run riêng với manifest/hash; không phải benchmark đủ rộng.
-- [`04_drift_evaluation.ipynb`](../notebooks/04_drift_evaluation.ipynb) — Chẩn đoán trajectory/plane **và** xuất `drift_selfconsistent.json` theo chain-vs-direct. Xem audit 04 trước khi diễn giải thang đo hoặc so sánh đoạn đo.
-- [`05_failure_aware_pipeline.ipynb`](../notebooks/05_failure_aware_pipeline.ipynb) — Phân tích chỉ báo, mô phỏng routing và thử recovery riêng; chưa nối end-to-end. Kết quả ở `notebooks/outputs/05_failure_aware/`; phương pháp trong RDR-0008 còn Proposed.
+- [`notebooks/README.md`](../notebooks/README.md) — Điểm vào thực nghiệm: notebook riêng theo model/RQ, thứ tự phụ thuộc, phân công và hợp đồng bàn giao. **Chỉ chạy Colab/Kaggle hosted runtime**, theo `RULES.md` §8.
+- [`notebooks/classical/`](../notebooks/classical/) và [`notebooks/lightglue/`](../notebooks/lightglue/) — Pilot ảnh gốc tách SIFT/ORB và từng extractor LightGlue; không trộn với benchmark 640 px.
+- [`notebooks/models/`](../notebooks/models/) — Bảy notebook 640 px, một cấu hình mỗi notebook; độc lập output và log.
+- [`notebooks/drift/`](../notebooks/drift/) — Một job trajectory và bảy job chain-vs-direct, nhận đường dẫn run model cụ thể.
+- [`notebooks/research/`](../notebooks/research/) — Ba scan theo matcher → RQ1/RQ2 → bốn recovery độc lập → tổng hợp report. Các notebook 01–05 cũ chỉ còn mục lục; output lịch sử không thay đổi.
 
 ---
 

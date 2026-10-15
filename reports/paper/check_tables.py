@@ -13,16 +13,15 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "notebooks" / "outputs" / "05_failure_aware"
 PAPER = Path(__file__).resolve().parent
-NOTEBOOK = ROOT / "notebooks" / "05_failure_aware_pipeline.ipynb"
+INDICATORS = ROOT / "notebooks" / "shared" / "failure_core.py"
 
 VILLAGE = "phantom3-village-kfs"
 GRASS = "phantom3-grass-kfs"
 
 
 def declared_directions():
-    """{indicator: 'uparrow'|'downarrow'} from the notebook's INDICATOR_SUSPICION literal."""
-    source = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
-    code = "\n".join("".join(cell["source"]) for cell in source["cells"] if cell["cell_type"] == "code")
+    """Read the declared directions without importing or executing experiment code."""
+    code = INDICATORS.read_text(encoding="utf-8")
     block = re.search(r"INDICATOR_SUSPICION\s*=\s*\{(.*?)\}", code, re.S).group(1)
     pairs = re.findall(r'"([a-z_]+)"\s*:\s*(-?1\.0)', block)
     assert len(pairs) == 8, pairs
