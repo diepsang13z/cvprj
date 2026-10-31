@@ -93,54 +93,65 @@ matcher everywhere made the map \emph{worse} than the cheap matcher on the
 window we measured.
 
 \section{Related Work}
-\textbf{Incremental UAV mosaicking and risk blindness.} CPU-oriented sequential
-pipelines employing ORB/SIFT with RANSAC typically limit feature budgets or apply
-a fixed inlier threshold to drop degraded frames~\cite{hwang2026}; Li et
+\textbf{Incremental UAV mosaicking and risk blindness.} Sequential aerial
+mosaicking pipelines broadly follow two paradigms: direct visual odometry with
+local bundle adjustment (such as Map2DFusion~\cite{map2dfusion}), which demands
+substantial compute and assumes continuous smooth motion, and pairwise
+feature-based homography chaining~\cite{hwang2026,li2023,chen2022,dronezaic}, which
+prioritises throughput. Among feature-based systems, CPU-oriented sequential
+pipelines using ORB or SIFT with RANSAC typically limit keypoint budgets or apply
+fixed inlier count thresholds to reject degraded frames~\cite{hwang2026}; Li et
 al.~\cite{li2023} minimise a weighted reprojection error and rematch historical
 keyframes to damp drift; Chen et al.~\cite{chen2022} apply dynamic programming for
 optimal seamlines alongside half-projective warps to handle parallax; and
-Kharismawati and Kazic~\cite{dronezaic} use Farneback dense optical flow and spatial
-clustering into submosaics for agricultural surveys. A critical limitation of these
-systems is that they operate in a risk-blind manner with fixed heuristic gates: they
-cannot anticipate cumulative geometric failure, nor do they adjust compute
-expenditure according to operational risk.
+Kharismawati and Kazic~\cite{dronezaic} employ Farneback dense optical flow and
+spatial clustering into submosaics for agricultural surveys. A critical limitation
+of these systems is that they operate in a risk-blind manner with static compute
+profiles and rigid heuristic gates: they cannot anticipate cumulative geometric
+failure, nor do they adjust compute expenditure dynamically according to step risk.
 
 \textbf{Matching confidence and failure prediction (RQ1).} In visual place
 recognition (VPR), inlier counts and inlier ratios derived from RANSAC or MAGSAC++
-are widely used to classify match confidence~\cite{zaffar2024,sferrazza2024}, yet
-they yield false positives over repetitive terrain. At the homography level,
-large-scale benchmarks reveal that mean reprojection error and feature counts
-correlate weakly with ground-truth geometric error~\cite{barath2023,yuan2024}.
-Uncertainty estimation has been formulated for deep homography estimation in
-satellite--thermal drone geo-localisation~\cite{uasthn}, and VSAC scores inlier
-quality independently~\cite{ivashechkin2021}. We demonstrate our advantage through a
-key negative result: on sequential UAV video, inlier counts prove anti-informative
-for step-level geometric error (AUC only 0.409), whereas post-warp photometric
-consistency (Patch NCC) reliably predicts step failures with AUCs of
+are widely adopted to classify match confidence~\cite{zaffar2024,sferrazza2024}.
+However, large-scale benchmarks reveal that algebraic reprojection error and
+feature counts correlate weakly with true geometric error~\cite{barath2023,yuan2024}.
+While deep uncertainty estimation has been explored for cross-domain satellite--thermal
+drone localisation~\cite{uasthn} and independent inlier scoring is formulated in
+VSAC~\cite{ivashechkin2021}, existing confidence metrics are predominantly evaluated
+on isolated image pairs with absolute ground truth. In incremental UAV video over
+repetitive agricultural or roof textures, RANSAC suffers from perceptual aliasing,
+where clusters of spurious matches agree on a degenerate planar warp. We demonstrate
+this through a key empirical negative result: on sequential UAV video, inlier counts
+are anti-informative for step-level geometric error (AUC only 0.409), whereas post-warp
+photometric consistency (Patch NCC) reliably predicts step failure with AUCs of
 0.770--0.855.
 
 \textbf{Classical vs learned matching trade-off and routing (RQ2).} Kim and
 Kim~\cite{kim2025} demonstrated that SIFT coupled with LightGlue (a Transformer GNN
-with early-exit pruning) recovers large-rotation and low-texture drone pairs;
-systematic benchmarks confirm learnable methods achieve higher accuracy but remain
-substantially slower on UAV platforms~\cite{gaisbauer2025}. Lightweight learned
-matchers (XFeat~\cite{potlapalli2024} via lightweight CNNs), semi-dense
+with early-exit pruning~\cite{lindenberger2023}) recovers large-rotation and
+low-texture drone pairs; yet systematic benchmarks confirm learnable methods remain
+computationally prohibitive on aerial platforms~\cite{gaisbauer2025}. Lightweight
+learned matchers (XFeat~\cite{potlapalli2024} via lightweight CNNs), semi-dense
 architectures with QuadTree token selection (Efficient LoFTR~\cite{wang2024}), and
 deformable attention models (DALGlue~\cite{dalglue}) reduce pair-wise inference
-latency, yet existing systems enforce an all-or-nothing paradigm. We demonstrate
-that running SuperPoint+LightGlue globally degenerates on homogeneous textures,
-increasing cumulative drift to 82.4\,px while taking 54.9\,s; in contrast, our
-two-tier router flags only 16\% of high-risk steps, cutting latency to 13.3\,s and
-reducing final drift to 28.5\,px.
+latency, yet existing systems enforce an all-or-nothing paradigm. Crucially,
+without global bundle adjustment, deploying learned matchers indiscriminately on
+repetitive natural textures can accumulate subtle subpixel registration bias across
+nominal steps. We demonstrate that running SuperPoint+LightGlue globally degenerates
+on homogeneous textures, increasing cumulative drift to 82.4\,px while consuming
+54.9\,s; in contrast, our two-tier router flags only 16\% of high-risk steps, cutting
+latency to 13.3\,s and reducing final drift to 28.5\,px.
 
 \textbf{Degeneration recovery and cascade failure (RQ3).} Prior systems
 individually adopt frame dropping~\cite{hwang2026}, historical keyframe
 rematching~\cite{li2023}, or submosaic splitting~\cite{dronezaic}. None of these
 works, however, benchmarks these recovery mechanisms under an identical failure
-trigger. We prove that frame dropping and keyframe rematching induce cascade
-failures, discarding 32/46 frames as spatial baselines widen; conversely, our
-submosaic splitting policy preserves all 46/46 frames while bounding drift strictly
-under 21.7\,px.
+trigger. Under consecutive degraded frames, skipping frames or rematching distant
+anchors widens the spatial and temporal baseline, making subsequent registration
+progressively harder. We prove that frame dropping and keyframe rematching induce
+severe cascade failures, discarding 32/46 frames; conversely, our submosaic
+splitting policy cleanly isolates failures, preserving all 46/46 frames while
+bounding cumulative drift strictly under 21.7\,px.
 \section{Method}
 \subsection{Pipeline}
 Frames are read in temporal order. For step $(i-1,i)$ the pipeline extracts
@@ -216,7 +227,7 @@ where learned semi-dense matching degrades by 5--313\,px per step). Artifacts in
 92 raw frames and environment manifests; full execution completed in 507\,s on CPU.
 
 \textbf{Comparative Baselines.} We benchmark against three established baseline paradigms:
-(i) \emph{Classical Baseline}: standard sequential SIFT-only without risk assessment~\cite{hwang2026,bu2016};
+(i) \emph{Classical Baseline}: standard sequential SIFT-only without risk assessment~\cite{hwang2026,map2dfusion};
 (ii) \emph{All-Learned Baseline}: unconditional deployment of SuperPoint+LightGlue~\cite{kim2025} or
 Efficient LoFTR~\cite{wang2024} across all frames; and (iii) \emph{Heuristic Recovery Baselines}: single-frame
 dropping~\cite{hwang2026} and historical keyframe rematching~\cite{li2023}.

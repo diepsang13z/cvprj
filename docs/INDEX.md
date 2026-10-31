@@ -47,6 +47,8 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
   - [`2026_09_20_diepsang13z.md`](logs/progress/2026_09_20_diepsang13z.md) — Đóng proposal, giảm scope, việc tiếp theo (baseline pipeline).
   - [`2026_10_14_diepsang13z.md`](logs/progress/2026_10_14_diepsang13z.md) — Quét 160 bước chọn cửa sổ có lỗi thật, viết Notebook 05 (RQ1/RQ2/RQ3), đề xuất `RDR-0008`, sửa lỗi tính toán và chạy lại Notebook 05.
   - [`2026_10_15_diepsang13z.md`](logs/progress/2026_10_15_diepsang13z.md) — Cập nhật paper; bổ sung tách notebook theo model/RQ, bàn giao artifact và quy định chỉ chạy trên cloud; ghi rõ kiểm tra tĩnh và giới hạn chưa chạy cloud.
+  - [`2026_10_21_diepsang13z.md`](logs/progress/2026_10_21_diepsang13z.md) — Rà soát phản biện Related Work, sửa lỗi citation bu2016, nâng cấp Section II bản tiếng Anh/Việt, cập nhật notes và biên dịch PDF.
+  - [`2026_10_31_diepsang13z.md`](logs/progress/2026_10_31_diepsang13z.md) — Chuyển đổi toàn bộ thực nghiệm sang 5 notebook độc lập cho Google Colab, xoá thư mục shared, làm sạch gạch dài/icon, đặt tên chuẩn nghiên cứu.
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
 - [`docs/logs/experiments/`](logs/experiments/) — Nhật ký thực nghiệm dài (quét trước khi thiết kế thí nghiệm).
   - [`0001_failure_scan_windows.md`](logs/experiments/0001_failure_scan_windows.md) — Nhật ký quét 160 bước × 2 sequence và chọn cửa sổ `village` 80–125 / `grass` 0–45. Đọc kèm audit 05: ghép đủ frame không chứng minh không có lỗi hình học.
@@ -60,14 +62,14 @@ Khu vực ghi nhật ký tiến trình, khảo sát văn hiến và brainstorm (
 
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
-- [`reports/paper/`](../reports/paper/) — **Bản nháp bài báo IEEE**, hai bản cùng số liệu: `main.tex` → `main.pdf` (tiếng Anh) và `main_vi.tex` → `main_vi.pdf` (tiếng Việt, cần font Times New Roman). `make_figures.py` và `make_mosaics.py` đọc artifact lịch sử; không tự chuyển sang run cloud mới. `check_tables.py` đối chiếu bảng với `report.json`, đọc `INDICATOR_SUSPICION` từ `notebooks/shared/failure_core.py` bằng text (không import model), và chặn em dash. `RDR-0008` còn Proposed; đọc kèm Limitations.
+- [`reports/paper/`](../reports/paper/) — **Bản nháp bài báo IEEE**, hai bản cùng số liệu: `main.tex` → `main.pdf` (tiếng Anh) và `main_vi.tex` → `main_vi.pdf` (tiếng Việt, cần font Times New Roman). `make_figures.py` và `make_mosaics.py` đọc artifact lịch sử; không tự chuyển sang run cloud mới. `check_tables.py` đối chiếu bảng với `report.json`, đọc `INDICATOR_SUSPICION` từ `notebooks/failure_aware_mosaicking_pipeline.ipynb` bằng text (không import model), và chặn em dash. `RDR-0008` còn Proposed; đọc kèm Limitations.
   - [`reports/paper/presentation_script.md`](../reports/paper/presentation_script.md) — Kịch bản thuyết trình paper 3–5 phút cho nhóm báo cáo với GVHD kèm bảng tra cứu số liệu nhanh.
 - [`reports/present_02/`](../reports/present_02/) — Slide Present 2, hai bản: `open_slide/` (deck open-slide 12 trang, có speaker notes + export PDF/PPTX, chạy `pnpm dev`) và `index.html` (bản offline mở bằng trình duyệt). Chi tiết ở `README.md` trong thư mục.
-- [`notebooks/README.md`](../notebooks/README.md) — Điểm vào thực nghiệm: notebook riêng theo model/RQ, thứ tự phụ thuộc, phân công và hợp đồng bàn giao. **Chỉ chạy Colab/Kaggle hosted runtime**, theo `RULES.md` §8.
-- [`notebooks/classical/`](../notebooks/classical/) và [`notebooks/lightglue/`](../notebooks/lightglue/) — Pilot ảnh gốc tách SIFT/ORB và từng extractor LightGlue; không trộn với benchmark 640 px.
-- [`notebooks/models/`](../notebooks/models/) — Bảy notebook 640 px, một cấu hình mỗi notebook; độc lập output và log.
-- [`notebooks/drift/`](../notebooks/drift/) — Một job trajectory và bảy job chain-vs-direct, nhận đường dẫn run model cụ thể.
-- [`notebooks/research/`](../notebooks/research/) — Ba scan theo matcher → RQ1/RQ2 → bốn recovery độc lập → tổng hợp report. Các notebook 01–05 cũ chỉ còn mục lục; output lịch sử không thay đổi.
+- [`notebooks/README.md`](../notebooks/README.md) — Điểm vào thực nghiệm: 5 notebook tuần tự theo model/RQ, hướng dẫn chia việc 4 người và hợp đồng bàn giao. **Chỉ chạy Google Colab hosted runtime**, theo `RULES.md` §8.
+- `notebooks/classical_mosaicking_baseline.ipynb` & `notebooks/deep_matching_pilot.ipynb` — Thực nghiệm baseline SIFT/ORB và pilot LightGlue trên ảnh gốc.
+- `notebooks/feature_matcher_benchmark.ipynb` — Benchmark chuẩn hoá so sánh 7 feature matcher ở độ phân giải 640 px.
+- `notebooks/accumulated_drift_evaluation.ipynb` — Kiểm chứng trajectory UAV và đo sai số trôi tích luỹ (accumulated drift).
+- `notebooks/failure_aware_mosaicking_pipeline.ipynb` — Pipeline hoàn chỉnh cho 3 câu hỏi nghiên cứu (RQ1 dự báo lỗi, RQ2 routing 2 tầng, RQ3 recovery).
 
 ---
 

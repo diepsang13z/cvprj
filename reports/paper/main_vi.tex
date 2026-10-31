@@ -108,49 +108,59 @@ và gọi matcher mạnh cho mọi bước làm bản đồ \emph{tệ hơn} mat
 sổ đã đo.
 
 \section{Công trình liên quan}
-\textbf{Ghép ảnh UAV tích luỹ và khuyết thiếu kiểm soát rủi ro.} Các pipeline
-tuần tự hướng CPU dùng ORB/SIFT kết hợp RANSAC thường giới hạn số điểm hoặc áp
-dụng ngưỡng số inlier cố định để loại bỏ frame kém~\cite{hwang2026}; Li et
-al.~\cite{li2023} tối ưu sai số chiếu lại có trọng số và rematch keyframe cũ để
-hãm drift; Chen et al.~\cite{chen2022} dùng quy hoạch động tìm seamline tối ưu và
-phép biến đổi half-projective warp xử lý mặt đất gồ ghề; còn Kharismawati và
-Kazic~\cite{dronezaic} dùng dòng quang học Farneback kết hợp phân cụm submosaic cho
-nông nghiệp. Điểm hạn chế cốt tử của các công trình này là vận hành ``mù rủi ro''
-hoặc chỉ dựa vào ngưỡng inlier kinh nghiệm, không đánh giá xem phép đăng ký có gây
-lệch hình học chuỗi hay không, và không có cơ chế thích ứng theo ngân sách tài
-nguyên tính toán.
+\textbf{Ghép ảnh UAV tích luỹ và khuyết thiếu kiểm soát rủi ro.} Các pipeline ghép
+ảnh bay chụp tuần tự nhìn chung đi theo hai nhánh: visual odometry trực tiếp kết hợp
+bundle adjustment cục bộ (tiêu biểu như Map2DFusion~\cite{map2dfusion}), đòi hỏi tài
+nguyên tính toán lớn và giả định chuyển động liên tục; hoặc xâu chuỗi homography từng
+cặp dựa trên đặc trưng~\cite{hwang2026,li2023,chen2022,dronezaic} để ưu tiên tốc độ.
+Trong nhóm dựa trên đặc trưng, các pipeline tuần tự hướng CPU dùng ORB/SIFT kết hợp
+RANSAC thường giới hạn số điểm hoặc áp dụng ngưỡng số inlier cố định để loại bỏ frame
+kém~\cite{hwang2026}; Li et al.~\cite{li2023} tối ưu sai số chiếu lại có trọng số và
+rematch keyframe cũ để hãm drift; Chen et al.~\cite{chen2022} dùng quy hoạch động tìm
+seamline tối ưu và phép biến đổi half-projective warp xử lý mặt đất gồ ghề; còn
+Kharismawati và Kazic~\cite{dronezaic} dùng dòng quang học Farneback kết hợp phân cụm
+submosaic cho nông nghiệp. Điểm hạn chế cốt tử của các công trình này là vận hành
+``mù rủi ro'' với cấu hình tính toán tĩnh và cổng lọc kinh nghiệm cứng nhắc: chúng không
+dự báo được lỗi hình học tích luỹ và không có cơ chế điều phối tài nguyên tính toán
+thích ứng theo rủi ro từng bước.
 
 \textbf{Dự báo lỗi đối sánh và ảo giác số inlier (RQ1).} Trong nhận diện vị trí
 (VPR), số inlier và tỉ lệ inlier từ RANSAC/MAGSAC++ thường được dùng để phân loại
-khớp thành công hay thất bại~\cite{zaffar2024,sferrazza2024}, nhưng dễ sinh dương
-tính giả ở địa hình lặp. Ở cấp độ homography, các benchmark quy mô lớn cho thấy sai
-số chiếu lại trung bình và số lượng đặc trưng tương quan rất yếu với sai số hình học
-thực tế~\cite{barath2023,yuan2024}. Độ bất định học sâu được đưa vào định vị
-vệ tinh--nhiệt~\cite{uasthn}, và thuật toán VSAC chấm điểm inlier độc
-lập~\cite{ivashechkin2021}. Nhóm chứng minh sự vượt trội bằng cách phát hiện kết quả
-phủ định quan trọng: trên chuỗi UAV, số inlier phản tác dụng khi dự báo lỗi cấp
-bước (AUC chỉ 0,409), trong khi chỉ báo kiểm tra tính nhất quán quang học sau biến
-đổi (Patch NCC) đạt AUC vượt trội từ 0,770 đến 0,855.
+khớp thành công hay thất bại~\cite{zaffar2024,sferrazza2024}. Tuy nhiên, các
+benchmark homography quy mô lớn cho thấy sai số chiếu lại đại số và số lượng đặc
+trưng tương quan rất yếu với sai số hình học thực tế~\cite{barath2023,yuan2024}. Dù
+độ bất định học sâu đã được nghiên cứu cho định vị drone vệ tinh--nhiệt~\cite{uasthn}
+và VSAC chấm điểm inlier độc lập~\cite{ivashechkin2021}, các độ đo tin cậy hiện hữu
+chủ yếu đánh giá trên từng cặp ảnh độc lập có ground truth tuyệt đối. Trên chuỗi video
+UAV qua vùng đồng cỏ hoặc mái nhà lặp, RANSAC chịu hiện tượng ngộ nhận tri giác
+(perceptual aliasing), nơi các cụm inlier giả cùng thoả mãn một homography sai lệch.
+Nhóm phát hiện kết quả phủ định quan trọng: trên chuỗi video UAV, số inlier phản tác
+dụng khi dự báo lỗi cấp bước (AUC chỉ 0,409), trong khi chỉ báo kiểm tra tính nhất
+quán quang học sau biến đổi (Patch NCC) đạt AUC vượt trội từ 0,770 đến 0,855.
 
 \textbf{Đánh đổi mô hình cổ điển và học sâu qua phân luồng (RQ2).} Kim và
-Kim~\cite{kim2025} dùng SIFT kết hợp LightGlue (GNN Transformer có early-exit) để
-xử lý góc xoay lớn; Gaisbauer et al.~\cite{gaisbauer2025} chứng minh phương pháp học
-sâu chính xác hơn nhưng chậm hơn trên drone. Các mô hình như XFeat~\cite{potlapalli2024}
-(CNN siêu nhẹ), Efficient LoFTR~\cite{wang2024} (chọn token QuadTree) hay
-DALGlue~\cite{dalglue} (deformable attention) nỗ lực giảm độ trễ từng cặp ảnh nhưng
-vẫn bị triển khai theo kiểu ép toàn bộ pipeline phải chạy qua mô hình nặng. Nhóm
-chứng minh giải pháp phân luồng 2 tầng vượt trội: chạy toàn bộ SuperPoint+LightGlue
-làm drift tăng lên 82,4\,px (do suy biến ở vùng đồng nhất) và tốn 54,9\,s; trong khi
-bộ định tuyến chỉ kích hoạt 16\% bước khó giúp giảm thời gian xuống 13,3\,s và kéo
-drift xuống chỉ còn 28,5\,px.
+Kim~\cite{kim2025} dùng SIFT kết hợp LightGlue (GNN Transformer có early-exit
+pruning~\cite{lindenberger2023}) để xử lý góc xoay lớn; Gaisbauer et
+al.~\cite{gaisbauer2025} chứng minh phương pháp học sâu chính xác hơn nhưng quá nặng
+về độ trễ trên drone. Các mô hình như XFeat~\cite{potlapalli2024} (CNN siêu nhẹ),
+Efficient LoFTR~\cite{wang2024} (chọn token QuadTree) hay DALGlue~\cite{dalglue}
+(deformable attention) nỗ lực giảm độ trễ từng cặp ảnh, song vẫn bị ép triển khai theo
+kiểu all-or-nothing trên toàn bộ chuyến bay. Đáng chú ý, khi thiếu bundle adjustment
+toàn cục, việc chạy mô hình học sâu vô điều kiện trên các bề mặt tự nhiên lặp sẽ tích
+luỹ sai số góc lệch subpixel qua từng bước danh định. Nhóm chứng minh chạy toàn bộ
+SuperPoint+LightGlue làm drift tăng lên 82,4\,px (nặng hơn cả SIFT cổ điển với 75,3\,px)
+và tốn tới 54,9\,s; trong khi bộ định tuyến rủi ro 2 tầng chỉ kích hoạt 16\% bước khó,
+giảm thời gian xuống 13,3\,s và kéo drift xuống chỉ còn 28,5\,px.
 
 \textbf{Cơ chế phục hồi suy biến và sụp đổ dây chuyền (RQ3).} Các nghiên cứu đơn
 lẻ áp dụng bỏ frame~\cite{hwang2026}, rematch keyframe cũ~\cite{li2023}, hoặc tách
 cụm submosaic~\cite{dronezaic}. Thiếu sót lớn là chưa công trình nào so sánh trực
-tiếp các cơ chế này dưới cùng một chuẩn kích hoạt. Nhóm chứng minh bỏ frame và
-rematch keyframe gây ra sụp đổ dây chuyền (cascade failure), làm mất đến 32/46
-frame do khoảng cách hình học bị nới rộng; trong khi chiến lược tách submosaic của
-nhóm giữ trọn 46/46 frame và giới hạn drift dưới 21,7\,px.
+tiếp các cơ chế này dưới cùng một chuẩn kích hoạt rủi ro. Khi gặp chuỗi frame suy biến
+liên tiếp, việc bỏ frame hoặc rematch keyframe ở xa sẽ nới rộng khoảng cách hình học
+(baseline dilation), làm các frame tiếp theo càng khó khớp hơn. Nhóm chứng minh bỏ
+frame và rematch keyframe gây sụp đổ dây chuyền (cascade failure), làm mất đến 32/46
+frame; trong khi chiến lược tách submosaic của nhóm cô lập lỗi triệt để, giữ trọn
+46/46 frame và giới hạn drift tích luỹ dưới 21,7\,px.
 \section{Phương pháp}
 \subsection{Pipeline}
 Frame được đọc theo thứ tự thời gian. Với bước $(i-1,i)$, pipeline trích đặc
@@ -225,7 +235,7 @@ trên CPU với mã băm SHA-256 lưu trữ đầy đủ.
 
 \textbf{Các đường cơ sở đối chứng (Baselines).} Nghiên cứu đối chiếu trực tiếp với ba nhóm
 baseline tiêu chuẩn: (i) \emph{Baseline cổ điển}: SIFT-640 tuần tự chuẩn không kiểm soát rủi
-ro~\cite{hwang2026,bu2016}; (ii) \emph{Baseline học sâu toàn phần}: chạy SuperPoint+LightGlue
+ro~\cite{hwang2026,map2dfusion}; (ii) \emph{Baseline học sâu toàn phần}: chạy SuperPoint+LightGlue
 hoặc Efficient LoFTR mù trên mọi frame~\cite{kim2025,wang2024}; và (iii) \emph{Baseline phục
 hồi kinh nghiệm}: bỏ frame~\cite{hwang2026} và rematch keyframe lịch sử~\cite{li2023}.
 \section{Kết quả}

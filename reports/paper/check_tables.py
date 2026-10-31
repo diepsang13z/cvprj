@@ -13,7 +13,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "notebooks" / "outputs" / "05_failure_aware"
 PAPER = Path(__file__).resolve().parent
-INDICATORS = ROOT / "notebooks" / "shared" / "failure_core.py"
+INDICATORS = ROOT / "notebooks" / "failure_aware_mosaicking_pipeline.ipynb"
 
 VILLAGE = "phantom3-village-kfs"
 GRASS = "phantom3-grass-kfs"
@@ -21,9 +21,14 @@ GRASS = "phantom3-grass-kfs"
 
 def declared_directions():
     """Read the declared directions without importing or executing experiment code."""
-    code = INDICATORS.read_text(encoding="utf-8")
+    text = INDICATORS.read_text(encoding="utf-8")
+    if INDICATORS.suffix == ".ipynb":
+        nb = json.loads(text)
+        code = "\n".join("".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code")
+    else:
+        code = text
     block = re.search(r"INDICATOR_SUSPICION\s*=\s*\{(.*?)\}", code, re.S).group(1)
-    pairs = re.findall(r'"([a-z_]+)"\s*:\s*(-?1\.0)', block)
+    pairs = re.findall(r'["\']([a-z_]+)["\']\s*:\s*(-?1\.0)', block)
     assert len(pairs) == 8, pairs
     return {name: ("uparrow" if float(sign) > 0 else "downarrow") for name, sign in pairs}
 

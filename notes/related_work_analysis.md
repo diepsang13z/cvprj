@@ -33,10 +33,9 @@ Nghiên cứu của nhóm giải quyết bài toán ghép ảnh 2D từ video UA
   - *Công nghệ:* Kết hợp direct tracking mức pixel (Lucas-Kanade) với đồ thị keyframe và tối ưu hoá bundle adjustment 2D cục bộ.
 
 #### B. Họ đang thiếu sót gì? (Research Gaps)
-1. **Hoạt động "mù" rủi ro (Risk-Blind Execution):** Các hệ thống hoặc chọn hoàn toàn thuật toán cổ điển nhẹ (dễ chết khi gặp địa hình lặp như đồng cỏ, ruộng lúa, mặt nước hoặc khi drone quay đổi hướng đột ngột), hoặc chạy toàn bộ bằng mạng nơ-ron sâu (quá nặng, tiêu tốn bộ nhớ và thời gian, không thể chạy trọn chuyến bay trên laptop/máy bay không người lái).
-2. **Cổng lọc kiểm duyệt thô sơ và tĩnh:** Hwang et al. và Li et al. dựa vào các ngưỡng cố định như $N_{\mathrm{inliers}} > K$ hoặc sai số chiếu lại trung bình $\mathrm{RMSE} < \epsilon$. Họ ngầm giả định rằng "nhiều inlier là homography đúng", bỏ qua việc RANSAC dễ dàng hội tụ vào các cấu trúc lặp sai lệch (vân cỏ, ngói nhà).
-3. **Thiếu sự so sánh công bằng giữa các chiến lược phục hồi:** Mỗi bài báo chỉ đưa ra một giải pháp riêng lẻ (bỏ frame, rematch keyframe, hay tách submosaic) mà không đo lường định lượng trên cùng một chuẩn kích hoạt xem chiến lược nào bảo toàn được bản đồ tốt nhất.
-
+1. **Hoạt động "mù" rủi ro (Risk-Blind Execution):** Hai nhánh hiện hành đều có hạn chế tài nguyên: nhánh SLAM/VO (Map2DFusion) đòi hỏi tính toán liên tục nặng và nhạy cảm với chuyển động giật; nhánh homography từng cặp (Hwang, Li) nhẹ nhưng cố định thuật toán cho toàn chuyến bay. Nếu chọn cổ điển (SIFT/ORB) thì vỡ ở cảnh khó; nếu ép chạy toàn bộ bằng deep model thì cạn kiệt CPU/pin.
+2. **Cổng lọc kiểm duyệt thô sơ và tĩnh:** Hwang et al. và Li et al. dựa vào các ngưỡng cố định như $N_{\mathrm{inliers}} > K$ hoặc sai số chiếu lại trung bình $\mathrm{RMSE} < \epsilon$. Họ ngầm giả định "nhiều inlier là homography đúng", bỏ qua việc RANSAC dễ hội tụ vào cấu trúc lặp sai lệch (perceptual aliasing).
+3. **Thiếu sự so sánh công bằng giữa các chiến lược phục hồi:** Mỗi bài báo chỉ đưa ra một giải pháp riêng lẻ (bỏ frame, rematch keyframe, hay tách submosaic) mà không đo lường định lượng trên cùng một chuẩn kích hoạt xem chiến lược nào bảo toàn bản đồ tốt nhất.
 #### C. Nhóm chứng minh tốt hơn thế nào?
 - **Giải pháp:** Xây dựng pipeline 2 tầng nhận biết rủi ro (Failure-Aware): tầng nhẹ (SIFT-640) chạy mặc định; chỉ leo thang (escalate) lên tầng sâu (SuperPoint + LightGlue) hoặc tăng độ phân giải khi chỉ báo rủi ro vượt ngưỡng.
 - **Bằng chứng thực nghiệm:**
@@ -58,15 +57,14 @@ Nghiên cứu của nhóm giải quyết bài toán ghép ảnh 2D từ video UA
   - *Công nghệ:* Thuật toán ước lượng độc lập VSAC, áp dụng thống kê phân bố mẫu để kiểm tra tính độc lập và chấm điểm chất lượng inliers.
 
 #### B. Họ đang thiếu sót gì? (Research Gaps)
-1. **Thiếu nhãn sai số cấp bước trong chuỗi tích luỹ UAV:** Các công trình trên đánh giá lỗi trên từng cặp ảnh độc lập (pair-wise) trong bối cảnh nhận diện địa điểm (VPR) với nhãn 3D/GPS, chưa từng nghiên cứu tác động của sai số cấp bước ($e_i$) dẫn đến hiện tượng trôi dạt tích luỹ (cumulative drift) trong chuỗi video ghép ảnh liên tục.
-2. **Ảo tưởng về số inlier (Inlier Count Illusion):** Các nghiên cứu prior art mặc định xem số inlier là thước đo độ tin cậy. Tuy nhiên, trên ảnh UAV có địa hình đồng nhất (đồng cỏ, ruộng lúa), RANSAC thường xuyên tìm thấy hàng trăm inlier khớp giả giữa các gợn cỏ ngẫu nhiên; sai số chiếu lại nội tại vẫn rất nhỏ ($< 1$ px) nhưng ma trận homography bị xoay lệch hoàn toàn (lỗi hình học thực tế lên đến 5 - 313 px/bước).
+1. **Thiếu nhãn sai số cấp bước trong chuỗi tích luỹ UAV:** Các công trình trên đánh giá lỗi trên từng cặp ảnh độc lập (pair-wise) trong bối cảnh nhận diện địa điểm (VPR) với nhãn 3D/GPS, chưa từng nghiên cứu tác động của sai số cấp bước ($e_i$) dẫn đến trôi dạt tích luỹ (cumulative drift) trong chuỗi video ghép ảnh liên tục.
+2. **Ảo tưởng về số inlier do ngộ nhận tri giác (Perceptual Aliasing):** Các nghiên cứu prior art mặc định xem số inlier là thước đo độ tin cậy. Tuy nhiên, trên ảnh UAV có địa hình đồng nhất (đồng cỏ, ruộng lúa, mái ngói), RANSAC tối ưu hoá thặng dư đại số nội tại nên dễ dàng gom hàng trăm điểm khớp sai thành inlier giả; sai số chiếu lại đại số vẫn rất nhỏ ($< 1$ px) nhưng ma trận homography bị xoay lệch hoàn toàn (sai số hình học thực tế lên đến 5 - 313 px/bước).
 
 #### C. Nhóm chứng minh tốt hơn thế nào?
 - **Phương pháp đo đạc:** Thiết lập thước đo sai số cấp bước độc lập ($e_i$) đối chiếu với matcher tham chiếu chất lượng cao ($H_i^{\mathrm{ref}}$ có cổng lọc tối thiểu 100 inliers). Đánh giá 8 chỉ báo chi phí thấp bằng hệ số tương quan hạng Spearman ($\rho$) và diện tích dưới đường cong ROC (AUC).
 - **Phát hiện thực nghiệm và chứng minh:**
-  - **Kết quả phủ định quan trọng (Negative Result):** Chỉ ra số lượng matches ($N_{\mathrm{match}}$) và số inliers ($N_{\mathrm{inlier}}$) hoàn toàn phản tác dụng trong việc dự báo sai số cấp bước (AUC thực tế $< 0,5$, lần lượt là 0,402 và 0,409).
-  - **Chỉ báo vượt trội:** Nhóm chứng minh chỉ báo độ tương quan tương đồng chuẩn hoá vùng đè phủ sau khi biến đổi (Overlap Patch NCC - $\tau_{\mathrm{ncc}}$) đạt AUC vượt trội (**0,770** trên `village` và **0,855** trên `grass`). Bằng chứng định lượng này chỉ ra rằng kiểm tra tính nhất quán quang học sau biến đổi hình học đáng tin cậy hơn nhiều so với việc đếm số điểm đặc trưng.
-
+  - **Kết quả phủ định quan trọng (Negative Result):** Chỉ ra số lượng matches ($N_{\mathrm{match}}$) và số inliers ($N_{\mathrm{inlier}}$) phản tác dụng trong việc dự báo sai số cấp bước (AUC thực tế $< 0,5$, lần lượt là 0,402 và 0,409; tương quan âm $\rho = -0,198$).
+  - **Chỉ báo vượt trội:** Nhóm chứng minh chỉ báo độ tương quan tương đồng chuẩn hoá vùng đè phủ sau biến đổi (Overlap Patch NCC - $\tau_{\mathrm{ncc}}$) trực tiếp đo độ trùng khớp quang học bề mặt, đạt AUC vượt trội (**0,770** trên `village` và **0,855** trên `grass`). Bằng chứng định lượng này chỉ ra rằng kiểm tra tính nhất quán quang học sau biến đổi hình học đáng tin cậy hơn nhiều so với việc đếm số điểm đặc trưng.
 ---
 
 ### Mảng 3: RQ2 — Phân luồng đối sánh & Tối ưu tài nguyên (Matcher Routing)
@@ -80,10 +78,9 @@ Nghiên cứu của nhóm giải quyết bài toán ghép ảnh 2D từ video UA
 - **Gaisbauer et al. (2025) [ISPRS Annals]:** Thực nghiệm đo lường so sánh có hệ thống giữa phương pháp cổ điển và học sâu trên dữ liệu máy bay không người lái.
 
 #### B. Họ đang thiếu sót gì? (Research Gaps)
-1. **Tư duy "Được ăn cả, ngã về không" (All-or-Nothing Deployment):** Các nghiên cứu mô hình sâu chỉ đo lường thời gian xử lý trên từng cặp ảnh riêng biệt. Khi triển khai vào hệ thống thực tế, họ ép toàn bộ luồng xử lý phải chạy qua mô hình nặng, khiến việc xử lý trên thiết bị bay hoặc máy tính cá nhân bị nghẽn cổ chai nghiêm trọng.
-2. **Ảo giác sai số của mô hình bán dày (Semi-dense Degeneration):** Các mô hình như LoFTR hay Efficient LoFTR dù có sai số chiếu lại nội tại rất nhỏ trên tập dữ liệu chuẩn, nhưng khi gặp địa hình UAV đồng nhất lặp (như chuỗi `grass`), chúng sinh ra hàng loạt tương ứng sai lệch trên toàn khung hình, làm vỡ hoàn toàn quỹ đạo ghép (sai số lên đến 313 px/bước).
-3. **Chạy mô hình mạnh mọi nơi làm bản đồ tệ hơn:** Chưa có công trình nào phát hiện và định lượng hiện tượng: việc ép buộc chạy mô hình sâu mạnh trên mọi bước có thể tích luỹ drift lớn hơn cả mô hình cổ điển trên chuỗi bay UAV thực tế.
-
+1. **Tư duy "Được ăn cả, ngã về không" (All-or-Nothing Deployment):** Các nghiên cứu mô hình sâu chỉ đo lường thời gian xử lý trên từng cặp ảnh riêng biệt. Khi tích hợp vào hệ thống, họ ép toàn bộ luồng xử lý chạy qua mô hình nặng, gây nghẽn cổ chai nghiêm trọng trên CPU/drone.
+2. **Tích luỹ sai số góc lệch khi thiếu Bundle Adjustment:** Chưa có công trình nào phát hiện hiện tượng: việc ép chạy mô hình sâu vô điều kiện trên mọi bước ở chuỗi bay UAV thực tế tích luỹ trôi dạt lớn hơn cả cổ điển (82,4 px so với 75,3 px). Lý do: khi không có bundle adjustment toàn cục, deep matcher trên địa hình tự nhiên bán lặp có xu hướng sinh độ lệch subpixel tích tụ dần qua các bước danh định.
+3. **Ảo giác sai số của mô hình bán dày (Semi-dense Degeneration):** Các mô hình như Efficient LoFTR trên địa hình đồng nhất lặp (chuỗi `grass`) sinh tương ứng sai trên toàn khung hình, làm vỡ hoàn toàn quỹ đạo ghép (sai số lên đến 313 px/bước).
 #### C. Nhóm chứng minh tốt hơn thế nào?
 - **Phương pháp phân luồng:** Bộ định tuyến rủi ro (Risk-based Router) kích hoạt 2 tầng theo ngân sách leo thang định trước ($\le 25\%$ số bước).
 - **Bằng chứng định lượng trực tiếp:**
@@ -101,9 +98,8 @@ Nghiên cứu của nhóm giải quyết bài toán ghép ảnh 2D từ video UA
 - **Kharismawati & Kazic (2025):** Cơ chế phân cụm và tách mảnh (Submosaic Splitting) — chia video thành các cụm độc lập khi phát hiện đứt gãy.
 
 #### B. Họ đang thiếu sót gì? (Research Gaps)
-1. **Hiện tượng sụp đổ dây chuyền (Cascade Failure):** Khi loại bỏ một frame hoặc cố gắng nhảy cóc để rematch với keyframe cũ, khoảng cách không gian và góc nhìn giữa frame hiện tại và frame tham chiếu bị kéo giãn ra. Hậu quả là frame tiếp theo càng khó khớp hơn, dẫn đến phản ứng dây chuyền: một vài bước lỗi ban đầu làm vứt bỏ phần lớn video (cascade).
+1. **Hiện tượng sụp đổ dây chuyền do nới rộng baseline (Baseline Dilation Cascade):** Khi loại bỏ frame $i$ hoặc nhảy cóc để rematch với keyframe cũ $i-k$, khoảng cách không gian và góc nhìn giữa frame tiếp theo $i+1$ và frame tham chiếu bị nới rộng. Hệ quả là frame sau càng khó khớp hơn, dẫn đến phản ứng dây chuyền: một vài bước lỗi ban đầu làm vứt bỏ phần lớn video (cascade failure).
 2. **Thiếu đánh giá định lượng so sánh:** Chưa có công trình nào đặt 3 cơ chế này lên cùng một bàn cân, dưới cùng một ngưỡng phát hiện lỗi rủi ro để đo lường tỷ lệ giữ frame và độ trôi dạt bản đồ.
-
 #### C. Nhóm chứng minh tốt hơn thế nào?
 - **Phương pháp thử nghiệm:** Đặt cả 3 chiến lược (Bỏ frame · Rematch keyframe · Tách submosaic) vào cùng pipeline online và cùng ngưỡng kích hoạt rủi ro $\tau_{\mathrm{ncc}} = 0,93$.
 - **Bằng chứng định lượng:**
