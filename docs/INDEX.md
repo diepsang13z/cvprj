@@ -52,6 +52,7 @@ Khu vực giải thích lý thuyết (`docs/explain/`), ghi nhật ký tiến tr
   - [`2026_10_15_diepsang13z.md`](logs/progress/2026_10_15_diepsang13z.md) — Cập nhật paper; bổ sung tách notebook theo model/RQ, bàn giao artifact và quy định chỉ chạy trên cloud; ghi rõ kiểm tra tĩnh và giới hạn chưa chạy cloud.
   - [`2026_10_21_diepsang13z.md`](logs/progress/2026_10_21_diepsang13z.md) — Rà soát phản biện Related Work, sửa lỗi citation bu2016, nâng cấp Section II bản tiếng Anh/Việt, cập nhật notes và biên dịch PDF.
   - [`2026_10_31_diepsang13z.md`](logs/progress/2026_10_31_diepsang13z.md) — Chuyển đổi toàn bộ thực nghiệm sang 5 notebook độc lập cho Google Colab, xoá thư mục shared, làm sạch gạch dài/icon, đặt tên chuẩn nghiên cứu.
+  - [`2026_11_01_diepsang13z.md`](logs/progress/2026_11_01_diepsang13z.md) — Thêm khối cấu hình nhanh (Quick Config) đầu 5 notebook để chuyển đổi mode pilot/full và chỉ định run benchmark.
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
 - [`docs/logs/experiments/`](logs/experiments/) — Nhật ký thực nghiệm dài (quét trước khi thiết kế thí nghiệm).
   - [`0001_failure_scan_windows.md`](logs/experiments/0001_failure_scan_windows.md) — Nhật ký quét 160 bước × 2 sequence và chọn cửa sổ `village` 80–125 / `grass` 0–45. Đọc kèm audit 05: ghép đủ frame không chứng minh không có lỗi hình học.
