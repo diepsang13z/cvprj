@@ -44,6 +44,7 @@ Khu vực giải thích lý thuyết (`docs/explain/`), ghi nhật ký tiến tr
 - [`explain/failure_aware_mosaicking_pipeline.md`](explain/failure_aware_mosaicking_pipeline.md) — Giải thích và audit RQ1/RQ2/RQ3: tích hợp hoàn chỉnh LOSO, decision logs replay, memory bounded LRU cache.
 - [`explain/detector_matcher.md`](explain/detector_matcher.md) — Giải thích khái niệm Detector, Matcher và vai trò trung tâm trong 3 RQ của nghiên cứu Failure-Aware Mosaicking.
 - [`explain/related_work_analysis.md`](explain/related_work_analysis.md) — Phân tích chuyên sâu các công trình liên quan: công nghệ sử dụng, thiếu sót (research gaps) và luận điểm/bằng chứng chứng minh giải pháp của nhóm vượt trội theo 4 mảng.
+- [`explain/experiment_design_and_metrics.md`](explain/experiment_design_and_metrics.md) — Hệ thống hoá phương pháp thiết kế thực nghiệm (LOSO protocol, execution modes, cloud constraints) và các thước đo (inlier, step error, drift chain-vs-direct, Spearman/AUC, Pareto latency, recovery metrics).
 
 ### 3.2. Nhật ký nghiên cứu (`docs/logs/`)
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
