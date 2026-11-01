@@ -68,16 +68,16 @@ Kế hoạch chia thành 4 bước tuần tự, mỗi bước có sản phẩm c
 
 ### Bước 1: Dựng khung ghép ảnh cổ điển (Classical Baseline)
 - Code pipeline cơ bản bằng Python + OpenCV trong `notebooks/classical_mosaicking_baseline.ipynb`: đọc ảnh $\rightarrow$ trích đặc trưng (ORB/SIFT) $\rightarrow$ RANSAC tính Homography $\rightarrow$ warp & blend.
-- Lưu ma trận toạ độ tích luỹ `H_to_mosaic`, chạy trên Colab/Kaggle với thư mục output độc bản UTC và manifest kèm hash SHA-256. Chi tiết tại [audit 01](notebook_01_classical_baseline.md).
+- Lưu ma trận toạ độ tích luỹ `H_to_mosaic`, chạy trên Colab/Kaggle với thư mục output độc bản UTC và manifest kèm hash SHA-256. Chi tiết tại [audit baseline](classical_mosaicking_baseline.md).
 
 ### Bước 2: Tích hợp Learned Matcher có sẵn (AI Baseline)
 - Khảo sát mô hình pretrained (SIFT/SuperPoint + LightGlue) trên ảnh gốc 1920×1080 trong `notebooks/deep_matching_pilot.ipynb`.
-- Đo đạc thời gian sau warmup, số inliers, RMSE và xuất mosaic 20 frame. Chi tiết tại [audit 02](notebook_02_lightglue_pilot.md).
+- Đo đạc thời gian sau warmup, số inliers, RMSE và xuất mosaic 20 frame. Chi tiết tại [audit deep matching](deep_matching_pilot.md).
 
 ### Bước 3: Benchmark chuẩn hoá 7 mô hình
 - So sánh có hệ thống 7 cấu hình ở cùng độ phân giải 640 px trong `notebooks/feature_matcher_benchmark.ipynb`.
-- Tối ưu bộ nhớ $O(1)$ qua nạp ảnh lười theo cặp (lazy streaming), hỗ trợ chế độ pilot và full, xuất `completed.json` sau cùng. Chi tiết tại [audit 03](notebook_03_all_models.md).
+- Tối ưu bộ nhớ $O(1)$ qua nạp ảnh lười theo cặp (lazy streaming), hỗ trợ chế độ pilot và full, xuất `completed.json` sau cùng. Chi tiết tại [audit benchmark](feature_matcher_benchmark.md).
 
 ### Bước 4: Đánh giá Drift Tự nhất quán & Pipeline Failure-Aware
-- Đo sai số trôi tích luỹ Chain-vs-Direct (`RDR-0007`) và so sánh trên tập đối chiếu chung (common eligible frames) trong `notebooks/accumulated_drift_evaluation.ipynb`. Chi tiết tại [audit 04](notebook_04_drift_evaluation.md).
-- Hiện thực hoá 3 RQ theo giao thức LOSO (`RDR-0011`) trong `notebooks/failure_aware_mosaicking_pipeline.ipynb`: kiểm định chỉ báo RQ1, mô phỏng routing RQ2 và đánh giá 4 chính sách phục hồi RQ3. Chi tiết tại [audit 05](notebook_05_failure_aware_pipeline.md).
+- Đo sai số trôi tích luỹ Chain-vs-Direct (`RDR-0007`) và so sánh trên tập đối chiếu chung (common eligible frames) trong `notebooks/accumulated_drift_evaluation.ipynb`. Chi tiết tại [audit drift](accumulated_drift_evaluation.md).
+- Hiện thực hoá 3 RQ theo giao thức LOSO (`RDR-0011`) trong `notebooks/failure_aware_mosaicking_pipeline.ipynb`: kiểm định chỉ báo RQ1, mô phỏng routing RQ2 và đánh giá 4 chính sách phục hồi RQ3. Chi tiết tại [audit failure-aware](failure_aware_mosaicking_pipeline.md).

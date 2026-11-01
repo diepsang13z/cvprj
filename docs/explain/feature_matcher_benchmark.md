@@ -1,4 +1,4 @@
-# Giải thích và audit Notebook 03: Benchmark chuẩn hoá 7 mô hình
+# Giải thích và audit: Feature Matcher Benchmark (7 mô hình chuẩn hoá)
 
 Đọc cùng notebook [`notebooks/feature_matcher_benchmark.ipynb`](../../notebooks/feature_matcher_benchmark.ipynb).
 Cập nhật kỹ thuật: **2026-11-01** — Đã hoàn thành toàn bộ sửa đổi kỹ thuật theo `RDR-0010`, `RDR-0011` và `RULES.md §8`.
@@ -29,7 +29,7 @@ Warmup tách khỏi timing, revision mô hình ghi trong manifest, không âm th
 
 ## 3. Số liệu phải gắn với run
 
-Run đối chiếu: `notebooks/outputs/03_all_models/20261013T164937_145955Z/`.
+Run đối chiếu: `notebooks/outputs/feature_matcher_benchmark/20261013T164937_145955Z/`.
 Notebook hiện lưu output cho 9/9 code cell, không lưu exception.
 `mosaic_summary.csv` cho thấy cả 14 trường hợp giữ đủ 20/20 frame.
 

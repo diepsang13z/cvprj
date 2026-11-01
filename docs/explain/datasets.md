@@ -68,7 +68,7 @@ Cộng cả 3 tầng = **4.29 GB < 10 GB** → không cần đánh đổi; chỉ
 └── config.cfg                   thông số camera nội tại (định dạng Svar/EICAM)
 ```
 
-- **`trajectory.txt` là nguồn đối chiếu phụ**, không phải ground truth đo độc lập (`UAV_ENABLE_POSE_DIAGNOSIS=0` mặc định trong notebook drift). Metric chính đã chốt ở [`RDR-0007`](../logs/decisions/RDR-0007_drift_metric_choice.md) là chain-vs-direct từ ảnh; xem [audit Notebook 04](notebook_04_drift_evaluation.md) về giới hạn tham chiếu và thang đo.
+- **`trajectory.txt` là nguồn đối chiếu phụ**, không phải ground truth đo độc lập (`UAV_ENABLE_POSE_DIAGNOSIS=0` mặc định trong notebook drift). Metric chính đã chốt ở [`RDR-0007`](../logs/decisions/RDR-0007_drift_metric_choice.md) là chain-vs-direct từ ảnh; xem [audit Accumulated Drift](accumulated_drift_evaluation.md) về giới hạn tham chiếu và thang đo.
 - **Giữ `config.cfg` và `trajectory.txt` đi cùng `rgb/`** để giữ provenance và khả năng chẩn đoán pose/camera. Thiếu trajectory không ngăn phép đo chain-vs-direct, nhưng thiếu metadata làm mất các phép đối chiếu liên quan.
 - Mô tả gói dựa trên trang tác giả; các notebook hiện tại giải nén an toàn qua `ensure_sequence()` hỗ trợ cả `.tar.gz`, `.tgz`, `.zip` và tự động tìm thư mục `rgb/` thực tế.
 

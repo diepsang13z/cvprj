@@ -100,7 +100,7 @@ khám phá cho tới quyết định phương pháp tiếp theo; không tự đ�
 
 ## Tài liệu/kết quả lịch sử
 
-Các ghi chú `docs/explain/notebook_*.md`, output cũ và số liệu paper là hồ sơ lịch sử,
+Các ghi chú trong `docs/explain/`, output cũ và số liệu paper là hồ sơ lịch sử,
 không phải bằng chứng phiên bản notebook hiện tại đã chạy. Không tự thay số liệu
 paper bằng run mới, hoặc trộn artifact cũ/mới khi schema và cấu hình khác nhau.
 Luồng chia việc cũ bằng ba file `scan_<matcher>.json` không được coi là tính năng

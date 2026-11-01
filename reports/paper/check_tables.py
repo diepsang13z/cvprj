@@ -11,7 +11,9 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "notebooks" / "outputs" / "05_failure_aware"
+OUT = ROOT / "notebooks" / "outputs" / "failure_aware_pipeline"
+if not OUT.is_dir():
+    OUT = ROOT / "notebooks" / "outputs" / "05_failure_aware"
 PAPER = Path(__file__).resolve().parent
 INDICATORS = ROOT / "notebooks" / "failure_aware_mosaicking_pipeline.ipynb"
 

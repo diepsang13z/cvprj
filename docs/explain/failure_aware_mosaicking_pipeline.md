@@ -1,4 +1,4 @@
-# Giải thích và audit Notebook 05: Thử nghiệm phát hiện rủi ro và phục hồi
+# Giải thích và audit: Failure-Aware Mosaicking Pipeline (Dự báo lỗi, phân luồng & phục hồi)
 
 Đọc cùng notebook [`notebooks/failure_aware_mosaicking_pipeline.ipynb`](../../notebooks/failure_aware_mosaicking_pipeline.ipynb).
 Tài liệu phân biệt ý tưởng, số liệu đã lưu và kết luận còn thiếu bằng chứng; không chốt phương pháp thay nhóm.
@@ -10,7 +10,7 @@ Tài liệu phân biệt ý tưởng, số liệu đã lưu và kết luận cò
 | Origin Date / Version Label | 2026-10-14 / `validation_v2` → `validation_v3` (mục 9) |
 | Verification Status | `VERIFIED` — notebook chạy lại trọn từ trên xuống sau khi sửa lỗi (mục 9) |
 | Overall Confidence | `AMBER` — lỗi tính toán đã sửa và có self-check; giới hạn phương pháp ở mục 7 vẫn nguyên |
-| Report đối chiếu | `notebooks/outputs/05_failure_aware/report.json`, stamp `20261014T070805_406984Z` |
+| Report đối chiếu | `notebooks/outputs/failure_aware_pipeline/report.json`, stamp `20261014T070805_406984Z` |
 | Quyết định phương pháp | [`RDR-0008`](../logs/decisions/RDR-0008_step_level_metric_and_risk_trigger.md) (**Proposed**), [`RDR-0011`](../logs/decisions/RDR-0011_loso_and_technical_readiness.md) (**Accepted**) |
 
 ## 1. Notebook làm gì và chưa làm gì?

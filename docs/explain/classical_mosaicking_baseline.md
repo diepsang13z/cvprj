@@ -1,4 +1,4 @@
-# Giải thích và audit Notebook 01: Baseline SIFT & ORB
+# Giải thích và audit: Baseline SIFT & ORB (Classical Mosaicking Baseline)
 
 Đọc cùng notebook [`notebooks/classical_mosaicking_baseline.ipynb`](../../notebooks/classical_mosaicking_baseline.ipynb).
 Cập nhật kỹ thuật: **2026-11-01** — Đã hoàn thành toàn bộ sửa đổi kỹ thuật theo `RDR-0010`, `RDR-0011` và `RULES.md §8`.
@@ -22,7 +22,7 @@ Blend là trộn kết quả cũ và ảnh mới theo tỷ lệ 50/50 ở vùng 
 
 ## 3. Kết quả đã lưu nói được gì?
 
-Nguồn: `outputs/01_classical_baseline/<stamp>/metrics_*_20frames.json`.
+Nguồn: `outputs/classical_mosaicking_baseline/<stamp>/metrics_*_20frames.json`.
 Các code cell trong notebook đều ở trạng thái sạch (`outputs: []`, `execution_count: null`) sẵn sàng chạy cloud.
 | Cấu hình | Frame đã ghép / yêu cầu | `pipeline_total_seconds` |
 |---|---|---|

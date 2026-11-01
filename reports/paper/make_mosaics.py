@@ -14,7 +14,9 @@ import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "notebooks" / "outputs" / "05_failure_aware"
+OUT = ROOT / "notebooks" / "outputs" / "failure_aware_pipeline"
+if not OUT.is_dir():
+    OUT = ROOT / "notebooks" / "outputs" / "05_failure_aware"
 FIG = Path(__file__).resolve().parent / "figures"
 FIG.mkdir(exist_ok=True)
 
