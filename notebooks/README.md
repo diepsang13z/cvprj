@@ -1,58 +1,107 @@
 # UAV Aerial Mosaicking Experiments
 
-## Mandatory Execution Policy
+## Phạm vi và trạng thái nghiên cứu
 
-**Experiments must run exclusively on Google Colab hosted runtimes.** Local execution on personal machines is strictly forbidden for both classical algorithms (CPU) and learned deep models (GPU), per project rules (`RULES.md §8`).
+- Ba RQ giữ theo RDR-0003: dự báo lỗi, phân luồng matcher, phục hồi.
+- [RDR-0011](../docs/logs/decisions/RDR-0011_loso_and_technical_readiness.md) chọn
+  **leave-one-sequence-out (LOSO)** và **chỉ sửa kỹ thuật trước**.
+- RDR-0008 vẫn **Proposed**. Các giá trị sai số bước, NCC, inlier ratio,
+  ngân sách escalation và policy mặc định chưa được chấp nhận là phương pháp chính thức.
+- Không gọi bất đồng với SIFT tham chiếu là độ chính xác thực địa.
+  Chain-vs-direct cần overlap; không đo được phải báo riêng, không thay bằng 0.
+- Không suy ra khả năng tổng quát từ cửa sổ đã dùng để chọn chỉ báo.
+  Village/grass đã được dùng khám phá; LOSO không xoá lịch sử đó.
 
-Each notebook includes its own Google Colab environment check and setup cell.
+## Chỉ chạy trên hosted runtime
 
----
+Theo [RULES.md §8](../RULES.md), không chạy notebook, cell, model hay pipeline
+trên máy cá nhân, kể cả Colab local runtime. Chỉ dùng hosted Colab/Kaggle.
+Máy cá nhân chỉ dùng kiểm tra JSON, cú pháp và đường dẫn.
 
-## Notebook Structure
+Qua kiểm tra tĩnh không có nghĩa đã chạy thành công trên Colab. Cần chạy
+self-check và smoke trên hosted runtime trước khi chạy toàn dataset.
+Không có cam kết thời gian chạy hoặc quota GPU trước khi đo.
 
-The experiment suite is organized into 5 focused, sequential, and fully self-contained notebooks. Each notebook contains all required data loaders, algorithms, and execution cells inline, allowing team members to open and run any single `.ipynb` file on Google Colab independently without external Python module dependencies.
+## Cấu trúc Google Drive
 
-| Notebook | Focus & Objective | Inputs | Key Deliverables |
-| :--- | :--- | :--- | :--- |
-| **`classical_mosaicking_baseline.ipynb`** | SIFT and ORB feature matching and mosaicking on original full-resolution imagery. | Raw sequence frames in `data/` | Mosaic images, homography metrics, execution logs |
-| **`deep_matching_pilot.ipynb`** | LightGlue matcher paired with SIFT or SuperPoint extractors on full-resolution imagery. | Raw sequence frames in `data/` | Pairwise matching metrics, homography matrices, mosaic |
-| **`feature_matcher_benchmark.ipynb`** | Standardized 640px benchmark evaluating 7 feature matching configurations. | Sequence frames (scaled to 640px) | `manifest.json`, pairwise matches (`pairs/`), mosaic, HTML report |
-| **`accumulated_drift_evaluation.ipynb`** | UAV trajectory/plane verification and accumulated homography drift measurement. | GPS/IMU metadata and output runs from benchmark | `trajectory_check.json`, `drift_selfconsistent.json` |
-| **`failure_aware_mosaicking_pipeline.ipynb`** | Complete Failure-Aware Mosaicking research pipeline answering RQ1, RQ2, and RQ3. | Sequence scan windows (village 80-125, grass 0-45) | `scan_<method>.json`, RQ1/RQ2 results, recovery comparisons, `report.json` |
+Giữ nguyên thư mục của nhóm; không cần đổi `dataset` thành `data`, không tạo symlink:
 
-Supported method identifiers for 03 & 04:
-`sift_bf`, `orb_bf`, `sift_lightglue`, `superpoint_lightglue`, `xfeat_mnn`, `xfeat_lighterglue`, `efficientloftr`.
+```text
+MyDrive/mosaicking_from_uav_video_research/
+  dataset/
+    <sequence>/
+      rgb/*.jpg
+      config.cfg
+      trajectory.txt
+  classical_mosaicking_baseline.ipynb
+  deep_matching_pilot.ipynb
+  feature_matcher_benchmark.ipynb
+  accumulated_drift_evaluation.ipynb
+  failure_aware_mosaicking_pipeline.ipynb
+  outputs/
+```
 
----
+Metadata pose không phải ground truth độc lập. Chẩn đoán trajectory chỉ là
+phép đối chiếu bổ sung; không dùng kết luận village/grass ép các sequence khác.
 
-## Collaborative Team Workflow (4 Members)
+## Luồng chạy
 
-To avoid Colab VRAM exhaustion and git merge conflicts on `.ipynb` files, team members execute tasks independently on their own cloud runtimes and exchange only result artifacts (`.json`, `.csv`, images):
+1. Upload bản notebook hiện tại lên Drive, mở trong Colab hosted runtime.
+2. Chọn runtime phù hợp: GPU cho learned matcher; ghi phần cứng thực tế
+   trong artifact. OpenCV SIFT/ORB vẫn chạy CPU dù runtime có GPU.
+3. Đọc cấu hình đầu notebook. Root mặc định là thư mục Drive ở trên;
+   `UAV_PROJECT_ROOT` cho root khác, `UAV_OUTPUT_ROOT` cho thư mục kết quả.
+   Dùng thư mục bền vững, không `/content` tạm, cho kết quả Colab.
+4. Chạy từ runtime sạch, cấp quyền mount Drive. Không bỏ qua lỗi dependency,
+   dữ liệu, self-check hoặc provenance để tiếp tục một run không hợp lệ.
+5. Chạy cấu hình nhỏ trước; kiểm tra artifact, số frame thực xử lý,
+   trạng thái thất bại/không đo được và marker hoàn tất.
+6. Sau smoke, chọn phạm vi full trong cấu hình. Chạy đủ sequence và đủ frame
+   khác với ghép thành công hết frame hay có tham chiếu hợp lệ cho hết frame.
+7. Notebook drift cần một run benchmark hoàn tất, đúng dữ liệu; dùng
+   `UAV_INPUT_RUN` để chỉ định thư mục run. Không lấy homography từ bộ ảnh khác.
+8. Trước khi đóng phiên, kiểm tra kết quả đã ở Drive. Với Kaggle, cần lưu
+   notebook version/output và bàn giao artifact; mount/directory tồn tại
+   không tự bảo đảm dữ liệu còn sau khi phiên bị xoá.
 
-### Phase 1: Benchmark & Failure Scans (Parallel Cloud Runs)
-- **Member A:** Run `sift_bf` and `orb_bf` in `feature_matcher_benchmark`; run SIFT window scan in `failure_aware_mosaicking_pipeline`.
-- **Member B:** Run `sift_lightglue` and `superpoint_lightglue` in `feature_matcher_benchmark`; run SuperPoint+LightGlue scan in `failure_aware_mosaicking_pipeline`.
-- **Member C:** Run `xfeat_mnn`, `xfeat_lighterglue`, and `efficientloftr` in `feature_matcher_benchmark`; run EfficientLoFTR scan in `failure_aware_mosaicking_pipeline`.
-- **Member D:** Run trajectory verification in `accumulated_drift_evaluation`; evaluate accumulated drift using run outputs from A, B, and C.
+## Vai trò của 5 notebook
 
-### Phase 2: RQ Analysis & Report Synthesis (Fast CPU Execution)
-Once the 3 scan files (`scan_sift_bf.json`, `scan_superpoint_lightglue.json`, `scan_efficientloftr.json`) are collected:
-1. Provide the 3 file paths in `failure_aware_mosaicking_pipeline`.
-2. Execute **Phase 2 (RQ1)**: Computes Spearman rank correlation and ROC-AUC for cheap failure indicators.
-3. Execute **Phase 3 (RQ2)**: Simulates two-stage risk-based matcher routing and identifies optimal threshold $\tau$.
-4. Execute **Phase 4 (RQ3)**: Evaluates the 4 recovery policies (`none`, `drop`, `anchor`, `split`) under shared threshold $\tau$.
-5. Execute **Phase 5 (Assembly)**: Synthesizes final `report.json` and updates IEEE paper figures.
+| Notebook | Vai trò | Giới hạn diễn giải |
+|---|---|---|
+| `classical_mosaicking_baseline.ipynb` | SIFT/ORB baseline, homography và mosaic | RMSE inlier không phải độ chính xác toàn bản đồ |
+| `deep_matching_pilot.ipynb` | SIFT/SuperPoint + LightGlue | Pilot ảnh gốc; không trộn timing với benchmark 640 px |
+| `feature_matcher_benchmark.ipynb` | So sánh các adapter trên cùng input/cấu hình | Báo backend/device và phạm vi timing; lỗi matcher là kết quả |
+| `accumulated_drift_evaluation.ipynb` | Chain-vs-direct trên output benchmark có provenance | Báo common support, coverage và tham chiếu không hợp lệ |
+| `failure_aware_mosaicking_pipeline.ipynb` | Chỉ báo, mô phỏng routing và thí nghiệm recovery | Phân biệt mô phỏng/cost cache với chạy online, cấu hình khám phá với protocol xác nhận |
 
----
+## Artifact và tái lập
 
-## Cloud Runtime Setup Guide
+- Run mới phải nằm trong thư mục mới; không ghi đè `notebooks/outputs/` lịch sử.
+- Giữ manifest, input hash/frame IDs, cấu hình, phiên bản thư viện, kết quả
+  từng cặp/sequence, failure log và marker hoàn tất cùng một run.
+- Run dở dang không phải run đã hoàn tất. Checkpoint giúp giữ công việc đã
+  xong; không đồng nghĩa tự động resume hoặc được trộn với run khác.
+- `N/A`/`null` là phép đo không khả dụng, không phải sai số bằng 0.
+- Split giữ ảnh nhưng có thể tạo mảnh một frame. Báo số/kích thước mảnh và
+  cạnh ghép thành công; không dùng retained frames một mình để kết luận thắng.
+- Không so thời gian khác phạm vi (matcher-only với pipeline, có IO với
+  không IO) như cùng một thước đo.
 
-1. Open Google Colab. Clone the repository and set working directory to root:
-   ```bash
-   git clone -b dieps13z/work https://github.com/diepsang13z/cvprj.git
-   cd cvprj
-   pip install -r requirements_learned.txt
-   ```
-2. Mount Google Drive on Colab (default persistent output root: `/content/drive/MyDrive/uav_runs`).
-3. Keep `DEVICE = "cpu"` or `"cuda"` consistent across all jobs within the same benchmark comparison.
-4. Each run automatically generates a distinct UTC-timestamped folder to prevent overwriting prior runs or historical baseline data in `notebooks/outputs/`.
+## LOSO: ranh giới protocol đã chốt
+
+Mỗi fold giữ lại một sequence; mọi bước hiệu chỉnh dùng các sequence còn lại.
+Ghi train/test sequence, cấu hình và trạng thái ngân sách khả thi cho từng fold.
+Không chọn lại ngưỡng từ kết quả sequence giữ lại. Một fold không khả thi hoặc
+không đủ tham chiếu phải được báo, không đổi sang ngưỡng dự phòng âm thầm.
+
+LOSO có thể cho các ngưỡng khác nhau giữa fold. Nó đánh giá quy trình hiệu chỉnh,
+không chứng minh một ngưỡng duy nhất phù hợp mọi cảnh. Các ngưỡng hiện có vẫn là
+khám phá cho tới quyết định phương pháp tiếp theo; không tự đổi RDR-0008 thành Accepted.
+
+## Tài liệu/kết quả lịch sử
+
+Các ghi chú `docs/explain/notebook_*.md`, output cũ và số liệu paper là hồ sơ lịch sử,
+không phải bằng chứng phiên bản notebook hiện tại đã chạy. Không tự thay số liệu
+paper bằng run mới, hoặc trộn artifact cũ/mới khi schema và cấu hình khác nhau.
+Luồng chia việc cũ bằng ba file `scan_<matcher>.json` không được coi là tính năng
+nhập/ghép dữ liệu nếu notebook hiện tại không cung cấp đường chạy đó.

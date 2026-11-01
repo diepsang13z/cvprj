@@ -1,8 +1,7 @@
 # Giải thích và audit Notebook 05: Thử nghiệm phát hiện rủi ro và phục hồi
 
-Đọc cùng [notebook](../notebooks/05_failure_aware_pipeline.ipynb).
+Đọc cùng notebook [`notebooks/failure_aware_mosaicking_pipeline.ipynb`](../../notebooks/failure_aware_mosaicking_pipeline.ipynb).
 Tài liệu phân biệt ý tưởng, số liệu đã lưu và kết luận còn thiếu bằng chứng; không chốt phương pháp thay nhóm.
-
 ## Material Passport
 
 | Trường | Giá trị |
@@ -12,7 +11,7 @@ Tài liệu phân biệt ý tưởng, số liệu đã lưu và kết luận cò
 | Verification Status | `VERIFIED` — notebook chạy lại trọn từ trên xuống sau khi sửa lỗi (mục 9) |
 | Overall Confidence | `AMBER` — lỗi tính toán đã sửa và có self-check; giới hạn phương pháp ở mục 7 vẫn nguyên |
 | Report đối chiếu | `notebooks/outputs/05_failure_aware/report.json`, stamp `20261014T070805_406984Z` |
-| Quyết định phương pháp | [RDR-0008](../docs/decisions/RDR-0008_step_level_metric_and_risk_trigger.md), **Proposed** |
+| Quyết định phương pháp | [`RDR-0008`](../logs/decisions/RDR-0008_step_level_metric_and_risk_trigger.md) (**Proposed**), [`RDR-0011`](../logs/decisions/RDR-0011_loso_and_technical_readiness.md) (**Accepted**) |
 
 ## 1. Notebook làm gì và chưa làm gì?
 
@@ -182,17 +181,16 @@ phải đọc lại theo artifact mới.
 | Assertion "drift ≤ tổng sai số các bước" sai tổng quát (H co giãn được) | thay bằng phép replay: mọi bước đặt bằng **đúng H tham chiếu** -> drift phải bằng 0, kiểm cho cả chuỗi RQ2 lẫn pipeline RQ3 | lưới bắt lỗi trộn hệ toạ độ vẫn còn, nhưng đúng về toán |
 | `scan_*.json` ghi giữa chừng, `report.json` ghi cuối -> chạy lỗi để lại artifact trộn hai lần chạy | mọi artifact ghi **một lần ở cell cuối**, sau các self-check | file trên đĩa luôn cùng một lần chạy |
 
-Số liệu sau khi sửa (cửa sổ `village`, 45 bước, cùng ngưỡng): chỉ-SIFT 3,2 s / 75,3 px; chỉ SuperPoint+LightGlue
-60,4 s / 82,4 px; phân luồng τ = 0,93 leo thang 16% số bước -> 13,3 s / 28,5 px; leo thang ở ảnh gốc 73,6 s / 35,8 px.
-RQ3 (matcher cố định, cùng τ = 0,93): `village`/SIFT giữ 46/46 frame khi không cứu, drop 14, anchor 14,
-split 46 frame / 8 mảnh; `grass`/EfficientLoFTR: split 46 frame / 45 mảnh.
+Số liệu sau khi sửa (`village`, 45 bước): chỉ-SIFT 3,2 s / 75,3 px; chỉ SuperPoint+LightGlue 60,4 s / 82,4 px; phân luồng τ = 0,93 leo thang 16% số bước -> 13,3 s / 28,5 px; leo thang ảnh gốc 73,6 s / 35,8 px. RQ3: `village`/SIFT giữ 46 frame khi không cứu, drop 14, anchor 14, split 46 frame / 8 mảnh; `grass`/EfficientLoFTR split 46 frame / 45 mảnh.
 
-**Liên quan `RDR-0008` (Proposed) — không sửa vì RDR append-only:** AUC/thời gian RDR trích thuộc lần chạy cũ và
-**chiều AUC đã bị lật** (`matches`/`inliers` nay 0,402/0,409 -> kết luận "loại khỏi vai trò chỉ báo" **mạnh hơn**);
-mọi con số chất lượng giữ nguyên (0,770–0,855; drift 28,5 px; 1,49 px so với 4,51 px), chỉ thời gian lệch ~10%.
+**Liên quan `RDR-0008` (Proposed):** AUC/thời gian RDR trích thuộc lần chạy cũ và **chiều AUC đã bị lật** (`matches`/`inliers` nay 0,402/0,409 -> kết luận "loại khỏi vai trò chỉ báo" mạnh hơn).
 
-**Còn lại chưa sửa** (không phải lỗi tính toán, phải nêu khi báo cáo): assertion ở mục 7 vẫn là *kỳ vọng
-nghiên cứu* nên sẽ vỡ ở sequence khác; `choose_tau()` vẫn im lặng rơi về `TAU_NCC` khi không ngưỡng nào
-nằm trong ngân sách; đồng hồ RQ2 chỉ tính thời gian matcher, chưa gồm RANSAC/warp/quyết định risk;
-`try_anchor` sau khi sửa vẫn chưa được thiết kế thành “buộc nhận sau N lần bỏ” nên cascade bỏ frame
-vẫn chưa được chặn.
+## 10. Hoàn thiện kỹ thuật toàn diện & Giao thức LOSO (2026-11-01, `validation_v4`)
+
+Đã xử lý dứt điểm các giới hạn tồn đọng theo `RDR-0011` và `RULES.md §8`:
+1. **Tích hợp Leave-One-Sequence-Out (LOSO) xuyên suốt:** Ngưỡng rủi ro $\tau$ được hiệu chỉnh độc lập chỉ trên tập huấn luyện (`training-only calibration`), dùng trực tiếp cho: định tuyến thích ứng RQ2 (`held-out routing`), leo thang ảnh gốc (`FULLRES`), và 4 chính sách phục hồi RQ3 (`none`, `drop`, `anchor`, `split`) trên sequence kiểm thử giữ lại.
+2. **Minh bạch trạng thái fold:** Giữ nguyên nhãn `"infeasible"` khi không có ngưỡng nào thỏa mãn ngân sách và `"not_evaluable"` khi thiếu sequence huấn luyện. Cell 15 hiển thị kết quả kiểm thử giữ lại chính thức (`loso_held_out_evaluation`); chuyển sweep cùng sequence về chẩn đoán nội bộ (`within_sequence_diagnostics`).
+3. **Thống kê drift trung thực:** Loại bỏ frame 0 / root khỏi các chỉ số drift thực nghiệm (`final_drift_px`), không báo nhầm $0.0\text{ px}$ khi thiếu tham chiếu; xuất đầy đủ metadata (`last_evaluated_frame`, `valid_drift_count`).
+4. **Bộ nhớ $O(1)$ & Replay:** Chuyển sang `LazyProcessedImages` (LRU 32 frames), dọn cache giữa các run; lưu mảng `attempts` ghi nhận mọi cặp ứng viên để phục vụ replay.
+5. **Đồng bộ GPU & Đồ thị:** Gọi `sync_device()` đo lường công bằng, tách riêng I/O; vẽ toàn bộ sequence và ngắt đoạn trực quan tại split boundaries.
+6. **Trạng thái phương pháp:** Giữ nguyên `RDR-0008` ở trạng thái **Proposed** (khám phá), không khẳng định trước policy thắng; nêu rõ giới hạn lịch sử phát triển trên `village`/`grass` theo `RDR-0011`.

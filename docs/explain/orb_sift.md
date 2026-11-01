@@ -56,12 +56,12 @@ Tài liệu so sánh và giải thích cơ chế của hai thuật toán trích 
 
 ---
 
-## 5. Vai trò trong dự án UAV Mosaicking (AI2002)
+## 5. Vai trò trong dự án UAV Mosaicking
 
-1. **Giai đoạn Baseline (Bước 1):**
-   - Dùng **SIFT** làm mốc tham chiếu độ chính xác chuẩn (do camera UAV Phantom 3 bay tương đối ổn định).
-   - Dùng **ORB** làm mốc tham chiếu về tốc độ tối đa trên CPU.
+1. **Giai đoạn Baseline & Benchmark (Bước 1 & 3):**
+   - Dùng **SIFT** làm mốc tham chiếu độ chính xác cổ điển trong `notebooks/classical_mosaicking_baseline.ipynb` và `notebooks/feature_matcher_benchmark.ipynb`.
+   - Dùng **ORB** làm mốc đối chứng tốc độ nhanh nhất trên CPU backend của Colab/Kaggle.
 
 2. **Giai đoạn Matcher Routing (RQ2):**
-   - **Tầng 1 (Mặc định):** Dùng thuật toán nhẹ (ORB hoặc SIFT) để xử lý nhanh các frame bay thẳng, nhiều chi tiết, địa hình phẳng.
-   - **Tầng 2 (Dự phòng):** Khi chỉ số rủi ro (RQ1) cảnh báo inlier tụt dốc hoặc cảnh mất chi tiết $\to$ mới kích hoạt Learned Matcher (SuperPoint + LightGlue).
+   - **Tầng 1 (Mặc định):** Dùng SIFT-640 (hoặc ORB) để xử lý nhanh các frame bay thẳng, nhiều chi tiết, địa hình phẳng.
+   - **Tầng 2 (Dự phòng):** Khi chỉ số rủi ro (RQ1) cảnh báo rủi ro $\to$ kích hoạt Learned Matcher (SuperPoint + LightGlue) hoặc ảnh gốc theo giao thức LOSO (`RDR-0011`).

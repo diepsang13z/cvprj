@@ -21,10 +21,10 @@ Tài liệu quy định nguyên tắc vận hành, quản lý context và kỹ t
 
 ## 3. Nguồn sự thật cao nhất (Single Source of Truth)
 
-- Quyết định đã chốt nằm ở `docs/decisions/` (mã `RDR-NNNN`), đọc theo **chủ đề**; quyết định mới chỉ thay quyết định cũ khi ghi rõ phạm vi thay thế.
-- `docs/decisions/` hoạt động **append-only**: chỉ thêm mới, không sửa đè quyết định cũ.
+- Quyết định đã chốt nằm ở `docs/logs/decisions/` (mã `RDR-NNNN`), đọc theo **chủ đề**; quyết định mới chỉ thay quyết định cũ khi ghi rõ phạm vi thay thế.
+- `docs/logs/decisions/` hoạt động **append-only**: chỉ thêm mới, không sửa đè quyết định cũ.
 - Việc đang mở do [GitHub Issues](https://github.com/diepsang13z/cvprj/issues) quản lý (khi nhóm dùng); trước mắt ghi ở `docs/logs/progress/`.
-- Mâu thuẫn giữa `AGENTS.md` / `README.md` / `docs/INDEX.md` với `docs/decisions/` → **decisions thắng**.
+- Mâu thuẫn giữa `AGENTS.md` / `README.md` / `docs/INDEX.md` với `docs/logs/decisions/` → **decisions thắng**.
 
 ## 4. Kỷ luật giai đoạn khám phá (Exploratory Discipline)
 
@@ -35,7 +35,7 @@ Tài liệu quy định nguyên tắc vận hành, quản lý context và kỹ t
 
 - Tên file và thư mục **chỉ dùng chữ thường, chữ số và dấu gạch dưới `_`**. Không dùng gạch ngang `-`, khoảng trắng, dấu tiếng Việt hoặc ký tự đặc biệt.
 - **Ngoại lệ 1 — mã quyết định:** `RDR-NNNN` giữ gạch ngang vì là mã, không phải dấu phân tách từ. Phần slug phía sau dùng `_`: `RDR-0004_lecturer_review_after_persen_proposal.md`.
-- **Ngoại lệ 2 — file điều hướng/quản lý context viết HOA:** `README.md`, `AGENTS.md`, `RULES.md`, `INDEX.md`. Nội dung là kiến thức/nhật ký → chữ thường. Ví dụ `refs/INDEX.md` (điều hướng) vs `notes/glossary.md` (nội dung).
+- **Ngoại lệ 2 — file điều hướng/quản lý context viết HOA:** `README.md`, `AGENTS.md`, `RULES.md`, `INDEX.md`. Nội dung là kiến thức/nhật ký → chữ thường. Ví dụ `refs/INDEX.md` (điều hướng) vs `docs/explain/glossary.md` (nội dung).
 - **Chỉ áp cho file tạo mới.** File cũ đã đúng quy ước thì giữ nguyên; file nội dung không đổi tên chỉ vì quy ước này.
 - **Quy ước `refs/`:** `<năm>_<tác_giả_chính_không_dấu>_<chủ_đề_ngắn>.pdf`.
 
@@ -45,7 +45,7 @@ Ba nguồn tách theo vòng đời thay đổi; **không giữ một file trạn
 
 | Loại thông tin | Nguồn | Khi nào cập nhật | Cách |
 | --- | --- | --- | --- |
-| Quyết định đã chốt | `docs/decisions/` | Nhóm chốt/thay đổi | Thêm `RDR` mới, nêu rõ phạm vi thay thế |
+| Quyết định đã chốt | `docs/logs/decisions/` | Nhóm chốt/thay đổi | Thêm `RDR` mới, nêu rõ phạm vi thay thế |
 | Việc đang mở | GitHub Issues (hoặc `docs/logs/progress/`) | Có việc mới/hoàn thành | Một issue mỗi việc; đóng khi xong |
 | Việc đã xảy ra | `docs/logs/progress/YYYY_MM_DD_<tên>.md` | Mỗi phiên | Mở file mới; không sửa file người khác |
 

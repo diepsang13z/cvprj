@@ -40,7 +40,7 @@ Mỗi Agent khi bắt đầu phiên mới đọc lướt theo thứ tự tối g
 
 1. **Bước 1 — `docs/INDEX.md`:** router tài liệu; định vị cấu trúc.
 2. **Bước 2 — `RULES.md`:** nắm giới hạn 200 dòng, kỷ luật Git, nơi ghi quyết định/việc mở/nhật ký.
-3. **Bước 3 — RDR liên quan trong `docs/decisions/`:** đọc theo chủ đề đang làm; file số lớn nhất là quyết định mới nhất.
+3. **Bước 3 — RDR liên quan trong `docs/logs/decisions/`:** đọc theo chủ đề đang làm; file số lớn nhất là quyết định mới nhất.
 4. **Bước 4 — GitHub Issues và `docs/logs/`:** Issues là việc đang mở; log ghi việc đã xảy ra, không thay cho Issues.
 5. **Bước 5 — Không đọc tràn lan `docs/logs/`:** chỉ mở log cụ thể khi nhiệm vụ hiện tại yêu cầu.
 
@@ -54,6 +54,6 @@ Mỗi Agent khi bắt đầu phiên mới đọc lướt theo thứ tự tối g
 ## 5. Khi thêm tài liệu
 
 - File context mới → thêm một dòng vào `docs/INDEX.md`. Không có dòng trong INDEX = file vô hình với agent sau.
-- Quyết định mới → `docs/decisions/RDR-NNNN_<slug>.md`, số kế tiếp, không sửa/không xoá file cũ.
+- Quyết định mới → `docs/logs/decisions/RDR-NNNN_<slug>.md`, số kế tiếp, không sửa/không xoá file cũ.
 - Nhật ký/trao đổi dài → `docs/logs/<chủ-đề>/<NNNN>_<slug>.md`, chỉ liệt kê ở INDEX.
 - File context ≤ 200 dòng (trừ `docs/logs/`).

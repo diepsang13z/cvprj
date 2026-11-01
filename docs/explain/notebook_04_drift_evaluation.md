@@ -1,14 +1,13 @@
 # Giải thích và audit Notebook 04: Đo độ lệch hình học bằng tham chiếu
 
-Đọc cùng [notebook](../notebooks/04_drift_evaluation.ipynb).
-Audit 2026-10-14: `ANALYZED` — kiểm tra code, artifact và phép chiếu cô lập; chưa chạy lại matching toàn bộ.
-Notebook hiện có output cho 12/12 code cell, không lưu exception; điều này không chứng nhận mọi kết luận.
+Đọc cùng notebook [`notebooks/accumulated_drift_evaluation.ipynb`](../../notebooks/accumulated_drift_evaluation.ipynb).
+Cập nhật kỹ thuật: **2026-11-01** — Đã hoàn thành toàn bộ sửa đổi kỹ thuật theo `RDR-0007`, `RDR-0010`, `RDR-0011` và `RULES.md §8`.
 
 ## 1. Hai câu hỏi khác nhau
 
 1. **Chẩn đoán pose:** hiểu `trajectory.txt`, quaternion và `Plane=` để đối chiếu chuyển động suy từ ảnh.
 2. **Đo tự nhất quán:** so H ghép tuần tự với H ghép thẳng bằng SIFT, theo
-   [RDR-0007](../docs/decisions/RDR-0007_drift_metric_choice.md).
+   [`RDR-0007`](../logs/decisions/RDR-0007_drift_metric_choice.md).
 
 Phần 2 không phụ thuộc trajectory, nhưng **không độc lập với ảnh hoặc matcher tham chiếu**.
 Câu hỏi đúng là “hai cách đăng ký bất đồng bao nhiêu pixel?”, không phải “lệch bao nhiêu so với thực địa?”.
@@ -75,30 +74,20 @@ không phải vượt “giới hạn cho phép” 28–37 lần.
 Các con số không chứng minh 6 cấu hình còn lại tương đương; chưa có kiểm định tương đương/khoảng bất định.
 Khác độ dài đoạn đo cũng không cho phép suy `grass` chính xác hơn hoặc khó hơn chỉ từ hai cột.
 
-## 5. Audit code và khả năng tái lập
+## 5. Audit kỹ thuật và các điểm hoàn thiện mới nhất
 
-| Vị trí | Bằng chứng / rủi ro | Việc cần làm |
-|---|---|---|
-| `latest_run_dir()` | Tự lấy thư mục mới nhất có `index.html` | Cố định run đánh giá; có HTML không tự bảo đảm mọi artifact đầy đủ |
-| `chain_to_original()` | Đọc H/size từ run cũ, ghép direct từ ảnh hiện tại | Kiểm hash trước khi chấm, không chỉ ghi tên run |
-| Audit hash lần này | 40/40 hash ảnh hiện tại khớp manifest run trên | Chưa thấy trộn ảnh sai ở run hiện tại; đây vẫn là kiểm tra còn thiếu trong notebook |
-| `direct_to_first()` | Có áp ngưỡng 100, khác Notebook 05 hiện tại | Giữ cơ chế không đo được và báo rõ đoạn đánh giá |
-| Tổng hợp `measured` / `ate_px` | Tính cả mốc 0 luôn bằng 0 | Nếu chỉ còn mốc, không được báo như có đánh giá drift hữu ích |
-| Assertions chẩn đoán | Ép residual tăng >10× | Kết quả nghiên cứu không phải bất biến code |
-| Assertions metric | Ép SIFT <60 px và EfficientLoFTR >5× SIFT | Có thể loại một thí nghiệm hợp lệ chỉ vì khác kỳ vọng |
-| Kiểm `drift(i=0)==0` | Identity so với identity | Không đủ để chứng minh hướng H ở các frame khác |
-| Docstring / phần mở đầu | `read_trajectory()` vẫn ghi `qw qx qy qz`; trạng thái nguồn pose chưa đồng bộ | Sửa tài liệu trong notebook trước khi dùng làm hướng dẫn |
-
-`ate_px` ở đây là RMS của dãy độ lệch 5 điểm, không phải Absolute Trajectory Error theo ground truth.
-Kiểm tra cô lập `drift_px()` với tịnh tiến (3,4) cho đúng 5 px;
-quaternion identity cho đúng ma trận identity. Không thay thế kiểm chứng pipeline đầy đủ.
-
+| Hạng mục | Hiện trạng kỹ thuật mới nhất |
+|---|---|
+| **Tách biệt chẩn đoán Pose** | Chẩn đoán trajectory mặc định tắt (`UAV_ENABLE_POSE_DIAGNOSIS=0`). Khi tắt, xuất structured `status: "disabled_or_unavailable"` và `None` cho các metric hình học, không fake số liệu. |
+| **Độc lập metadata camera** | Đọc danh sách ảnh và kích thước `(w, h)` trực tiếp từ file ảnh đĩa (`images_data`), không phụ thuộc `config.cfg`. |
+| **Xác thực Provenance & Hash** | `validate_benchmark_manifest()` kiểm chứng 100% tên file, thứ tự và hash SHA-256 từng ảnh so với benchmark run. |
+| **Lọc Run hoàn tất chuẩn** | `latest_run_dir()` chỉ tự động nhận các run có `completed.json` và cấu trúc artifacts đầy đủ; cho phép chọn run lịch sử qua `UAV_INPUT_RUN` khi đã qua xác thực. |
+| **Loại trừ mốc Identity** | Mốc $i = 0$ là reference origin ($0.0\text{ px}$ tự nhiên), loại khỏi các chỉ số thực nghiệm. Không còn điểm $i>0$ hợp lệ thì `final_drift_px = None`. |
+| **So sánh công bằng (Common Eligible Sets)** | Tính toán `common_eligible_sets` trên các frame mà mọi mô hình đều có tham chiếu hợp lệ ($\ge 100$ inlier), phân tách rõ với độ phủ `frames_stitched`. |
+| **Xoá Assertions thiên kiến** | Loại bỏ toàn bộ assertion ép kết quả nghiên cứu (SIFT < 60, ELoFTR > 5x, residual tăng >10x); chỉ giữ lại các unit self-check toán học. |
 ## 6. Đọc output và kết luận
 
 - `trajectory_check.json`: chẩn đoán quy ước và các giả định pose/plane, không phải chứng nhận GPS.
 - `drift_selfconsistent.json`: sai số vòng, run nguồn, `last_index`, `skipped_steps`, chuỗi metric.
 - Writer dùng đường dẫn cố định; cần giữ run nguồn và artifact tương ứng khi so các lần chạy.
-
-**Kết luận:** có giá trị đo tự nhất quán và chẩn đoán, nhưng chưa đo sai số ngoài thực địa.
-Cần sửa lập luận về thang đo, assertions ép kết quả và ràng buộc provenance.
-Notebook/RDR chưa được sửa trong lần audit này.
+**Kết luận:** Notebook đo drift tự nhất quán chuỗi vs trực tiếp theo chuẩn khoa học `RDR-0007`, lưu vết provenance đầy đủ và bảo toàn toàn bộ nhật ký inliers phục vụ đánh giá công bằng.

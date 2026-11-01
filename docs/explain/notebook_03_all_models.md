@@ -1,8 +1,7 @@
-# Giải thích và audit Notebook 03: Pilot chung cho 7 cấu hình
+# Giải thích và audit Notebook 03: Benchmark chuẩn hoá 7 mô hình
 
-Đọc cùng [notebook](../notebooks/03_all_models.ipynb).
-Audit 2026-10-14: `ANALYZED` — đọc code/artifact, kiểm tra hình học và hash; chưa chạy lại inference.
-
+Đọc cùng notebook [`notebooks/feature_matcher_benchmark.ipynb`](../../notebooks/feature_matcher_benchmark.ipynb).
+Cập nhật kỹ thuật: **2026-11-01** — Đã hoàn thành toàn bộ sửa đổi kỹ thuật theo `RDR-0010`, `RDR-0011` và `RULES.md §8`.
 ## 1. Mục đích
 
 Đặt các cấu hình vào cùng điều kiện xử lý để quan sát matching và mosaic:
@@ -10,11 +9,10 @@ Audit 2026-10-14: `ANALYZED` — đọc code/artifact, kiểm tra hình học v�
 `xfeat_mnn`, `xfeat_lighterglue`, `efficientloftr`.
 Đây là khảo sát cấu hình pretrained, chưa phải benchmark đủ rộng hoặc xếp hạng mô hình tổng quát.
 
-- Hai sequence: `phantom3-village-kfs`, `phantom3-grass-kfs`.
-- Tầng cặp: 3 cặp đầu mỗi sequence, tổng cộng 42 lần đo cho 7 cấu hình.
-- Tầng mosaic: 20 frame đầu mỗi sequence, tổng cộng 14 mosaic.
-- CPU 4 threads, cạnh dài tối đa 640 px, kích thước làm tròn xuống bội 32.
+- Chế độ benchmark: `pilot` (2 sequence: `village`, `grass`; 3 cặp đầu; 20 frame mosaic) hoặc `full` (tự động quét toàn bộ sequence trong `dataset/`, toàn bộ cặp và toàn bộ frame).
+- Độ phân giải chuẩn hoá: cạnh dài tối đa 640 px (làm tròn xuống bội 32).
 - Sparse đặt tối đa 2.000 keypoint; EfficientLoFTR semi-dense không bị ép cùng số correspondence.
+- Môi trường thực thi: Google Colab / Kaggle (GPU T4/A100); nghiêm cấm chạy máy cá nhân (`RULES.md §8`).
 
 Không nên gán một sequence luôn “dễ” hoặc “khó”: mức khó phụ thuộc matcher, cửa sổ và phép đo.
 
@@ -49,27 +47,16 @@ Chưa đủ bằng chứng quy nguyên nhân riêng cho “sai số góc quay nh
 EfficientLoFTR nói chung không phù hợp: cần tách ảnh hưởng adapter, preprocessing, checkpoint và dữ liệu.
 Quan sát hiện tại hỗ trợ nhu cầu kiểm tra lỗi đăng ký; chưa chứng minh chỉ báo/routing/recovery của RQ1–RQ3.
 
-## 4. Audit: đã kiểm gì, còn thiếu gì?
+## 4. Audit kỹ thuật và các điểm hoàn thiện mới nhất
 
-| Hạng mục | Kết quả audit | Giới hạn |
-|---|---|---|
-| Hình học | Phép tịnh tiến được khôi phục đúng; 3 correspondence bị từ chối | Chưa bao phủ mọi cấu hình suy biến/projective |
-| Blend | Ba ảnh hằng 0/100/200 cho pixel 125 | Đúng blend tuần tự, không phải trung bình đều |
-| Hash đầu vào | 40/40 ảnh hiện tại khớp manifest của run trên | Không tự xác nhận code/checkpoint/môi trường hoàn toàn giống run cũ |
-| Tái lập | Run riêng, manifest, JSON nghiêm ngặt, NPZ giữ điểm | Chưa chạy lặp lại toàn bộ để kiểm tra độ ổn định |
-| Resize | 1920×1080 được đưa về 640×352 | Hai trục có tỷ lệ khác nhau; cần giữ đúng biến đổi tọa độ khi so ảnh gốc |
-| Tiêu chí thành công | H hợp lệ về số học | Không kiểm tra độc lập rằng đăng ký đúng |
-| Thống kê | Mỗi cặp đo một lượt sau warmup | Chưa có khoảng bất định hay benchmark nhiều sequence/cửa sổ |
-| Assertions cuối | Có kiểm tra hình học hữu ích, nhưng ép `frames_stitched >= 2` | Ca thất bại ngay cặp đầu vẫn là kết quả thí nghiệm hợp lệ, không nhất thiết lỗi code |
-
-`match_seconds` chỉ đo matcher/preprocessing/chuyển điểm về CPU, không gồm RANSAC.
-`chain_total_seconds` gồm matching, RANSAC và dựng mosaic, không gồm đọc ảnh trước đó hoặc ghi kết quả.
-Không so trực tiếp với timing Notebook 01/02 mà bỏ qua khác biệt phạm vi, độ phân giải và điều kiện máy.
-Chưa đo peak RAM/VRAM, điện năng hoặc throughput trên drone.
-
-Kiểm tra adapter learned với nguồn upstream/checkpoint độc lập **chưa được thực hiện trong audit này**.
-Vì thế không thể dùng các kiểm tra geometry đã pass để chứng nhận cả 7 adapter đều đúng.
-
+| Hạng mục | Hiện trạng kỹ thuật mới nhất |
+|---|---|
+| **Cloud Guard & Bền vững** | Nghiêm cấm chạy local; fail-closed nếu không mount được `/content/drive/MyDrive`. Chặn ghi đè run cũ khi có `completed.json`. |
+| **Bộ nhớ $O(1)$ (Lazy Streaming)** | Đọc ảnh lười theo cặp on-demand khi matching và render mosaic thay vì giữ toàn bộ mảng ảnh trong RAM, bảo đảm chạy an toàn trên full dataset. |
+| **Subpixel Precision cho ELoFTR** | Trích xuất toạ độ qua `process_eloftr_matches()` giữ nguyên độ chính xác `float32`, kèm unit self-check tự động xác thực. |
+| **Kiểm tra và Xuất marker sau cùng** | `completed.json` chỉ được xuất SAU CÙNG sau khi kiểm tra hình học, tính hợp lệ JSON và số lượng pair khớp chuẩn. Trang navigation chỉ nhận run có `completed.json`. |
+| **Provenance thiết bị chuẩn xác** | Ghi nhận backend minh bạch cho từng phương pháp: `"cpu"` cho OpenCV SIFT/ORB, `"cuda"` cho các mô hình học sâu. |
+| **Xử lý ca thất bại hợp lệ** | Cho phép chấp nhận kết quả 1 frame khi matcher thất bại mà không crash hay ép `frames_stitched >= 2`. |
 ## 5. Đọc artifact
 
 - `manifest.json`: cấu hình run, revision và hash ảnh nguồn.

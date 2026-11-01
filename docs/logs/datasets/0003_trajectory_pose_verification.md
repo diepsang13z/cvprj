@@ -83,7 +83,7 @@ Vì `grass` có gốc toạ độ đặt ngay tại drone và khoảng cách t�
 
 Theo `RULES.md` mục 4, công thức/metric đo drift là quyết định phương pháp, agent không tự chốt. Ba lựa chọn:
 
-1. **Hỏi tác giả dataset** xác nhận quy ước `trajectory.txt` và `Plane=` (email đã ghi ở `notes/datasets.md` mục 5). Rẻ nhất, và là cách duy nhất để số liệu mét có giá trị công bố.
+1. **Hỏi tác giả dataset** xác nhận quy ước `trajectory.txt` và `Plane=` (email đã ghi ở `docs/explain/datasets.md` mục 5). Rẻ nhất, và là cách duy nhất để số liệu mét có giá trị công bố.
 2. **Chuyển sang metric tự nhất quán, không cần ngoại lai:** so $H^{\\text{chuỗi}}_{i \\to 0}$ (tích luỹ tuần tự) với $H^{\\text{trực tiếp}}_{i \\to 0}$ (ghép thẳng frame $i$ với frame 0). Đo đúng sai số tích luỹ, cùng hệ pixel, không phụ thuộc trajectory. Hạn chế: chỉ áp dụng được khi hai frame còn đủ vùng chồng nhau.
 3. **Tạm dùng trajectory để so thứ hạng** giữa các mô hình, ghi rõ là tương đối, không quy đổi ra mét. Yếu nhất vì kế thừa toàn bộ sai số đã nêu.
 
@@ -92,5 +92,5 @@ Theo `RULES.md` mục 4, công thức/metric đo drift là quyết định phư�
 ## 5. Hệ quả tới kế hoạch
 
 - **Không** đưa bảng drift nào vào báo cáo cho tới khi mục 4 được chốt.
-- Phát hiện `efficientloftr` vỡ bản đồ ở `notes/models.md` **vẫn giữ nguyên giá trị**, vì nó dựa trên **ảnh mosaic kiểm tra bằng mắt** và kích thước canvas, không dựa trên trajectory.
+- Phát hiện `efficientloftr` vỡ bản đồ ở `docs/explain/models.md` **vẫn giữ nguyên giá trị**, vì nó dựa trên **ảnh mosaic kiểm tra bằng mắt** và kích thước canvas, không dựa trên trajectory.
 - `notebooks/04_drift_evaluation.ipynb` được giữ lại làm **notebook chẩn đoán**: mọi assert trong đó mã hoá các kết luận ở mục 2 và 3, chạy lại là kiểm chứng lại được.

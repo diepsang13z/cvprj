@@ -1,6 +1,6 @@
 # Giải thích Detector, Matcher và vai trò trong nghiên cứu Failure-Aware Mosaicking
 
-Tài liệu giải thích cốt lõi hai thành phần **Detector** (bộ dò điểm), **Matcher** (bộ so khớp) và vai trò trung tâm của chúng trong bài toán ghép ảnh UAV 2D theo định hướng nghiên cứu Failure-Aware (RDR-0003).
+Tài liệu giải thích cốt lõi hai thành phần **Detector** (bộ dò điểm), **Matcher** (bộ so khớp) và vai trò trung tâm của chúng trong bài toán ghép ảnh UAV 2D theo định hướng nghiên cứu Failure-Aware ([`RDR-0003`](../logs/decisions/RDR-0003_confirm_rq_dataset.md)) và giao thức đánh giá LOSO ([`RDR-0011`](../logs/decisions/RDR-0011_loso_and_technical_readiness.md)).
 
 ---
 
@@ -88,19 +88,17 @@ Hệ thống dùng các chỉ báo rẻ (cheap indicators) sinh ra trực tiếp
   - Classical Matcher (ORB/SIFT): Siêu nhanh (vài chục ms, chạy tốt trên CPU drone), nhưng dễ gãy khi bay qua vùng ít chi tiết, tán cây lặp vân, hoặc đổi góc gắt.
   - Learned Matcher (LightGlue): Ghép cực kỳ chính xác và kiên cường, nhưng rất nặng (chậm hơn 10–20 lần, đòi hỏi GPU, ngốn pin).
 - **Giải pháp Routing (RQ2):**
-  - **Tầng 1 (Mặc định):** Chạy Classical Matcher nhẹ. Với 80% thời gian drone bay thẳng qua cảnh nhà cửa bình thường, tầng này hoàn thành tốt nhiệm vụ ở độ trễ cực thấp.
-  - **Tầng 2 (Dự phòng rủi ro):** Khi chỉ số rủi ro (RQ1) cảnh báo nguy cơ trôi lỗi hoặc match thấp $\to$ Risk Gate mới kích hoạt Learned Matcher (SuperPoint + LightGlue) để giải cứu.
-  - Nhờ đó, hệ thống đạt điểm tối ưu Pareto: chất lượng tương đương toàn bộ AI nhưng tốc độ tiệm cận thuật toán cổ điển.
-
+  - **Tầng 1 (Mặc định):** Chạy Classical Matcher nhẹ (SIFT/ORB). Với phần lớn thời gian bay qua địa hình thuận lợi, tầng này hoàn thành tốt nhiệm vụ ở độ trễ cực thấp.
+  - **Tầng 2 (Dự phòng rủi ro):** Khi chỉ số rủi ro (RQ1) cảnh báo nguy cơ trôi lỗi hoặc match thấp $\to$ Risk Gate mới kích hoạt Learned Matcher (SuperPoint + LightGlue) hoặc ảnh gốc để giải cứu.
+  - Hiệu chỉnh ngưỡng rủi ro $\tau$ được thực hiện nghiêm ngặt theo giao thức Leave-One-Sequence-Out (LOSO) trên tập huấn luyện (`RDR-0011`). Các giá trị số hiện tại mang tính khám phá ([`RDR-0008`](../logs/decisions/RDR-0008_step_level_metric_and_risk_trigger.md) Proposed).
 ### 2.3. Đối với RQ3 (Recovery — Cơ chế phục hồi khi Matcher bế tắc)
 
 Khi cả Classical Matcher lẫn Learned Matcher đều không tìm đủ số lượng match tin cậy (ví dụ drone xoay $90^\circ$ đột ngột làm mất dấu hoàn toàn):
 
-- Tín hiệu fail từ Matcher kích hoạt 1 trong 3 cơ chế ứng phó:
-  1. **Frame Rejection:** Huỷ frame hiện tại, không ghép vào canvas để tránh làm "nhiễm độc" ma trận tích luỹ $H_{0 \to t}$.
-  2. **Keyframe Rematching:** Yêu cầu Matcher thử so khớp ngược về một Keyframe lịch sử trong bộ nhớ thay vì frame $t-1$.
-  3. **Submosaic Splitting:** Đóng cụm bản đồ con hiện tại, mở cụm mosaic mới để ngắt đứt chuỗi tích luỹ lỗi.
-
+- Tín hiệu fail từ Matcher kích hoạt 1 trong các cơ chế ứng phó được so sánh định lượng:
+  1. **Frame Rejection (Drop):** Bỏ frame hiện tại, nhảy cóc sang frame tiếp theo để tránh làm nhiễm độc ma trận tích luỹ $H_{0 \to t}$.
+  2. **Keyframe Rematching (Anchor):** Yêu cầu Matcher thử so khớp ngược về một Keyframe tin cậy đã đặt trong lịch sử thay vì frame $t-1$.
+  3. **Submosaic Splitting (Split):** Đóng cụm bản đồ con hiện tại, mở cụm mosaic mới với hệ toạ độ riêng để ngắt đứt chuỗi tích luỹ lỗi.
 ---
 
 ## 3. Bảng so sánh các Detector và Matcher trong thực nghiệm dự án

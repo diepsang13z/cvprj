@@ -2,13 +2,13 @@
 
 Tổng hợp toàn bộ dataset liên quan tới dự án, nội dung từng gói dữ liệu và thứ tự tải tối ưu trong ngân sách ~10 GB. Kiểm chứng ngày **2026-10-13**.
 
-Hồ sơ giới thiệu bộ dataset (xuất xứ, nội dung, metadata, giới hạn): [`docs/logs/datasets/0002_npu_dronemap_intro.md`](../docs/logs/datasets/0002_npu_dronemap_intro.md).
+Hồ sơ giới thiệu bộ dataset (xuất xứ, nội dung, metadata, giới hạn): [`docs/logs/datasets/0002_npu_dronemap_intro.md`](../logs/datasets/0002_npu_dronemap_intro.md).
 
 ---
 
 ## 1. Kết luận nhanh (TL;DR)
 
-- **Chỉ có 1 dataset trong phạm vi dự án:** NPU Drone-Map (đã chốt tại `RDR-0005`). Trang `adv-ci.com/blog/source/` có 2 mục dataset, nhưng chỉ mục này liên quan (mục còn lại — NPU RGB-D — là dữ liệu **trong nhà**, Kinect, ngoài phạm vi).
+- **Chỉ có 1 dataset trong phạm vi dự án:** NPU Drone-Map (đã chốt tại [`RDR-0005`](../logs/decisions/RDR-0005_finalize_npu_dronemap_dataset.md)). Trang `adv-ci.com/blog/source/` có 2 mục dataset, nhưng chỉ mục này liên quan (mục còn lại — NPU RGB-D — là dữ liệu **trong nhà**, Kinect, ngoài phạm vi).
 - **Nguồn tải public duy nhất:** Baidu Pan → thư mục `NPU_Dronemap`, gồm **14 file `*-kfs.tar.gz`**, tổng **~4.29 GB**.
 - **"Cả ảnh và metadata" = gói `-kfs`.** Mỗi gói chứa `rgb/` (ảnh undistorted) + `trajectory.txt` (pose R+t từng keyframe) + `config.cfg` (thông số camera) — theo mô tả định dạng "sequence keyframes" trên trang chủ dataset.
 - **Với ngân sách 10 GB: tải hết 14 file vẫn dư ~5.7 GB.** Nút thắt thật sự là *tốc độ Baidu* (đang tải chỉ ~60 KB/s → 4.3 GB mất nhiều giờ), không phải dung lượng. Phần dư để dành cho mosaic output, checkpoint, log.
@@ -68,9 +68,9 @@ Cộng cả 3 tầng = **4.29 GB < 10 GB** → không cần đánh đổi; chỉ
 └── config.cfg                   thông số camera nội tại (định dạng Svar/EICAM)
 ```
 
-- **`trajectory.txt` là nguồn đối chiếu**, không phải ground truth đo độc lập. Metric chính đã chốt ở RDR-0007 là chain-vs-direct từ ảnh; xem [audit Notebook 04](notebook_04_drift_evaluation.md) về giới hạn tham chiếu và thang đo.
+- **`trajectory.txt` là nguồn đối chiếu phụ**, không phải ground truth đo độc lập (`UAV_ENABLE_POSE_DIAGNOSIS=0` mặc định trong notebook drift). Metric chính đã chốt ở [`RDR-0007`](../logs/decisions/RDR-0007_drift_metric_choice.md) là chain-vs-direct từ ảnh; xem [audit Notebook 04](notebook_04_drift_evaluation.md) về giới hạn tham chiếu và thang đo.
 - **Giữ `config.cfg` và `trajectory.txt` đi cùng `rgb/`** để giữ provenance và khả năng chẩn đoán pose/camera. Thiếu trajectory không ngăn phép đo chain-vs-direct, nhưng thiếu metadata làm mất các phép đối chiếu liên quan.
-- Mô tả gói dựa trên trang tác giả; audit notebook đã đọc dữ liệu giải nén `village`/`grass`, không xác minh toàn bộ nội dung 14 archive.
+- Mô tả gói dựa trên trang tác giả; các notebook hiện tại giải nén an toàn qua `ensure_sequence()` hỗ trợ cả `.tar.gz`, `.tgz`, `.zip` và tự động tìm thư mục `rgb/` thực tế.
 
 ---
 
@@ -122,18 +122,11 @@ Rà lại `adv-ci.com/blog/source/` + `npu-drone-map-dataset/` sau khi gặp b�
 
 ## 7. Đưa dữ liệu lên Colab / Kaggle
 
-- **Không upload thẳng vào session Colab/Kaggle:** `files.upload()` chậm, đĩa session bị xóa sạch mỗi lần ngắt kết nối → session sau phải up lại từ đầu. Tốn thời gian hơn chứ không tiết kiệm.
-- Nguyên tắc: up **một lần** lên nơi lưu trữ bền; mỗi session chỉ copy + giải nén một lần.
-
-| Nơi lưu | Cách dùng trong session | Hợp khi |
-|---|---|---|
-| Google Drive (private) | `drive.mount(...)` → `cp` file `.tar.gz` sang `/content` → giải nén | Chạy Colab là chính |
-| Kaggle Dataset (private) | Up bằng `kaggle datasets create/version`; notebook đọc trực tiếp `/kaggle/input/...` | Chạy Kaggle là chính (khỏi copy) |
-| HuggingFace repo private | `hf upload` / `snapshot_download` | Upload hay đứt (có resume), tải trong Colab nhanh |
-
-- Lưu trữ dạng `.tar.gz` nguyên gói; chỉ giải nén vào `/content` (đĩa local) khi chạy — đọc trực tiếp hàng nghìn JPEG nhỏ qua Drive mount rất chậm.
-- **Giữ chế độ private**: dataset không ghi license rõ ràng → không phát hành lại công khai.
-
+- **Quy định môi trường:** Tuyệt đối không chạy inference hay pipeline trên máy cá nhân (`RULES.md §8`, `RDR-0010`). Toàn bộ thực nghiệm chạy trên hosted Colab/Kaggle.
+- **Cấu trúc bền vững trên Google Drive:** Cả 5 notebook đều tìm kiếm dataset tự động dưới đường dẫn persistent:
+  `/content/drive/MyDrive/mosaicking_from_uav_video_research/dataset/<sequence>/` (hoặc `data/<sequence>/`).
+- **Nguyên tắc nạp dữ liệu:** Upload các file nén `*-kfs.tar.gz` lên Google Drive một lần duy nhất. Khi chạy, hàm `ensure_sequence()` trong notebook sẽ tự động giải nén an toàn (`tarfile.data_filter`) và kiểm tra tính toàn vẹn, tránh tình trạng giải nén lại nhiều lần.
+- Trên Kaggle, cấu hình biến môi trường `UAV_OUTPUT_ROOT` để xuất kết quả bền vững trước khi phiên bị đóng.
 ---
 
 ## 8. Các mục khác trên `adv-ci.com/blog/source/`

@@ -39,12 +39,12 @@ Tài liệu giải thích các thuật ngữ chuyên ngành thị giác máy tí
 | **Failure Prediction (RQ1)** | Dự báo lỗi đăng ký hình học | Khả năng tính toán các **chỉ báo rẻ** (blur score, số inliers, độ bao phủ không gian, sai số chiếu lại) ngay sau khi khớp frame để dự đoán xem ma trận $H$ này có làm hỏng bản đồ tích luỹ về sau không. |
 | **Reprojection Error (RE)** | Sai số chiếu lại | Khoảng cách Euclidean (tính bằng pixel) giữa toạ độ điểm thực tế trên ảnh 2 và toạ độ điểm từ ảnh 1 được chiếu qua ma trận $H$. |
 | **Cumulative Drift** | Sai số trôi tích luỹ (Drift) | Hiện tượng sai số nhỏ ở từng cặp frame nhân dồn qua thời gian ($H_{0 \to t}$), khiến các frame sau cùng bị bóp méo, lệch vị trí hàng chục mét hoặc biến dạng hình thang cực độ. |
-| **Matcher Routing / Risk Gate (RQ2)** | Cơ chế phân luồng bộ khớp theo rủi ro | Chạy matcher cổ điển trước, chỉ gọi learned matcher khi bị gắn cờ rủi ro. Mục tiêu là cân bằng chi phí và chất lượng, không bảo đảm learned matcher luôn tốt hơn; Notebook 05 đang mô phỏng chính sách này. |
+| **Matcher Routing / Risk Gate (RQ2)** | Cơ chế phân luồng bộ khớp theo rủi ro | Chạy matcher cổ điển trước, chỉ kích hoạt learned matcher hoặc ảnh gốc khi chỉ báo vượt ngưỡng rủi ro của fold LOSO (`RDR-0011`). |
 | **Pareto Frontier** | Biên tối ưu Pareto | Đường cong thể hiện sự đánh đổi tối ưu: không thể tăng thêm chất lượng mosaic mà không chấp nhận độ trễ (latency) cao hơn. |
-| **Confidence-Triggered Recovery (RQ3)** | Phục hồi theo mức tin cậy | Chiến lược xử lý bước ghép bị gắn cờ. Thiết kế có thể đặt sau routing; Notebook 05 hiện so recovery với matcher cố định, chưa nối sau learned escalation. |
-| ↳ **Frame Rejection** | Loại bỏ khung hình | Bỏ hẳn frame hiện tại, không ghép vào bản đồ để tránh làm "nhiễm độc" ma trận tích luỹ; chờ frame kế tiếp. |
-| ↳ **Keyframe Rematching / Backoff** | Khớp lại với Keyframe lịch sử | Thay vì ghép với frame liền kề $t-1$, hệ thống tìm trong bộ nhớ các Keyframe cũ có vùng phủ chồng lấn để ghép trực tiếp, ngắt đứt chuỗi tích luỹ lỗi. |
-| ↳ **Submosaic / Mini-mosaic Splitting** | Tách cụm bản đồ con | Đóng cụm hiện tại và mở cụm mới với hệ tọa độ riêng khi rủi ro cao. Notebook 05 chưa ghép nối các cụm ở tầng cao hơn; giữ mọi frame không đồng nghĩa tạo được một bản đồ liên tục. |
+| **Confidence-Triggered Recovery (RQ3)** | Phục hồi theo mức tin cậy | Cơ chế xử lý bước ghép khi rủi ro vượt ngưỡng $\tau$, thử nghiệm 4 chính sách: không cứu, bỏ frame, rematch anchor, tách submosaic. |
+| ↳ **Frame Rejection (Drop)** | Loại bỏ khung hình | Bỏ hẳn frame hiện tại, nhảy cóc sang frame kế tiếp để tránh làm nhiễm độc ma trận tích luỹ $H_{0 \to t}$. |
+| ↳ **Keyframe Rematching (Anchor)** | Khớp lại với Keyframe lịch sử | Thay vì ghép với frame $t-1$, hệ thống tìm trong bộ nhớ các frame mốc tin cậy đã đặt trước đó để ghép trực tiếp. |
+| ↳ **Submosaic Splitting (Split)** | Tách cụm bản đồ con | Đóng cụm hiện tại và mở cụm mới với hệ toạ độ riêng; ngắt đứt chuỗi tích luỹ lỗi và giữ trọn vẹn số frame. |
 
 ---
 
@@ -56,5 +56,9 @@ Tài liệu giải thích các thuật ngữ chuyên ngành thị giác máy tí
 | **RTK (Real-Time Kinematic)** | Định vị vi sai thời gian thực | Công nghệ GPS độ chính xác cao (sai số $1\text{--}3\text{ cm}$) gắn trên drone chuyên dụng, giúp biết chính xác toạ độ tâm chụp của từng frame. |
 | **Telemetry (.SRT / EXIF log)** | Dữ liệu đo xa / Nhật ký bay | File phụ đề/metadata đi kèm video drone chứa toạ độ GPS, độ cao (altitude), vận tốc, và các góc quay camera (yaw, pitch, roll) theo từng mili-giây. |
 | **Georeferencing** | Định vị địa lý (Gắn toạ độ) | Quá trình gán hệ toạ độ thực (WGS84, UTM, VN-2000) vào từng pixel của ảnh mosaic. *(Dự án hiện tại là bản đồ cục bộ, không bắt buộc georeference).* |
-| **RMSE (Root Mean Square Error)** | Sai số căn bậc hai trung bình | Căn của trung bình bình phương sai số; phải nêu sai số giữa đại lượng nào và trong hệ tọa độ nào. RMSE inlier trong các notebook là reprojection error trên chính điểm dùng fit H, không phải sai số so với ground truth mặt đất. |
-| **SSIM / PSNR** | Độ tương đồng cấu trúc & Tỷ số tín hiệu/nhiễu | Các chỉ số chất lượng ảnh: **SSIM** (0 đến 1) đo độ sắc nét và cấu trúc vân bề mặt; **PSNR** (dB) đo độ nhiễu và biến dạng màu sắc tại vùng giáp ranh. |
+| **RMSE (Root Mean Square Error)** | Sai số căn bậc hai trung bình | Căn của trung bình bình phương sai số; RMSE inlier trong các notebook là reprojection error trên chính điểm fit $H$, không phải sai số so với ground truth mặt đất. |
+| **Self-Consistent Drift (Chain-vs-Direct)** | Độ lệch tự nhất quán chuỗi vs trực tiếp | Thước đo drift theo `RDR-0007`: so sánh ma trận chuỗi $H^{\text{chain}}_{i \to 0}$ với ma trận ghép thẳng $H^{\text{direct}}_{i \to 0}$ bằng SIFT ảnh gốc trên 5 điểm mốc (đơn vị pixel ảnh gốc). |
+| **Reference Gate ($\ge 100$ inliers)** | Cổng nghiệm thu tham chiếu | Điều kiện tiên quyết của `RDR-0007`: chỉ công nhận điểm đo drift thực nghiệm khi cặp ghép trực tiếp có $\ge 100$ inliers. Mất vùng chồng được ghi nhận trung thực là `None`/`N/A`. |
+| **Common Eligible Frame Set** | Tập khung hình đối chiếu chung | Tập hợp các bước $i \ge 1$ mà tất cả các mô hình đem so sánh đều có tham chiếu SIFT hợp lệ, bảo đảm so sánh cross-method công bằng. |
+| **Step-Level Error ($e_i$)** | Sai số cấp bước | Sai số hình học của từng bước ghép so với matcher tham chiếu chất lượng cao (theo `RDR-0008` Proposed). |
+| **Leave-One-Sequence-Out (LOSO)** | Kiểm chứng chéo giữ lại một chuỗi | Giao thức kiểm chứng chéo theo `RDR-0011`: mỗi fold giữ 1 sequence làm tập test, hiệu chỉnh toàn bộ ngưỡng rủi ro $\tau$ trên các sequence còn lại. |
