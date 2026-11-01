@@ -37,11 +37,11 @@ Khu vực giải thích lý thuyết (`docs/explain/`), ghi nhật ký tiến tr
 - [`explain/datasets.md`](explain/datasets.md) — Dataset của dự án: 14 gói NPU Drone-Map, nội dung ảnh/metadata, thứ tự tải trong ngân sách 10 GB.
 - [`explain/orb_sift.md`](explain/orb_sift.md) — Cơ chế hoạt động và so sánh trực diện hai thuật toán đặc trưng cổ điển (SIFT và ORB).
 - [`explain/models.md`](explain/models.md) — Danh sách các mô hình và cấu hình chạy thử nghiệm (SIFT/ORB, LightGlue, XFeat, Efficient LoFTR), vai trò trong RQ2 và lưu ý kỹ thuật.
-- [`explain/notebook_01_classical_baseline.md`](explain/notebook_01_classical_baseline.md) — Giải thích và audit baseline SIFT/ORB: luồng ghép, timing, sửa lỗi RMSE và bổ sung provenance.
-- [`explain/notebook_02_lightglue_pilot.md`](explain/notebook_02_lightglue_pilot.md) — Giải thích và audit LightGlue pilot: 3 cặp và mosaic 20 frame ảnh gốc, kiểm tra frame tối thiểu và revision thực tế.
-- [`explain/notebook_03_all_models.md`](explain/notebook_03_all_models.md) — Giải thích và audit benchmark 7 cấu hình: run/manifest/hash, nạp ảnh lười $O(1)$, subpixel float32 ELoFTR, marker completed.
-- [`explain/notebook_04_drift_evaluation.md`](explain/notebook_04_drift_evaluation.md) — Giải thích và audit drift tự nhất quán chain-vs-direct, loại trừ mốc identity, tập đối chiếu chung common eligible frames.
-- [`explain/notebook_05_failure_aware_pipeline.md`](explain/notebook_05_failure_aware_pipeline.md) — Giải thích và audit RQ1/RQ2/RQ3: tích hợp hoàn chỉnh LOSO, decision logs replay, memory bounded LRU cache.
+- [`explain/classical_mosaicking_baseline.md`](explain/classical_mosaicking_baseline.md) — Giải thích và audit baseline SIFT/ORB: luồng ghép, timing, sửa lỗi RMSE và bổ sung provenance.
+- [`explain/deep_matching_pilot.md`](explain/deep_matching_pilot.md) — Giải thích và audit LightGlue pilot: 3 cặp và mosaic 20 frame ảnh gốc, kiểm tra frame tối thiểu và revision thực tế.
+- [`explain/feature_matcher_benchmark.md`](explain/feature_matcher_benchmark.md) — Giải thích và audit benchmark 7 cấu hình: run/manifest/hash, nạp ảnh lười $O(1)$, subpixel float32 ELoFTR, marker completed.
+- [`explain/accumulated_drift_evaluation.md`](explain/accumulated_drift_evaluation.md) — Giải thích và audit drift tự nhất quán chain-vs-direct, loại trừ mốc identity, tập đối chiếu chung common eligible frames.
+- [`explain/failure_aware_mosaicking_pipeline.md`](explain/failure_aware_mosaicking_pipeline.md) — Giải thích và audit RQ1/RQ2/RQ3: tích hợp hoàn chỉnh LOSO, decision logs replay, memory bounded LRU cache.
 - [`explain/detector_matcher.md`](explain/detector_matcher.md) — Giải thích khái niệm Detector, Matcher và vai trò trung tâm trong 3 RQ của nghiên cứu Failure-Aware Mosaicking.
 - [`explain/related_work_analysis.md`](explain/related_work_analysis.md) — Phân tích chuyên sâu các công trình liên quan: công nghệ sử dụng, thiếu sót (research gaps) và luận điểm/bằng chứng chứng minh giải pháp của nhóm vượt trội theo 4 mảng.
 

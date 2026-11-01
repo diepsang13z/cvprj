@@ -1,4 +1,4 @@
-# Giải thích và audit Notebook 04: Đo độ lệch hình học bằng tham chiếu
+# Giải thích và audit: Accumulated Drift Evaluation (Đo sai số trôi tích luỹ)
 
 Đọc cùng notebook [`notebooks/accumulated_drift_evaluation.ipynb`](../../notebooks/accumulated_drift_evaluation.ipynb).
 Cập nhật kỹ thuật: **2026-11-01** — Đã hoàn thành toàn bộ sửa đổi kỹ thuật theo `RDR-0007`, `RDR-0010`, `RDR-0011` và `RULES.md §8`.
@@ -51,7 +51,7 @@ Không được lấy mức SIFT làm ngưỡng sai số cho phép hoặc tự �
 
 ## 4. Số liệu và phạm vi đo thực tế
 
-Nguồn: `notebooks/outputs/04_drift_evaluation/drift_selfconsistent.json`;
+Nguồn: `notebooks/outputs/accumulated_drift_evaluation/drift_selfconsistent.json`;
 run Notebook 03 được chấm: `20261013T164937_145955Z`.
 Frame đánh số từ 0, đơn vị là pixel ảnh gốc.
 

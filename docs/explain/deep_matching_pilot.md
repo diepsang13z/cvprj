@@ -1,4 +1,4 @@
-# Giải thích và audit Notebook 02: Pilot LightGlue ở ảnh gốc
+# Giải thích và audit: Deep Matching Pilot (SIFT & SuperPoint + LightGlue)
 
 Đọc cùng notebook [`notebooks/deep_matching_pilot.ipynb`](../../notebooks/deep_matching_pilot.ipynb).
 Cập nhật kỹ thuật: **2026-11-01** — Đã hoàn thành toàn bộ sửa đổi kỹ thuật theo `RDR-0010`, `RDR-0011` và `RULES.md §8`.
@@ -30,7 +30,7 @@ không gồm đọc ảnh, setup, warmup, RANSAC hoặc vẽ ảnh.
 
 ## 3. Kết quả và trạng thái kỹ thuật
 
-Nguồn: `outputs/02_lightglue_pilot/<stamp>/mosaic_*/metrics.json`.
+Nguồn: `outputs/deep_matching_pilot/<stamp>/mosaic_*/metrics.json`.
 Các code cell trong notebook đều ở trạng thái sạch (`outputs: []`, `execution_count: null`) sẵn sàng chạy cloud.
 
 | Cấu hình | Frame thực ghép / yêu cầu | `chain_total_seconds` | Phủ canvas |
