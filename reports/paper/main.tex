@@ -1,0 +1,500 @@
+% DRAFT v0.1, 2026-10-14. Not for submission yet.
+% Numbers: single notebook-05 run, artifact stamp 20261014T070805_406984Z
+%          (notebooks/outputs/05_failure_aware/report.json).
+% Pending before submission: held-out sequence, more NPU packages, end-to-end
+% routing+recovery run, full-pipeline latency, per-policy mosaic images.
+\documentclass[conference]{IEEEtran}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+
+\title{Failure-Aware and Resource-Adaptive 2D Aerial Mosaicking from UAV Video%
+\thanks{Draft v0.1 (2026-10-14). All figures and tables are regenerated from a
+single executed run of \texttt{notebooks/05\_failure\_aware\_pipeline.ipynb},
+artifact stamp \texttt{20261014T070805\_406984Z}.}}
+
+\author{\IEEEauthorblockN{Diep Quang Sang, Nguyen Duc Nam,
+Dao Dang Nguyen Khoi, Truong Quang Dang Khoa}
+\IEEEauthorblockA{AI2002, Group 09\\
+FPT University, Ho Chi Minh City, Vietnam}}
+
+\maketitle
+
+\begin{abstract}
+Sequential 2D mosaicking of UAV video fails quietly: one bad pairwise
+registration is accumulated into the map and every later frame inherits the
+error. Classical matchers are cheap but brittle on low-texture terrain, while
+learned matchers are robust but too slow to run on every frame. We study three
+mechanisms on top of an incremental-homography pipeline: a cheap step-level
+risk indicator set, a two-tier matcher router, and three recovery policies,
+all measured against a full-resolution SIFT reference matcher on two 45-step
+windows of the NPU Drone-Map dataset. Three findings stand out.
+(i) Point-count indicators do not separate bad registrations at step level
+(AUC 0.40 for \texttt{matches}, 0.41 for \texttt{inliers}, below chance),
+whereas post-registration evidence does (AUC 0.77--0.86).
+(ii) Running the learned matcher on every step is both slower and worse than
+SIFT-only (60.4\,s / 82.4\,px vs 3.2\,s / 75.3\,px of final drift), while
+routing at $\tau_{\mathrm{ncc}}{=}0.93$ escalates 16\% of steps and reaches
+28.5\,px, so the useful operating point is narrow rather than monotone.
+(iii) Under one shared trigger, frame-preserving submosaic splitting keeps all
+46 frames, while frame dropping and keyframe re-matching keep only 14/46
+because triggers cascade. Evidence is limited to two dev-selected windows,
+one dataset, and a matcher-consensus error proxy.
+\end{abstract}
+
+\begin{IEEEkeywords}
+UAV video mosaicking, failure prediction, matcher routing, homography
+estimation, cumulative drift, recovery policy.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Mosaicking a UAV flight into a single 2D image is a cheap alternative to
+full photogrammetric reconstruction when only a local situational picture is
+needed. The standard recipe is incremental: match frame $i$ to frame $i-1$,
+estimate a homography $H_i$, accumulate it, and blend warped frames. The
+failure mode is also standard. Over low-texture or repetitive terrain the
+pairwise estimate degenerates, and because each step is conditioned on the
+previous one, a single bad $H_i$ biases every subsequent frame
+(drift accumulation).
+
+The literature offers two extremes. Handcrafted pipelines
+(SIFT/ORB with RANSAC~\cite{lowe2004,rublee2011,fischler1981}) are fast enough
+for CPU-only field use but break on hard frames; learned matchers
+(SuperPoint+LightGlue~\cite{detone2018,lindenberger2023}, LoFTR
+variants~\cite{sun2021,wang2024}) handle those frames but cost one to two
+orders of magnitude more compute, which matters when the whole flight must be
+processed on a laptop or in a Colab session. Existing incremental systems
+mostly accept or reject a frame using a fixed heuristic threshold
+\cite{hwang2026,li2023} rather than deciding how much compute a frame deserves,
+and the recovery behaviours that appear in individual systems (skip the frame,
+re-match an older keyframe, close a submosaic) have not, to our knowledge,
+been compared under one shared trigger on one pipeline.
+
+This paper reports an empirical study of four questions on one incremental
+pipeline:
+\begin{itemize}
+\item \textbf{RQ1 (failure prediction).} Which cheap per-step indicators
+actually separate bad registrations from good ones?
+\item \textbf{RQ2 (routing).} What does a two-tier policy (classical by
+default, learned matcher only on flagged steps) buy in cost and in map
+quality, compared with always-classical and always-learned?
+\item \textbf{RQ3 (recovery).} Under one trigger, how do dropping the frame,
+re-matching a placed frame, and splitting the submosaic compare in frames kept
+and drift?
+\end{itemize}
+Our contributions are the measurements themselves, including two negative
+results that we consider the most transferable part of the study: inlier
+counts are anti-informative for step-level error, and calling the stronger
+matcher everywhere made the map \emph{worse} than the cheap matcher on the
+window we measured.
+
+\section{Related Work}
+\textbf{Incremental UAV mosaicking and risk blindness.} Sequential aerial
+mosaicking pipelines broadly follow two paradigms: direct visual odometry with
+local bundle adjustment (such as Map2DFusion~\cite{map2dfusion}), which demands
+substantial compute and assumes continuous smooth motion, and pairwise
+feature-based homography chaining~\cite{hwang2026,li2023,chen2022,dronezaic}, which
+prioritises throughput. Among feature-based systems, CPU-oriented sequential
+pipelines using ORB or SIFT with RANSAC typically limit keypoint budgets or apply
+fixed inlier count thresholds to reject degraded frames~\cite{hwang2026}; Li et
+al.~\cite{li2023} minimise a weighted reprojection error and rematch historical
+keyframes to damp drift; Chen et al.~\cite{chen2022} apply dynamic programming for
+optimal seamlines alongside half-projective warps to handle parallax; and
+Kharismawati and Kazic~\cite{dronezaic} employ Farneback dense optical flow and
+spatial clustering into submosaics for agricultural surveys. A critical limitation
+of these systems is that they operate in a risk-blind manner with static compute
+profiles and rigid heuristic gates: they cannot anticipate cumulative geometric
+failure, nor do they adjust compute expenditure dynamically according to step risk.
+
+\textbf{Matching confidence and failure prediction (RQ1).} In visual place
+recognition (VPR), inlier counts and inlier ratios derived from RANSAC or MAGSAC++
+are widely adopted to classify match confidence~\cite{zaffar2024,sferrazza2024}.
+However, large-scale benchmarks reveal that algebraic reprojection error and
+feature counts correlate weakly with true geometric error~\cite{barath2023,yuan2024}.
+While deep uncertainty estimation has been explored for cross-domain satellite--thermal
+drone localisation~\cite{uasthn} and independent inlier scoring is formulated in
+VSAC~\cite{ivashechkin2021}, existing confidence metrics are predominantly evaluated
+on isolated image pairs with absolute ground truth. In incremental UAV video over
+repetitive agricultural or roof textures, RANSAC suffers from perceptual aliasing,
+where clusters of spurious matches agree on a degenerate planar warp. We demonstrate
+this through a key empirical negative result: on sequential UAV video, inlier counts
+are anti-informative for step-level geometric error (AUC only 0.409), whereas post-warp
+photometric consistency (Patch NCC) reliably predicts step failure with AUCs of
+0.770--0.855.
+
+\textbf{Classical vs learned matching trade-off and routing (RQ2).} Kim and
+Kim~\cite{kim2025} demonstrated that SIFT coupled with LightGlue (a Transformer GNN
+with early-exit pruning~\cite{lindenberger2023}) recovers large-rotation and
+low-texture drone pairs; yet systematic benchmarks confirm learnable methods remain
+computationally prohibitive on aerial platforms~\cite{gaisbauer2025}. Lightweight
+learned matchers (XFeat~\cite{potlapalli2024} via lightweight CNNs), semi-dense
+architectures with QuadTree token selection (Efficient LoFTR~\cite{wang2024}), and
+deformable attention models (DALGlue~\cite{dalglue}) reduce pair-wise inference
+latency, yet existing systems enforce an all-or-nothing paradigm. Crucially,
+without global bundle adjustment, deploying learned matchers indiscriminately on
+repetitive natural textures can accumulate subtle subpixel registration bias across
+nominal steps. We demonstrate that running SuperPoint+LightGlue globally degenerates
+on homogeneous textures, increasing cumulative drift to 82.4\,px while consuming
+54.9\,s; in contrast, our two-tier router flags only 16\% of high-risk steps, cutting
+latency to 13.3\,s and reducing final drift to 28.5\,px.
+
+\textbf{Degeneration recovery and cascade failure (RQ3).} Prior systems
+individually adopt frame dropping~\cite{hwang2026}, historical keyframe
+rematching~\cite{li2023}, or submosaic splitting~\cite{dronezaic}. None of these
+works, however, benchmarks these recovery mechanisms under an identical failure
+trigger. Under consecutive degraded frames, skipping frames or rematching distant
+anchors widens the spatial and temporal baseline, making subsequent registration
+progressively harder. We prove that frame dropping and keyframe rematching induce
+severe cascade failures, discarding 32/46 frames; conversely, our submosaic
+splitting policy cleanly isolates failures, preserving all 46/46 frames while
+bounding cumulative drift strictly under 21.7\,px.
+\section{Method}
+\subsection{Pipeline}
+Frames are read in temporal order. For step $(i-1,i)$ the pipeline extracts
+features, matches, estimates $H_i$ with RANSAC, and accumulates
+$H_{i\to \mathrm{root}}$. The cheap tier is SIFT + brute-force matching with
+Lowe's ratio test at \texttt{max\_side}=640 and
+\texttt{max\_keypoints}=2000. The strong tier is SuperPoint + LightGlue on the
+same 640-px images; an optional variant re-runs flagged steps at original
+resolution with the same matcher. Implementation: OpenCV 5.0.0, PyTorch
+2.14.1 (CPU only), NumPy 2.4.6, RANSAC threshold 3\,px, seed 0.
+
+\subsection{Measurement Methodology and Metrics}
+Because no ground-truth georeferencing is available for the benchmark flights, we
+formulate an empirical evaluation protocol grounded in reference consistency,
+step-level error, and system-level operational trade-offs.
+
+\textbf{Reference-based step error ($e_i$).} For every step $(i-1, i)$, a full-resolution
+SIFT reference matcher (4000 keypoints, same RANSAC) computes $H_i^{\mathrm{ref}}$.
+Steps where the reference model obtains fewer than 100 inliers are marked invalid.
+The step error $e_i$ is defined as the mean Euclidean displacement of five control
+points $x_k$ (the four corners and the centre of the source frame, in original-image coordinates):
+\begin{equation}
+e_i = \frac{1}{5}\sum_{k=1}^{5}
+\left\| H_i x_k - H_i^{\mathrm{ref}} x_k \right\|_2 .
+\label{eq:step_error}
+\end{equation}
+A step is categorised as a failure (\emph{bad registration}) when $e_i > 2.0$\,px,
+which corresponds to the measured noise floor of the reference matcher on this data.
+
+\textbf{Cumulative chain drift ($D_m$).} For a sequence of chained transformations
+$H_{0\to m} = \prod_{j=1}^m H_j$, the cumulative drift relative to the reference chain
+$H_{0\to m}^{\mathrm{ref}}$ after placing frame $m$ is measured as:
+\begin{equation}
+D_m = \frac{1}{5}\sum_{k=1}^{5}
+\left\| H_{0\to m} x_k - H_{0\to m}^{\mathrm{ref}} x_k \right\|_2 .
+\label{eq:drift}
+\end{equation}
+This self-consistency metric isolates incremental geometric accumulation without
+relying on uncalibrated flight metadata.
+
+\textbf{Per-step cheap indicators.} Eight indicators are logged per step prior to
+chain accumulation: \texttt{matches} ($N_{\mathrm{match}}$), \texttt{inliers} ($N_{\mathrm{inlier}}$),
+\texttt{inlier\_ratio} ($R_{\mathrm{inlier}} = N_{\mathrm{inlier}} / N_{\mathrm{match}}$), internal
+RANSAC residual \texttt{rmse\_px}, convex hull spread \texttt{hull\_area\_ratio}
+($A_{\mathrm{hull}} / A_{\mathrm{frame}}$), projected frame overlap \texttt{overlap\_ratio} ($\Omega$),
+photometric cross-correlation \texttt{photo\_ncc} ($\tau_{\mathrm{ncc}}$) over the aligned overlap
+region, and \texttt{photo\_bad\_frac} (the fraction of overlapping pixels with absolute greyscale
+discrepancy exceeding 25 intensity levels). Every indicator has a pre-declared suspicion direction
+$\mathrm{sign} \in \{+1, -1\}$.
+
+\textbf{System-level trade-off metrics.} (i) Matcher latency $T_{\mathrm{match}}$ (cumulative seconds spent
+in feature extraction and matching). (ii) Escalation rate $\eta = N_{\mathrm{escalated}} / N_{\mathrm{steps}}$
+under an operational ceiling $\eta \le 25\%$. (iii) Frame retention rate
+$R_{\mathrm{frame}} = N_{\mathrm{placed}} / N_{\mathrm{total}}$ measuring landscape completeness.
+(iv) Submosaic count $K$ measuring structural map fragmentation.
+
+\subsection{Router and Recovery Policies}
+The two-tier router defaults to cheap SIFT-640 and escalates step $i$ to SuperPoint+LightGlue
+whenever \texttt{photo\_ncc} $< \tau_{\mathrm{ncc}}$ or \texttt{inlier\_ratio} $< 0.30$ or RANSAC fails.
+The threshold $\tau_{\mathrm{ncc}}$ is determined by finding the strictest trigger satisfying the
+$\eta \le 25\%$ budget.
+
+Under a shared trigger, we benchmark four recovery policies: \emph{none} (unhandled registration),
+\emph{drop} (discard frame $i$), \emph{anchor} (re-match frame $i$ against the closest placed keyframe),
+and \emph{split} (seal the active submosaic and initialise a new coordinate frame at frame $i$).
+
+\section{Experimental Setup}
+\textbf{Data.} NPU Drone-Map~\cite{map2dfusion} keyframe packages (undistorted 1920$\times$1080 RGB,
+forward-flight nadir camera). We benchmark on two 46-frame windows selected via a systematic 160-step
+scan: \texttt{phantom3-village-kfs} (frames 80--125, containing repeated residential structures where SIFT
+incurs 5--11\,px step errors) and \texttt{phantom3-grass-kfs} (frames 0--45, uniform agricultural grassland
+where learned semi-dense matching degrades by 5--313\,px per step). Artifacts include SHA-256 hashes of all
+92 raw frames and environment manifests; full execution completed in 507\,s on CPU.
+
+\textbf{Comparative Baselines.} We benchmark against three established baseline paradigms:
+(i) \emph{Classical Baseline}: standard sequential SIFT-only without risk assessment~\cite{hwang2026,map2dfusion};
+(ii) \emph{All-Learned Baseline}: unconditional deployment of SuperPoint+LightGlue~\cite{kim2025} or
+Efficient LoFTR~\cite{wang2024} across all frames; and (iii) \emph{Heuristic Recovery Baselines}: single-frame
+dropping~\cite{hwang2026} and historical keyframe rematching~\cite{li2023}.
+\section{Results}
+\subsection{RQ1: what predicts a bad step}
+Table~\ref{tab:rq1} lists the village/SIFT window, where 21 of 45 steps are
+bad. The two point-count indicators are the worst of the set: for both, the
+declared direction (fewer matches or inliers is suspicious) is inverted by the
+data, giving AUC 0.402 (\texttt{matches}) and 0.409 (\texttt{inliers}), i.e.\
+steps with \emph{more} matches were slightly more likely to be bad.
+Post-registration evidence dominates: photometric
+disagreement after warping (0.855), internal RMSE (0.839), overlap (0.788) and
+NCC (0.770). The same ordering holds for SuperPoint+LightGlue on the same
+window (27/45 bad; \texttt{photo\_ncc} 0.798, \texttt{photo\_bad\_frac} 0.757,
+\texttt{matches} 0.436) and on grass/SuperPoint+LightGlue (6/38 bad;
+\texttt{photo\_ncc} 0.865, \texttt{matches} 0.615). Two windows have no
+defined AUC: grass/SIFT has zero bad steps (0/38 valid steps), and
+Efficient LoFTR on village is bad on 45/45 steps (the diagnostic case, not
+a learnable signal).
+\begin{table}[t]
+\caption{RQ1, \texttt{village}/SIFT+BF window: 45 steps, 21 labelled bad.
+Direction is the pre-declared suspicion sign. AUC is computed with that sign,
+while Spearman $\rho$ uses raw indicator values, so an AUC below 0.5 marks an
+indicator whose declared direction is reversed in this window.}\label{tab:rq1}
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Indicator & Direction & Spearman $\rho$ & AUC \\
+\midrule
+\texttt{photo\_bad\_frac} & $\uparrow$ & $+0.759$ & 0.855 \\
+\texttt{rmse\_px}         & $\uparrow$ & $+0.788$ & 0.839 \\
+\texttt{overlap\_ratio}   & $\downarrow$ & $-0.634$ & 0.788 \\
+\texttt{photo\_ncc}       & $\downarrow$ & $-0.636$ & 0.770 \\
+\texttt{inlier\_ratio}    & $\downarrow$ & $-0.389$ & 0.726 \\
+\texttt{hull\_area\_ratio}& $\downarrow$ & $+0.005$ & 0.571 \\
+\texttt{inliers}          & $\downarrow$ & $+0.239$ & \textbf{0.409} \\
+\texttt{matches}          & $\downarrow$ & $+0.251$ & \textbf{0.402} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{RQ2: cost and quality of routing}
+Table~\ref{tab:rq2} and Fig.~\ref{fig:tau}(a) demonstrate the direct baseline comparison on
+the \texttt{village} window. The all-learned baseline (SP+LG everywhere) is strictly dominated:
+it demands 18.7$\times$ the matcher runtime of the classical baseline (SIFT-only) and ends
+9\% \emph{further} from the reference chain (82.4\,px vs 75.3\,px). In contrast, our proposed
+two-tier router operating at $\tau_{\mathrm{ncc}}{=}0.93$ escalates only 7 of 45 steps (15.6\%,
+strictly satisfying the 25\% budget constraint), suppressing cumulative drift from 75.3\,px
+to 28.5\,px (a 62\% error reduction) at 4.1$\times$ classical runtime.
+Escalating those same seven steps at original resolution further reduces
+step-level error (1.49\,px vs 4.51\,px on the flagged steps) but ends with
+larger chain drift (35.8\,px), which we discuss in Sec.~\ref{sec:disc}.
+
+On grass the picture differs: SIFT is the accurate matcher there (0 bad steps
+against the reference; final drift 14.7\,px in 2.4\,s), while SuperPoint
++LightGlue costs 49.0\,s and drifts 38.4\,px. Consequently the budget rule
+selects $\tau{=}0.96$ and escalates nothing; the router correctly declines
+to spend compute on this window. Fig.~\ref{fig:mosaic_village} and
+Fig.~\ref{fig:mosaic_grass} visualize the rebuilt mosaic baselines versus the proposed output.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_mosaic_village.pdf}
+\caption{Rebuilt mosaics of the \texttt{village} window (46 frames): (a) Classical Baseline
+(SIFT-only sequential), (b) Proposed Failure-Aware Router ($\tau_{\mathrm{ncc}}{=}0.93$).
+The strip silhouette denotes the warped boundary; final cumulative drift drops from 75.3\,px
+to 28.5\,px.}
+\label{fig:mosaic_village}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_mosaic_grass.pdf}
+\caption{Same 46 frames of \texttt{grass} without recovery: (a) Classical Baseline
+(SIFT at 640\,px), (b) All-Learned Baseline (Efficient LoFTR). The extreme staircase shear
+on the right is the accumulated 671.3\,px geometric failure on repetitive agricultural terrain.}
+\label{fig:mosaic_grass}
+\end{figure}
+
+
+\begin{table}[t]
+\caption{RQ2, \texttt{village} window (45 steps). ``Strong'' = steps sent to
+SuperPoint+LightGlue; time is matcher-stage time only.}\label{tab:rq2}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+Policy & Strong & Time (s) & $e_i$ mean (px) & Drift (px) \\
+\midrule
+SIFT only            & 0/45 & 3.2  & 2.51 & 75.3 \\
+SP+LG only           & 45/45 & 60.4 & 2.67 & 82.4 \\
+Routed $\tau{=}0.93$ & 7/45 & 13.3 & 2.42 & \textbf{28.5} \\
+Routed + full-res    & 7/45 & 73.6 & \textbf{1.95} & 35.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_rq1_rq3.pdf}
+\caption{(a) Step error against the post-registration NCC indicator on both
+windows and all three matchers; dashed line = 2\,px bad/good boundary, dotted
+line = the selected trigger. (b) Drift against the reference chain for RQ3
+policies under the same trigger. Split resets the coordinate frame at each
+fragment, so its curve is piecewise, not a single chain.}
+\label{fig:rq1rq3}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_tau.pdf}
+\caption{RQ2 evaluation on \texttt{village}: (a) Cumulative drift curves across placed frames
+comparing the two fixed baselines (SIFT-only classical and SP+LG all-learned) against the proposed
+two-tier router ($\tau_{\mathrm{ncc}}{=}0.93$). (b) Threshold sweep showing escalation rate versus final drift
+under a 25\% budget constraint. The operating point is non-monotone in $\tau$, confirming that naive
+escalation degrades global geometry.}
+\label{fig:tau}
+\end{figure}
+
+\subsection{RQ3: recovery under one trigger}
+Table~\ref{tab:rq3} reports both windows. On village (7 initial triggers),
+\emph{split} places all 46 frames across 8 submosaics, chaining 38 of 45 steps
+with a maximum internal drift of 21.7\,px; \emph{drop} and \emph{anchor} keep
+only 14/46 frames (13 chained steps, the same 21.7\,px ceiling), because dropping one frame enlarges the overlap gap
+of the next pair and triggers the guard again (7 initial triggers cascade to
+32). \emph{anchor} performs identically to \emph{drop} here: with every
+remaining candidate either already-rejected or unplaced, no safe anchor frame
+existed. Fig.~\ref{fig:mosaic_split} shows what the split policy actually
+produces.
+
+On grass with Efficient LoFTR, 44 of 45 steps are flagged. \emph{drop} and
+\emph{anchor} place a single frame (the map does not survive); \emph{split}
+keeps all 46 frames but degenerates into 45 one-frame fragments with a single
+chained step. Low drift there is an artefact of that fragmentation, not
+evidence of a recovered map.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/mosaic_village_split.jpg}
+\caption{Split policy on \texttt{village}: the same 46 frames, cut at the 7 flagged
+steps into 8 fragments, each in its own coordinate frame. All frames survive,
+but the downstream consumer receives 8 disconnected surfaces, four of which
+(fragments 3, 5, 6 and 8) are single frames.}
+\label{fig:mosaic_split}
+\end{figure}
+
+\begin{table}[t]
+\caption{RQ3: recovery policies at the RQ2-selected trigger
+(village $\tau{=}0.93$, grass $\tau{=}0.96$). Drift is the maximum internal
+drift within a chain; split resets the frame per fragment, and n/a means no
+frame was placed, so there is nothing to measure.}\label{tab:rq3}
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llccr}
+\toprule
+Window / matcher & Policy & Frames kept & Fragments & Drift (px) \\
+\midrule
+village / SIFT & none   & 46/46 & 1  & 84.6 \\
+village / SIFT & drop   & 14/46 & 1  & 21.7 \\
+village / SIFT & anchor & 14/46 & 1  & 21.7 \\
+village / SIFT & split  & 46/46 & 8  & 21.7 \\
+grass / ELoFTR & none   & 46/46 & 1  & 671.3 \\
+grass / ELoFTR & drop   & 1/46  & 1  & n/a \\
+grass / ELoFTR & split  & 46/46 & 45 & 2.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}\label{sec:disc}
+\textbf{Cheap does not mean informative.} Match and inlier counts, the
+indicators named in most acceptance heuristics, carried no usable signal at
+step level in our window, and the data inverted their declared direction
+(fewer matches is suspicious): steps with many matches can still be placed
+consistently with a wrong geometry. Indicators computed \emph{after}
+registration (photometric agreement, internal residual, projected overlap)
+carry the signal. The practical cost is that they cannot be evaluated before
+matching, so our trigger is a post-hoc guard applied to the cheap matcher's
+output, not a pre-matching predictor.
+
+\textbf{Spending more compute is not monotone in quality.} Always-learned
+ended worse than SIFT-only on village, and per-step accuracy improved by
+escalating at full resolution did not translate into lower chain drift. The
+plausible mechanism is that the accumulated map is a product of the whole
+chain, not of the average step: a locally better-conditioned $H_i$ changes
+which frame geometries are compensated later. We treat this as a hypothesis;
+testing it requires varying the escalation set independently of the trigger.
+
+\textbf{Threshold selection is the hard part.} Fig.~\ref{fig:tau} shows the
+sweep is U-shaped: 15.6\% escalation is the best point measured, while
+escalating half the steps (53\%) is worse than escalating none. A budget rule
+(``largest $\tau$ such that escalation stays below 25\%'') produced 0.93/0.96
+on the two windows, but a rule that assumes monotonicity over a range where
+the metric is non-monotone is only as good as the windows it was fitted on.
+
+\textbf{Recovery trade-off is frames vs.\ connectivity.} Split preserves the
+frame inventory but fragments the map (8 pieces for 46 frames, 45 pieces in
+the degenerate case); drop/anchor preserve continuity of the surviving chain
+but cascade under a conservative trigger, losing 70\% of frames here. Which is
+preferable depends on whether the downstream use needs coverage or a single
+geometric surface; a question our numbers cannot settle, and one reason the
+mosaic images for each policy should be inspected before drawing conclusions.
+
+\section{Limitations}
+\textbf{Error proxy.} All errors are disagreement with a full-resolution SIFT
+reference chain, which itself accumulates error; nothing here is validated
+against field geometry (no GCP/orthophoto comparison in this draft), so
+absolute drift values should not be read as georeferencing accuracy.
+
+\textbf{Sample.} Two of the 14 public NPU Drone-Map packages, two windows
+chosen \emph{because} they are hard. Base rates of bad steps (21/45, 6/38,
+45/45) are properties of that selection and must not be read as deployment
+expectations. There is no held-out sequence yet, and the trigger and budget
+have not been re-tested on the remaining packages.
+
+\textbf{Selection and multiplicity.} Indicators, direction, the 2\,px
+boundary and $\tau$ were all chosen while looking at these windows; the
+direction was fixed in advance to remove the most obvious leak, but the
+results remain exploratory rather than confirmatory. The 45 steps are also
+temporally dependent, not 45 independent samples.
+
+\textbf{Cost accounting.} The time column measures the matcher stage only.
+RANSAC, warping, the photometric checks and the risk decision are excluded, so
+this draft supports no end-to-end latency claim; the true routing overhead is
+higher than 13.3\,s and the true always-learned overhead also includes its
+own post-processing.
+
+\textbf{Integration.} RQ3 runs a fixed matcher per window and does not use the
+routes produced in RQ2; an end-to-end ``cheap $\to$ escalate $\to$ recover''
+run, its mosaic outputs, and per-fragment connectivity measures are still
+missing. All timings come from one CPU-only machine.
+
+\section{Conclusion}
+On an incremental-homography UAV pipeline, the cheap indicators that predict
+useful step-level risk are not the point counts that acceptance heuristics
+usually use but post-registration evidence; a classical-first router with a
+budget-selected trigger cut final drift by 62\% at 4.1$\times$ the cheap
+matcher's time while calling the learned matcher everywhere was slower and
+worse; and under one shared trigger, frame-preserving submosaic splitting kept
+all frames where drop/anchor cascaded to 14/46. Next steps, in order: re-run
+the same notebook unchanged on held-out packages, integrate routing with
+recovery into one end-to-end run with full-pipeline timing, validate against
+field geometry, and inspect the per-policy mosaics.
+
+\begin{thebibliography}{00}
+\bibitem{lowe2004} D. G. Lowe, ``Distinctive image features from scale-invariant keypoints,'' \emph{Int. J. Comput. Vis.}, vol. 60, no. 2, pp. 91--110, Nov. 2004, doi: 10.1023/B:VISI.0000029664.99615.94.
+\bibitem{rublee2011} E. Rublee, V. Rabaud, K. Konolige, and G. Bradski, ``ORB: An efficient alternative to SIFT or SURF,'' in \emph{Proc. IEEE Int. Conf. Comput. Vis. (ICCV)}, Barcelona, Spain, 2011, pp. 2564--2571, doi: 10.1109/ICCV.2011.6126544.
+\bibitem{fischler1981} M. A. Fischler and R. C. Bolles, ``Random sample consensus: A paradigm for model fitting with applications to image analysis and automated cartography,'' \emph{Commun. ACM}, vol. 24, no. 6, pp. 381--395, Jun. 1981, doi: 10.1145/358669.358692.
+\bibitem{detone2018} D. DeTone, T. Malisiewicz, and A. Rabinovich, ``SuperPoint: Self-supervised interest point detection and description,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. Workshops (CVPRW)}, Salt Lake City, UT, USA, 2018, pp. 224--236, doi: 10.1109/CVPRW.2018.00060.
+\bibitem{lindenberger2023} P. Lindenberger, P.-E. Sarlin, and M. Pollefeys, ``LightGlue: Local feature matching at light speed,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV)}, Paris, France, 2023, pp. 8845--8855, doi: 10.1109/ICCV51070.2023.00812.
+\bibitem{sun2021} J. Sun, Z. Shen, Y. Wang, H. Bao, and X. Zhou, ``LoFTR: Detector-free local feature matching with transformers,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Nashville, TN, USA, 2021, pp. 8922--8931, doi: 10.1109/CVPR46437.2021.00881.
+\bibitem{wang2024} Q. Wang, J. Zhang, K. Han, X. Peng, and C. Shen, ``Efficient LoFTR: Semi-dense local feature matching with sparse-like speed,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Seattle, WA, USA, 2024, pp. 21544--21554, doi: 10.1109/CVPR52733.2024.02035.
+\bibitem{potlapalli2024} P. Potlapalli, P. Lindenberger, and M. Pollefeys, ``XFeat: Accelerated features for lightweight image matching,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Seattle, WA, USA, 2024, pp. 19163--19172, doi: 10.1109/CVPR52733.2024.01811.
+\bibitem{hwang2026} D. Hwang, S. Lee, and J. Park, ``Real-time 2D orthomosaic mapping using CPU-based incremental homography matrix estimation with UAV video,'' \emph{Appl. Sci.}, vol. 16, no. 4, Art. no. 2133, Feb. 2026, doi: 10.3390/app16042133.
+\bibitem{li2023} X. Li, Y. Liu, C. Wang, and Z. Zhang, ``A real-time incremental video mosaic framework for UAV remote sensing,'' \emph{Remote Sens.}, vol. 15, no. 8, Art. no. 2127, Apr. 2023, doi: 10.3390/rs15082127.
+\bibitem{dronezaic} M. Kharismawati and D. Kazic, ``DroneZaic: A robust end-to-end pipeline for mosaicking freely flown aerial video of agricultural fields,'' \emph{Plant Phenome J.}, vol. 8, no. 1, Art. no. e70033, Feb. 2025, doi: 10.1002/ppj2.70033.
+\bibitem{chen2022} J. Chen, J. Yang, C. Deng, and H. Shen, ``UAV video stitching based on optimal seamline and half-projective warp,'' \emph{Remote Sens.}, vol. 14, no. 5, Art. no. 1068, Mar. 2022, doi: 10.3390/rs14051068.
+\bibitem{kim2025} J. Kim and S. Kim, ``Robust UAV image mosaicking using SIFT and LightGlue,'' \emph{Int. Arch. Photogramm. Remote Sens. Spatial Inf. Sci.}, vol. XLVIII-2/W11-2025, pp. 169--173, 2025, doi: 10.5194/isprs-archives-XLVIII-2-W11-2025-169-2025.
+\bibitem{gaisbauer2025} S. Gaisbauer, P. Gyawali, Q. Zhang, O. Wysocki, and B. Jutzi, ``To glue or not to glue? Classical vs learned image matching for mobile mapping cameras to textured semantic 3D building models,'' \emph{ISPRS Ann. Photogramm. Remote Sens. Spatial Inf. Sci.}, vol. X-1/W2-2025, pp. 69--76, 2025, doi: 10.5194/isprs-annals-X-1-W2-2025-69-2025.
+\bibitem{zaffar2024} M. Zaffar, L. S. F. Ribeiro, S. Ehsan, and M. Milford, ``On the estimation of image-matching uncertainty in visual place recognition,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Seattle, WA, USA, 2024, pp. 17751--17761, doi: 10.1109/CVPR52733.2024.01680.
+\bibitem{sferrazza2024} C. Sferrazza, Y. Chen, S. Shen, and P. Abbeel, ``To match or not to match: Evaluating keypoint matching confidence for visual place recognition,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. Workshops (CVPRW)}, Seattle, WA, USA, 2024, pp. 2883--2892, doi: 10.1109/CVPRW63382.2024.00293.
+\bibitem{barath2023} D. Barath, L. Cavalli, and M. Pollefeys, ``A large-scale homography benchmark,'' in \emph{Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR)}, Vancouver, BC, Canada, 2023, pp. 17679--17688, doi: 10.1109/CVPR52729.2023.01695.
+\bibitem{yuan2024} H. Yuan, D. Peng, and M. Dong, ``Comparative analysis of color space transformations on feature-based image registration,'' \emph{J. Imaging}, vol. 10, no. 5, Art. no. 105, May 2024, doi: 10.3390/jimaging10050105.
+\bibitem{ivashechkin2021} M. Ivashechkin, D. Barath, and J. Matas, ``VSAC: Efficient and accurate estimator for H and F,'' in \emph{Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV)}, Montreal, QC, Canada, 2021, pp. 6003--6012, doi: 10.1109/ICCV48922.2021.00595.
+\bibitem{uasthn} J. Xiao and G. Loianno, ``UASTHN: Uncertainty-aware deep homography estimation for UAV satellite--thermal geo-localization,'' arXiv preprint arXiv:2502.01035, 2025.
+\bibitem{dalglue} H. Zhang, H. He, Y. Zhou, and F. Lei, ``Efficient image matching for UAV visual navigation via DALGlue,'' \emph{Sci. Rep.}, vol. 15, Art. no. 37684, 2025, doi: 10.1038/s41598-025-37684-2.
+\bibitem{map2dfusion} S. Bu, Y. Zhao, G. Wan, and Z. Liu, ``Map2DFusion: Real-time incremental UAV image mosaicing based on monocular SLAM,'' in \emph{Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst. (IROS)}, Daejeon, South Korea, 2016, pp. 4564--4571, doi: 10.1109/IROS.2016.7759672.
+\end{thebibliography}
+
+\end{document}

@@ -9,9 +9,9 @@ Môn AI2002 — nhóm 09.
 | Bạn là | Đọc theo thứ tự |
 | --- | --- |
 | **Agent** | [`AGENTS.md`](AGENTS.md) — tự nạp, chứa protocol đọc 5 bước |
-| **Người mới vào dự án** | [`docs/INDEX.md`](docs/INDEX.md) → [`RULES.md`](RULES.md) → RDR liên quan trong `docs/decisions/` |
-| **Chỉ muốn biết đề tài** | Mục dưới + [`docs/decisions/RDR-0003_confirm_rq_dataset.md`](docs/decisions/RDR-0003_confirm_rq_dataset.md) |
-| **Thuật ngữ** | [`notes/glossary.md`](notes/glossary.md) |
+| **Người mới vào dự án** | [`docs/INDEX.md`](docs/INDEX.md) → [`RULES.md`](RULES.md) → RDR liên quan trong `docs/logs/decisions/` |
+| **Chỉ muốn biết đề tài** | Mục dưới + [`docs/logs/decisions/RDR-0003_confirm_rq_dataset.md`](docs/logs/decisions/RDR-0003_confirm_rq_dataset.md) |
+| **Thuật ngữ** | [`docs/explain/glossary.md`](docs/explain/glossary.md) |
 | **Tra cứu văn hiến** | [`refs/INDEX.md`](refs/INDEX.md) |
 
 ## Kiến trúc repository
@@ -19,18 +19,19 @@ Môn AI2002 — nhóm 09.
 | Tầng | Thư mục chính | Trách nhiệm |
 | --- | --- | --- |
 | **1. Project Governance** | `README.md`, `AGENTS.md`, `RULES.md`, `docs/INDEX.md` | Quy tắc vận hành, protocol Agent, kỷ luật Git, router tài liệu |
-| **2. Research Theory & Notes** | `notes/` | Thuật ngữ, ghi chú lý thuyết |
+| **2. Research Theory & Explain** | `docs/explain/` | Thuật ngữ, ghi chú lý thuyết, phân tích mô hình và notebook |
 | **3. Literature Reference** | `refs/` | Thư viện 18 bài báo toàn văn (PDF), danh mục ở `refs/INDEX.md` |
-| **4. Research Records** | `docs/decisions/`, `docs/logs/` | Quyết định `RDR-NNNN` append-only và nhật ký tiến độ |
+| **4. Research Records** | `docs/logs/` (trong đó có `decisions/`) | Quyết định `RDR-NNNN` append-only và nhật ký tiến độ |
 | **5. Deliverables & Experiments** | `reports/`, `notebooks/` | Đề cương (Word/PDF/slide), mẫu môn học và thực nghiệm ghép ảnh |
 
 ## Cấu trúc thư mục
 
 | Thư mục | Nội dung |
 | --- | --- |
-| `docs/` | Router (`INDEX.md`), quyết định (`decisions/`), nhật ký (`logs/`) |
-| `notes/` | Thuật ngữ, ghi chú lý thuyết, dataset, mô hình |
+| `docs/` | Router (`INDEX.md`), giải thích (`explain/`), nhật ký & quyết định (`logs/`, `logs/decisions/`) |
 | `refs/` | Thư viện PDF tham khảo, danh mục ở `refs/INDEX.md` |
 | `reports/` | Deliverables: `proposal/`, `md/` (bản markdown), `templates/` (mẫu môn học) |
-| `notebooks/` | Thực nghiệm ghép ảnh; output ở `notebooks/outputs/` (đã gitignore), vào từ `outputs/index.html` |
+| `notebooks/` | [Công việc độc lập theo model/RQ](notebooks/README.md), chỉ chạy trên Colab/Kaggle hosted runtime; `notebooks/outputs/` giữ kết quả lịch sử |
 | `data/` | 8 sequence `-kfs` của NPU Drone-Map (đã gitignore, không hardcode đường dẫn) |
+
+**Không thực thi notebook/pipeline trên máy cá nhân**, kể cả GPU hoặc Colab local runtime. Xem [RULES.md §8](RULES.md#8-thực-nghiệm-chỉ-chạy-trên-cloud).

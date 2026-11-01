@@ -21,10 +21,10 @@ Tài liệu quy định nguyên tắc vận hành, quản lý context và kỹ t
 
 ## 3. Nguồn sự thật cao nhất (Single Source of Truth)
 
-- Quyết định đã chốt nằm ở `docs/decisions/` (mã `RDR-NNNN`), đọc theo **chủ đề**; quyết định mới chỉ thay quyết định cũ khi ghi rõ phạm vi thay thế.
-- `docs/decisions/` hoạt động **append-only**: chỉ thêm mới, không sửa đè quyết định cũ.
+- Quyết định đã chốt nằm ở `docs/logs/decisions/` (mã `RDR-NNNN`), đọc theo **chủ đề**; quyết định mới chỉ thay quyết định cũ khi ghi rõ phạm vi thay thế.
+- `docs/logs/decisions/` hoạt động **append-only**: chỉ thêm mới, không sửa đè quyết định cũ.
 - Việc đang mở do [GitHub Issues](https://github.com/diepsang13z/cvprj/issues) quản lý (khi nhóm dùng); trước mắt ghi ở `docs/logs/progress/`.
-- Mâu thuẫn giữa `AGENTS.md` / `README.md` / `docs/INDEX.md` với `docs/decisions/` → **decisions thắng**.
+- Mâu thuẫn giữa `AGENTS.md` / `README.md` / `docs/INDEX.md` với `docs/logs/decisions/` → **decisions thắng**.
 
 ## 4. Kỷ luật giai đoạn khám phá (Exploratory Discipline)
 
@@ -35,7 +35,7 @@ Tài liệu quy định nguyên tắc vận hành, quản lý context và kỹ t
 
 - Tên file và thư mục **chỉ dùng chữ thường, chữ số và dấu gạch dưới `_`**. Không dùng gạch ngang `-`, khoảng trắng, dấu tiếng Việt hoặc ký tự đặc biệt.
 - **Ngoại lệ 1 — mã quyết định:** `RDR-NNNN` giữ gạch ngang vì là mã, không phải dấu phân tách từ. Phần slug phía sau dùng `_`: `RDR-0004_lecturer_review_after_persen_proposal.md`.
-- **Ngoại lệ 2 — file điều hướng/quản lý context viết HOA:** `README.md`, `AGENTS.md`, `RULES.md`, `INDEX.md`. Nội dung là kiến thức/nhật ký → chữ thường. Ví dụ `refs/INDEX.md` (điều hướng) vs `notes/glossary.md` (nội dung).
+- **Ngoại lệ 2 — file điều hướng/quản lý context viết HOA:** `README.md`, `AGENTS.md`, `RULES.md`, `INDEX.md`. Nội dung là kiến thức/nhật ký → chữ thường. Ví dụ `refs/INDEX.md` (điều hướng) vs `docs/explain/glossary.md` (nội dung).
 - **Chỉ áp cho file tạo mới.** File cũ đã đúng quy ước thì giữ nguyên; file nội dung không đổi tên chỉ vì quy ước này.
 - **Quy ước `refs/`:** `<năm>_<tác_giả_chính_không_dấu>_<chủ_đề_ngắn>.pdf`.
 
@@ -45,7 +45,7 @@ Ba nguồn tách theo vòng đời thay đổi; **không giữ một file trạn
 
 | Loại thông tin | Nguồn | Khi nào cập nhật | Cách |
 | --- | --- | --- | --- |
-| Quyết định đã chốt | `docs/decisions/` | Nhóm chốt/thay đổi | Thêm `RDR` mới, nêu rõ phạm vi thay thế |
+| Quyết định đã chốt | `docs/logs/decisions/` | Nhóm chốt/thay đổi | Thêm `RDR` mới, nêu rõ phạm vi thay thế |
 | Việc đang mở | GitHub Issues (hoặc `docs/logs/progress/`) | Có việc mới/hoàn thành | Một issue mỗi việc; đóng khi xong |
 | Việc đã xảy ra | `docs/logs/progress/YYYY_MM_DD_<tên>.md` | Mỗi phiên | Mở file mới; không sửa file người khác |
 
@@ -56,3 +56,12 @@ Ba nguồn tách theo vòng đời thay đổi; **không giữ một file trạn
 ## 7. Thêm quy tắc mới
 
 Thêm mục đánh số tiếp theo ngay tại đây. Khi mâu thuẫn, `RULES.md` thắng mọi mô tả khác trong repo.
+
+## 8. Thực nghiệm chỉ chạy trên cloud
+
+- **Tuyệt đối không thực thi notebook hoặc pipeline/model thực nghiệm trên máy tính cá nhân**, kể cả khi máy có GPU. Không dùng Colab kết nối local runtime.
+- Chỉ chạy trên runtime do Google Colab hoặc Kaggle cấp. CPU cổ điển (SIFT/ORB) cũng phải chạy trên cloud; chọn GPU cho model học sâu khi cần.
+- Quy định này cụ thể hoá `RDR-0010`, nhằm tránh tải tính toán kéo dài trên thiết bị cá nhân; không đồng nghĩa mọi tác vụ CPU đều làm hỏng phần cứng.
+- Trên máy cá nhân chỉ đọc/sửa notebook và kiểm tra tĩnh JSON, cú pháp, đường dẫn. Không Run All, chạy cell, `nbconvert --execute`, `papermill`, hoặc chạy script thay notebook để lách quy định.
+- Mỗi công việc có notebook riêng và thư mục kết quả riêng theo run. Lưu cấu hình, môi trường, nguồn dữ liệu và log/artifact lên bộ nhớ bền vững trước khi kết thúc phiên cloud.
+- Không ghi đè kết quả đã dùng trong paper. Người tổng hợp chỉ ghép artifact cùng cấu hình/dữ liệu; ghi rõ nguồn từng run, không trộn thời gian CPU/GPU thành một benchmark.

@@ -1,6 +1,6 @@
 # Giới thiệu dataset NPU Drone-Map (bộ dữ liệu team sẽ dùng)
 
-**Mục đích:** hồ sơ giới thiệu bộ dữ liệu chính của đề tài — xuất xứ, nội dung, metadata, giới hạn cần biết trước khi thiết kế thí nghiệm. Bổ trợ cho [`notes/datasets.md`](../../../notes/datasets.md) (kế hoạch tải 14 gói) và `RDR-0005` (quyết định chọn dataset).
+**Mục đích:** hồ sơ giới thiệu bộ dữ liệu chính của đề tài — xuất xứ, nội dung, metadata, giới hạn cần biết trước khi thiết kế thí nghiệm. Bổ trợ cho [`docs/explain/datasets.md`](../../explain/datasets.md) (kế hoạch tải 14 gói) và `RDR-0005` (quyết định chọn dataset).
 **Ngày kiểm chứng:** 2026-10-13. **Nguồn:** `adv-ci.com/blog/` (trang chủ tác giả), trang dataset, bài IROS 2016, Li et al. 2023.
 
 ---
@@ -52,7 +52,7 @@ Ba định dạng cho mỗi sequence (theo mô tả trang chủ dataset):
 
 ## 4. Đề tài dùng bộ này thế nào
 
-- Xem `RDR-0005` (dataset duy nhất của đề tài) và [`notes/datasets.md`](../../../notes/datasets.md) (thứ tự tải 3 tầng, tổng 4.3 GB).
+- Xem `RDR-0005` (dataset duy nhất của đề tài) và [`docs/explain/datasets.md`](../../explain/datasets.md) (thứ tự tải 3 tầng, tổng 4.3 GB).
 - **RQ1 (dự báo lỗi):** cần cặp frame khó — `grass` (ít vân), `centralPark` (lặp vân tán cây), `freeway` (dải tuyến tính) — để có tỉ lệ lỗi thực đáng phân tích.
 - **RQ2 (phân luồng matcher):** đo latency ↔ chất lượng trên cùng tập frame, đối chiếu classical với learned.
 - **RQ3 (phục hồi):** cần đoạn quay gắt / mất dấu cục bộ — ưu tiên `centralPark`, `lowlower`.
