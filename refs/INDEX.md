@@ -1,7 +1,7 @@
 # Danh mục tài liệu tham khảo (References)
 
 Thư mục lưu trữ các bài báo khoa học toàn văn (PDF) phục vụ nghiên cứu đề tài **Failure-Aware and Resource-Adaptive 2D Aerial Mosaicking**.
-Toàn bộ 22 file PDF ở thư mục gốc `refs/` khớp 1-to-1 với 22 trích dẫn trong bài báo (`reports/paper/main.tex`). Các bài không dùng được chuyển vào thư mục con `refs/unused/`.
+Danh mục dưới đây là inventory lịch sử gắn với [`paper/v1`](../reports/paper/v1/), không phải chứng nhận metadata hay nội dung trích dẫn. Paper v2 dùng [`references.bib`](../reports/paper/v2/references.bib) và [`reference_audit.md`](../reports/paper/v2/reference_audit.md) đã đối soát nguồn; không sao chép tác giả/DOI từ tên file hoặc bảng cũ. Các bài không dùng được lưu trong `refs/unused/`.
 
 ---
 

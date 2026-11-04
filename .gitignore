@@ -13,3 +13,6 @@ __pycache__/
 .ipynb_checkpoints/
 outputs/
 notebooks/outputs/
+
+# Bản tải tạm từ Drive (đã giải nén vào notebooks/)
+notebooks/drive-download-*.zip
