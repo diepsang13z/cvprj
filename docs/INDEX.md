@@ -44,6 +44,8 @@ Khu vực giải thích lý thuyết (`docs/explain/`), ghi nhật ký tiến tr
 - [`explain/failure_aware_mosaicking_pipeline.md`](explain/failure_aware_mosaicking_pipeline.md) — Giải thích và audit RQ1/RQ2/RQ3: tích hợp hoàn chỉnh LOSO, decision logs replay, memory bounded LRU cache.
 - [`explain/detector_matcher.md`](explain/detector_matcher.md) — Giải thích khái niệm Detector, Matcher và vai trò trung tâm trong 3 RQ của nghiên cứu Failure-Aware Mosaicking.
 - [`explain/related_work_analysis.md`](explain/related_work_analysis.md) — Phân tích chuyên sâu các công trình liên quan: công nghệ sử dụng, thiếu sót (research gaps) và luận điểm/bằng chứng chứng minh giải pháp của nhóm vượt trội theo 4 mảng.
+- [`explain/experiment_design_and_metrics.md`](explain/experiment_design_and_metrics.md) — Hệ thống hoá phương pháp thiết kế thực nghiệm (LOSO protocol, execution modes, cloud constraints) và các thước đo (inlier, step error, drift chain-vs-direct, Spearman/AUC, Pareto latency, recovery metrics).
+- [`explain/experimental_results_synthesis.md`](explain/experimental_results_synthesis.md) — Tổng hợp kết quả cloud tháng 11/2026 cho paper: baseline, benchmark, drift, RQ1–RQ3/LOSO; bảng số liệu, provenance, ảnh trùng, availability và giới hạn kết luận.
 
 ### 3.2. Nhật ký nghiên cứu (`docs/logs/`)
 - [`docs/logs/progress/`](logs/progress/) — Nhật ký tiến độ theo người: mỗi người một file theo ngày, append-only.
@@ -53,6 +55,7 @@ Khu vực giải thích lý thuyết (`docs/explain/`), ghi nhật ký tiến tr
   - [`2026_10_21_diepsang13z.md`](logs/progress/2026_10_21_diepsang13z.md) — Rà soát phản biện Related Work, sửa lỗi citation bu2016, nâng cấp Section II bản tiếng Anh/Việt, cập nhật notes và biên dịch PDF.
   - [`2026_10_31_diepsang13z.md`](logs/progress/2026_10_31_diepsang13z.md) — Chuyển đổi toàn bộ thực nghiệm sang 5 notebook độc lập cho Google Colab, xoá thư mục shared, làm sạch gạch dài/icon, đặt tên chuẩn nghiên cứu.
   - [`2026_11_01_diepsang13z.md`](logs/progress/2026_11_01_diepsang13z.md) — Thêm khối cấu hình nhanh (Quick Config) đầu 5 notebook để chuyển đổi mode pilot/full và chỉ định run benchmark.
+  - [`2026_11_04_diepsang13z.md`](logs/progress/2026_11_04_diepsang13z.md) — Tổng hợp kết quả full cho paper; đối soát hash, mẫu số drift, LOSO, trade-off routing/recovery và ảnh trùng centralPark.
 - [`docs/logs/literature-survey/`](logs/literature-survey/) — Nhật ký quét novelty (Wave 1–3) và query logs.
 - [`docs/logs/experiments/`](logs/experiments/) — Nhật ký thực nghiệm dài (quét trước khi thiết kế thí nghiệm).
   - [`0001_failure_scan_windows.md`](logs/experiments/0001_failure_scan_windows.md) — Nhật ký quét 160 bước × 2 sequence và chọn cửa sổ `village` 80–125 / `grass` 0–45. Đọc kèm audit 05: ghép đủ frame không chứng minh không có lỗi hình học.
@@ -66,8 +69,9 @@ Khu vực giải thích lý thuyết (`docs/explain/`), ghi nhật ký tiến tr
 
 - `reports/md/` — Bản markdown (thuyết minh đề cương).
 - `reports/templates/` — Mẫu và hướng dẫn học phần.
-- [`reports/paper/`](../reports/paper/) — **Bản nháp bài báo IEEE**, hai bản cùng số liệu: `main.tex` → `main.pdf` (tiếng Anh) và `main_vi.tex` → `main_vi.pdf` (tiếng Việt, cần font Times New Roman). `make_figures.py` và `make_mosaics.py` đọc artifact lịch sử; không tự chuyển sang run cloud mới. `check_tables.py` đối chiếu bảng với `report.json`, đọc `INDICATOR_SUSPICION` từ `notebooks/failure_aware_mosaicking_pipeline.ipynb` bằng text (không import model), và chặn em dash. `RDR-0008` còn Proposed; đọc kèm Limitations.
-  - [`reports/paper/presentation_script.md`](../reports/paper/presentation_script.md) — Kịch bản thuyết trình paper 3–5 phút cho nhóm báo cáo với GVHD kèm bảng tra cứu số liệu nhanh.
+- [`reports/paper/v2/`](../reports/paper/v2/) — Bản thảo IEEE conference hiện hành, tiếng Anh/Việt; kết quả full tháng 11/2026, baseline và Related Work kiểm chứng. [`README.md`](../reports/paper/v2/README.md) ghi template, nguồn dữ liệu và cách biên dịch; [`reference_audit.md`](../reports/paper/v2/reference_audit.md) ghi nguồn đối soát Ref. `RDR-0008` vẫn Proposed.
+- [`reports/paper/v1/`](../reports/paper/v1/) — Lưu nguyên trạng bản thảo, PDF, hình và script lịch sử; không dùng số liệu/Ref v1 làm nguồn đã kiểm chứng cho v2. Script giữ đường dẫn cũ, không chạy từ vị trí mới.
+  - [`reports/paper/v1/presentation_script.md`](../reports/paper/v1/presentation_script.md) — Kịch bản thuyết trình lịch sử, không phản ánh kết quả full mới.
 - [`reports/present_02/`](../reports/present_02/) — Slide Present 2, hai bản: `open_slide/` (deck open-slide 12 trang, có speaker notes + export PDF/PPTX, chạy `pnpm dev`) và `index.html` (bản offline mở bằng trình duyệt). Chi tiết ở `README.md` trong thư mục.
 - [`notebooks/README.md`](../notebooks/README.md) — Hướng dẫn Drive, hosted Colab/Kaggle, artifact từng run và giới hạn kiểm chứng. LOSO theo RDR-0011; ngưỡng RDR-0008 vẫn khám phá.
 - `notebooks/classical_mosaicking_baseline.ipynb` & `notebooks/deep_matching_pilot.ipynb` — Thực nghiệm baseline SIFT/ORB và pilot LightGlue trên ảnh gốc.
